@@ -1,0 +1,33 @@
+name: Daily SmartScanner Auto-Sync
+
+on:
+  schedule:
+    # Runs Monday to Friday at 17:30 IST (12:00 UTC)
+    - cron: '0 12 * * 1-5'
+  workflow_dispatch: # Allows manual trigger from GitHub UI button
+
+permissions:
+  contents: write
+
+jobs:
+  sync-market-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Market Data Fetcher
+        run: |
+          python fetcher.py
+
+      - name: Commit & Push Latest Market Data
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "SmartScanner Bot"
+          git add data/
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update market data [skip ci]" && git push)
