@@ -9,8 +9,6 @@ import json
 import datetime
 import urllib.request
 import urllib.error
-import zipfile
-import io
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -21,7 +19,6 @@ HEADERS = {
 def get_today_str():
     # Target date: default to today (IST)
     now = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
-    # If weekend, you can test with last Friday
     return now.strftime('%d%m%Y'), now.strftime('%Y-%m-%d'), now.strftime('%Y%m%d')
 
 def fetch_url(url, timeout=25):
@@ -40,21 +37,6 @@ def download_nse_bhav(date_dmy):
     data = fetch_url(url)
     return data.decode('utf-8', errors='ignore') if data else None
 
-def download_nse_fno(date_dmy):
-    # Format: FNO_BCDDMMYYYY.DAT
-    url = f"https://nsearchives.nseindia.com/content/fo/FNO_BC{date_dmy}.DAT"
-    print(f"[*] Downloading NSE F&O: {url}")
-    data = fetch_url(url)
-    return data.decode('utf-8', errors='ignore') if data else None
-
-def download_bse_udiff(date_ymd):
-    # Format: BhavCopy_BSE_CM_0_0_0_YYYYMMDD_F_0000.csv.zip
-    url = f"https://nsearchives.nseindia.com/content/cm/BhavCopy_NSE_CM_0_0_0_{date_ymd}_F_0000.csv.zip"
-    bse_url = f"https://www.bseindia.com/download/BhavCopy/Equity/BhavCopy_BSE_CM_0_0_0_{date_ymd}_F_0000.CSV"
-    print(f"[*] Downloading BSE Bhavcopy: {bse_url}")
-    data = fetch_url(bse_url)
-    return data.decode('utf-8', errors='ignore') if data else None
-
 def parse_nse_bhav(csv_text):
     if not csv_text:
         return {}
@@ -62,51 +44,63 @@ def parse_nse_bhav(csv_text):
     lines = csv_text.strip().split('\n')
     if len(lines) < 2:
         return {}
+    
+    # Strip spaces from header items
     header = [h.strip().upper() for h in lines[0].split(',')]
     
-    def get_val(row, col_name, default=0.0):
-        try:
-            if col_name in header:
-                idx = header.index(col_name)
-                v = row[idx].strip().replace(' ', '')
-                return float(v) if v else default
-        except:
-            pass
+    def get_val(row, col_names, default=0.0):
+        if isinstance(col_names, str):
+            col_names = [col_names]
+        for name in col_names:
+            if name in header:
+                try:
+                    idx = header.index(name)
+                    v = row[idx].strip().replace(' ', '').replace(',', '')
+                    return float(v) if v else default
+                except:
+                    pass
         return default
 
-    def get_str(row, col_name):
-        try:
-            if col_name in header:
-                return row[header.index(col_name)].strip()
-        except:
-            pass
+    def get_str(row, col_names):
+        if isinstance(col_names, str):
+            col_names = [col_names]
+        for name in col_names:
+            if name in header:
+                try:
+                    return row[header.index(name)].strip()
+                except:
+                    pass
         return ""
 
     for line in lines[1:]:
         parts = [p.strip() for p in line.split(',')]
         if len(parts) < len(header):
             continue
-        series = get_str(parts, 'SERIES')
+        series = get_str(parts, ['SERIES', 'SCTYSRS'])
         if series not in ['EQ', 'BE', 'SM']:
             continue
-        sym = get_str(parts, 'SYMBOL')
-        c = get_val(parts, 'CLOSE_PRICE')
+        sym = get_str(parts, ['SYMBOL', 'TCKRSYMB'])
+        c = get_val(parts, ['CLOSE_PRICE', 'CLOSE', 'CLSPRIC'])
         if not sym or c <= 0:
             continue
         
+        # In sec_bhavdata_full, TURNOVER_LACS is in Lakhs, so multiply by 1e5 for total Rupee value
+        turnover_lacs = get_val(parts, ['TURNOVER_LACS', 'TOTTRDVAL'])
+        net_trdval = turnover_lacs * 100000.0 if turnover_lacs > 0 else get_val(parts, ['NET_TRDVAL', 'TTLTRFVAL'])
+        
         stocks[sym] = {
             'sym': sym,
-            'name': get_str(parts, 'SECURITY'),
+            'name': get_str(parts, ['SECURITY', 'FININSTRMNM', 'NAME']) or sym,
             'ex': 'NSE',
-            'o': get_val(parts, 'OPEN_PRICE'),
-            'h': get_val(parts, 'HIGH_PRICE'),
-            'l': get_val(parts, 'LOW_PRICE'),
+            'o': get_val(parts, ['OPEN_PRICE', 'OPEN', 'OPNPRIC']),
+            'h': get_val(parts, ['HIGH_PRICE', 'HIGH', 'HGHPRIC']),
+            'l': get_val(parts, ['LOW_PRICE', 'LOW', 'LWPRIC']),
             'c': c,
-            'p': get_val(parts, 'PREV_CL_PR'),
-            't': get_val(parts, 'NET_TRDVAL'),
-            'v': get_val(parts, 'TOTALTRDQTY') or get_val(parts, 'TOTTRDQTY'),
-            'deliv_per': get_val(parts, 'DELIV_PER'),
-            'deliv_qty': get_val(parts, 'DELIV_QTY')
+            'p': get_val(parts, ['PREV_CLOSE', 'PREV_CL_PR', 'PREVCLOSE', 'PRVSCLSGPRIC']),
+            't': net_trdval,
+            'v': get_val(parts, ['TTL_TRD_QNTY', 'TOTALTRDQTY', 'TOTTRDQTY', 'TTLTRDQTY']),
+            'deliv_per': get_val(parts, ['DELIV_PER', 'DELIV. PER']),
+            'deliv_qty': get_val(parts, ['DELIV_QTY', 'DELIV_PER_QTY'])
         }
     return stocks
 
@@ -139,13 +133,11 @@ def run_pipeline():
     }
     
     if nse_stocks:
-        # Save historical day record
         hist_path = f"data/history/{date_iso}.json"
         with open(hist_path, 'w', encoding='utf-8') as f:
             json.dump(day_record, f, separators=(',', ':'))
         print(f"[+] Saved historical file: {hist_path}")
         
-        # Save latest index
         latest_path = "data/latest.json"
         with open(latest_path, 'w', encoding='utf-8') as f:
             json.dump(day_record, f, separators=(',', ':'))
