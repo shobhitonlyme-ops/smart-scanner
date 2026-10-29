@@ -123,8 +123,8 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
 <select id="pw"><option value="3">Perf window: 3D</option><option value="5" selected>Perf window: 5D</option><option value="10">Perf window: 10D</option></select>
 <label class="mu"><input type="checkbox" id="uc" checked> 🔒 Upper-circuit hide</label>
 <div style="display:inline-flex;border:1px solid var(--bd);border-radius:6px;overflow:hidden;margin-left:auto">
-<button type="button" id="v_tbl" class="view-btn on" title="Table View">📋 Table</button>
-<button type="button" id="v_hm" class="view-btn" title="Heatmap View">🔥 Heatmap</button>
+<button type="button" id="v_tbl" class="view-btn on" onclick="switchView('table')" title="Table View">📋 Table</button>
+<button type="button" id="v_hm" class="view-btn" onclick="switchView('heatmap')" title="Heatmap View">🔥 Heatmap</button>
 </div>
 </div>
 <div id="cs"><span class="mu">📈 Chart:</span>
@@ -703,7 +703,22 @@ function nr47Rows(d){
 }
 
 
+
 let VIEW_MODE = 'table'; // 'table' or 'heatmap'
+
+window.switchView = function(mode){
+  VIEW_MODE = mode;
+  const btnTbl = $('v_tbl'), btnHm = $('v_hm');
+  if(mode === 'heatmap'){
+    if(btnHm){ btnHm.classList.add('on'); btnHm.style.background='var(--b)'; btnHm.style.color='#fff'; }
+    if(btnTbl){ btnTbl.classList.remove('on'); btnTbl.style.background='var(--card)'; btnTbl.style.color='var(--tx)'; }
+  } else {
+    if(btnTbl){ btnTbl.classList.add('on'); btnTbl.style.background='var(--b)'; btnTbl.style.color='#fff'; }
+    if(btnHm){ btnHm.classList.remove('on'); btnHm.style.background='var(--card)'; btnHm.style.color='var(--tx)'; }
+  }
+  render();
+};
+
 
 function renderHeatmap(stocks){
   const elGrid = $('hm-grid');
@@ -770,7 +785,7 @@ function renderHeatmap(stocks){
     tile.onclick = () => {
       const sym = tile.getAttribute('data-c');
       const ex = tile.getAttribute('data-ex');
-      if(sym) openC(sym, ex);
+      if(sym) openChart(sym);
     };
   });
 }
@@ -789,12 +804,17 @@ function render(){
   const isHm = (cur === 'hm' || VIEW_MODE === 'heatmap');
   const tblWrap = document.querySelector('.w');
   const hmPanel = $('hm-panel');
+  const btnTbl = $('v_tbl'), btnHm = $('v_hm');
   if(isHm){
+    if(btnHm){ btnHm.classList.add('on'); btnHm.style.background='var(--b)'; btnHm.style.color='#fff'; }
+    if(btnTbl){ btnTbl.classList.remove('on'); btnTbl.style.background='var(--card)'; btnTbl.style.color='var(--tx)'; }
     if(tblWrap) tblWrap.style.display = 'none';
     if(hmPanel) hmPanel.style.display = 'block';
     renderHeatmap(d);
     return;
   } else {
+    if(btnTbl){ btnTbl.classList.add('on'); btnTbl.style.background='var(--b)'; btnTbl.style.color='#fff'; }
+    if(btnHm){ btnHm.classList.remove('on'); btnHm.style.background='var(--card)'; btnHm.style.color='var(--tx)'; }
     if(tblWrap) tblWrap.style.display = 'block';
     if(hmPanel) hmPanel.style.display = 'none';
   }
@@ -1088,7 +1108,7 @@ document.addEventListener('click',async x=>{
   const nn=x.target.closest('[data-n]');if(nn){const y=nn.dataset.n,v=prompt('Note — '+y,NT[y]||'');if(v!==null){v.trim()?NT[y]=v.trim():delete NT[y];saveWL();render()}return}
   const c=x.target.closest('[data-c]');if(c){x.preventDefault();openChart(c.dataset.c)}
   const t=x.target.closest('[data-t]'),w=x.target.closest('[data-w]');
-  if(t){cur=t.dataset.t;render()}
+  if(t){cur=t.dataset.t; if(cur==='hm'){ VIEW_MODE='heatmap'; } else if(cur!=='hm' && cur!=='perf' && VIEW_MODE==='heatmap' && t.dataset.t!=='hm'){ /* keep view mode */ } render();}
   if(w){const s=w.dataset.w;WL.has(s)?WL.delete(s):WL.add(s);saveWL();render()}
 });
 
@@ -1170,7 +1190,7 @@ $('bt').onclick=()=>{$('btpanel').classList.toggle('on');if($('btpanel').classLi
 $('btx').onclick=()=>$('btpanel').classList.remove('on');
 $('btrun').onclick=runBacktest;
 
-['q','ex','mp','mt','ms','so','uc','pw'].forEach(i=>$(i).addEventListener('input',render));
+['q','ex','idx','mp','mt','ms','so','uc','pw','hm_so'].forEach(i=>{ const el=$(i); if(el){ el.addEventListener('input',render); el.addEventListener('change',render); } });
 $('wb').onclick=addWL;
 $('wa').addEventListener('keydown',x=>{if(x.key==='Enter')addWL()});
 </script></body></html>
