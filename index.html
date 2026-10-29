@@ -378,6 +378,7 @@ function build(){
   Object.values(S.nse).forEach(s=>m['NSE:'+s.sym]={...s});
   Object.values(S.bse).forEach(s=>{m['BSE:'+s.sym]={...s}});
   U=Object.values(m);
+    window.U=U;
     U.sort((a,b)=>(b.mc||0)-(a.mc||0) || (b.t||0)-(a.t||0));
     U.forEach((s,idx)=>{s.capRank=idx+1;});
 
@@ -707,88 +708,104 @@ function nr47Rows(d){
 let VIEW_MODE = 'table'; // 'table' or 'heatmap'
 
 window.switchView = function(mode){
-  VIEW_MODE = mode;
-  const btnTbl = $('v_tbl'), btnHm = $('v_hm');
+  window.VIEW_MODE = mode;
+  const tblWrap = document.querySelector('.w');
+  const hmPanel = document.getElementById('hm-panel');
+  const btnTbl = document.getElementById('v_tbl');
+  const btnHm = document.getElementById('v_hm');
+  
   if(mode === 'heatmap'){
+    if(tblWrap) tblWrap.style.display = 'none';
+    if(hmPanel) hmPanel.style.display = 'block';
     if(btnHm){ btnHm.classList.add('on'); btnHm.style.background='var(--b)'; btnHm.style.color='#fff'; }
     if(btnTbl){ btnTbl.classList.remove('on'); btnTbl.style.background='var(--card)'; btnTbl.style.color='var(--tx)'; }
+    if(typeof renderHeatmap === 'function'){
+      const curTab = (typeof TABS !== 'undefined' && Array.isArray(TABS)) ? (TABS.find(t=>t.id===cur)||TABS[0]) : null;
+      const d = (curTab && typeof rows === 'function') ? rows(curTab).slice(0, 500) : (window.U || []).slice(0, 500);
+      renderHeatmap(d);
+    }
   } else {
+    if(tblWrap) tblWrap.style.display = 'block';
+    if(hmPanel) hmPanel.style.display = 'none';
     if(btnTbl){ btnTbl.classList.add('on'); btnTbl.style.background='var(--b)'; btnTbl.style.color='#fff'; }
     if(btnHm){ btnHm.classList.remove('on'); btnHm.style.background='var(--card)'; btnHm.style.color='var(--tx)'; }
+    if(typeof render === 'function') render();
   }
-  render();
 };
 
-
-function renderHeatmap(stocks){
-  const elGrid = $('hm-grid');
-  const elStats = $('hm-stats');
-  if(!elGrid || !elStats) return;
-  
-  let adv = 0, dec = 0, unc = 0;
-  stocks.forEach(s => {
-    if(s.chg > 0.05) adv++;
-    else if(s.chg < -0.05) dec++;
-    else unc++;
-  });
-  
-  elStats.innerHTML = `
-    <span class="hm-stat-chip hm-up">▲ ${adv} Advances</span>
-    <span class="hm-stat-chip hm-dn">▼ ${dec} Declines</span>
-    <span class="hm-stat-chip hm-nc">● ${unc} Flat</span>
-    <span class="mu" style="margin-left:8px">Total: <b>${stocks.length}</b> stocks</span>
-  `;
-  
-  if(!stocks.length){
-    elGrid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--mu)">Is filter me koi stock match nahi hua. Index ya turnover filter badal kar dekhein.</div>';
-    return;
+window.renderHeatmap = function(stocks){
+  try {
+    const elGrid = document.getElementById('hm-grid');
+    const elStats = document.getElementById('hm-stats');
+    if(!elGrid || !elStats) return;
+    
+    const list = (stocks && stocks.length) ? stocks : (window.U || []);
+    
+    let adv = 0, dec = 0, unc = 0;
+    list.forEach(s => {
+      const chg = s.chg || 0;
+      if(chg > 0.05) adv++;
+      else if(chg < -0.05) dec++;
+      else unc++;
+    });
+    
+    elStats.innerHTML = `
+      <span class="hm-stat-chip hm-up">▲ ${adv} Advances</span>
+      <span class="hm-stat-chip hm-dn">▼ ${dec} Declines</span>
+      <span class="hm-stat-chip hm-nc">● ${unc} Flat</span>
+      <span class="mu" style="margin-left:8px">Total: <b>${list.length}</b> stocks</span>
+    `;
+    
+    if(!list.length){
+      elGrid.innerHTML = '<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--mu)">Is filter me koi stock match nahi hua. Index ya turnover badal kar dekhein.</div>';
+      return;
+    }
+    
+    const hmSort = document.getElementById('hm_so') ? document.getElementById('hm_so').value : 'chg_desc';
+    let sorted = [...list];
+    if(hmSort === 'chg_desc') sorted.sort((a,b)=>(b.chg||0)-(a.chg||0));
+    else if(hmSort === 'chg_asc') sorted.sort((a,b)=>(a.chg||0)-(b.chg||0));
+    else if(hmSort === 'cr_desc') sorted.sort((a,b)=>(b.cr||0)-(a.cr||0));
+    else if(hmSort === 'sym') sorted.sort((a,b)=>String(a.sym||'').localeCompare(String(b.sym||'')));
+    
+    const visible = sorted.slice(0, 500);
+    elGrid.innerHTML = visible.map(s => {
+      let bg = '#1e2d4a', bd = '#2d4168', tx = '#ffffff';
+      const c = Number(s.chg) || 0;
+      if(c >= 7.0) { bg = '#005e2e'; bd = '#008542'; }
+      else if(c >= 4.0) { bg = '#007a3d'; bd = '#00994d'; }
+      else if(c >= 1.5) { bg = '#00994d'; bd = '#00b359'; }
+      else if(c > 0) { bg = '#00b865'; bd = '#00d676'; tx = '#061a0e'; }
+      else if(c <= -7.0) { bg = '#6e0c0c'; bd = '#8f1717'; }
+      else if(c <= -4.0) { bg = '#8f1717'; bd = '#b32222'; }
+      else if(c <= -1.5) { bg = '#b32222'; bd = '#d43333'; }
+      else if(c < 0) { bg = '#d94343'; bd = '#eb5e5e'; }
+      else { bg = '#2a3550'; bd = '#3d4d73'; tx = 'var(--mu)'; }
+      
+      const sign = c > 0 ? '+' : '';
+      const turnDisp = (s.cr && s.cr >= 1) ? ('₹' + s.cr.toFixed(1) + 'Cr') : ('₹' + ((s.cr||0)*100).toFixed(0) + 'L');
+      const safeName = String(s.name || s.sym || '').replace(/"/g, '&quot;');
+      const sym = String(s.sym || '');
+      const ex = String(s.ex || '');
+      const priceDisp = (s.c != null && Number.isFinite(+s.c)) ? (+s.c).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}) : '–';
+      const chgDisp = (s.chg != null && Number.isFinite(+s.chg)) ? (+s.chg).toFixed(2) : '0.00';
+      const tip = `${safeName} (${ex}) - LTP: ₹${priceDisp} (${sign}${chgDisp}%) - High: ₹${fm(s.h)} Low: ₹${fm(s.l)} - Turn: ${turnDisp}`;
+      
+      return `<div class="hm-tile" style="background:${bg};border:1px solid ${bd};color:${tx}" title="${tip}" onclick="openChart('${sym}')">
+        <div class="hm-tile-top">
+          <span class="hm-sym">${sym}</span>
+          <span class="hm-badge">${ex}</span>
+        </div>
+        <div class="hm-tile-btm">
+          <span class="hm-price">₹${priceDisp}</span>
+          <span class="hm-chg">${sign}${chgDisp}%</span>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(err) {
+    console.error('renderHeatmap error:', err);
   }
-  
-  const hmSort = $('hm_so') ? $('hm_so').value : 'chg_desc';
-  let sorted = [...stocks];
-  if(hmSort === 'chg_desc') sorted.sort((a,b)=>b.chg-a.chg);
-  else if(hmSort === 'chg_asc') sorted.sort((a,b)=>a.chg-b.chg);
-  else if(hmSort === 'cr_desc') sorted.sort((a,b)=>b.cr-a.cr);
-  else if(hmSort === 'sym') sorted.sort((a,b)=>a.sym.localeCompare(b.sym));
-  
-  const visible = sorted.slice(0, 500);
-  elGrid.innerHTML = visible.map(s => {
-    let bg = '#1e2d4a', bd = '#2d4168', tx = '#ffffff';
-    const c = s.chg;
-    if(c >= 7.0) { bg = '#005e2e'; bd = '#008542'; }
-    else if(c >= 4.0) { bg = '#007a3d'; bd = '#00994d'; }
-    else if(c >= 1.5) { bg = '#00994d'; bd = '#00b359'; }
-    else if(c > 0) { bg = '#00b865'; bd = '#00d676'; tx = '#061a0e'; }
-    else if(c <= -7.0) { bg = '#6e0c0c'; bd = '#8f1717'; }
-    else if(c <= -4.0) { bg = '#8f1717'; bd = '#b32222'; }
-    else if(c <= -1.5) { bg = '#b32222'; bd = '#d43333'; }
-    else if(c < 0) { bg = '#d94343'; bd = '#eb5e5e'; }
-    else { bg = '#2a3550'; bd = '#3d4d73'; tx = 'var(--mu)'; }
-    
-    const sign = c > 0 ? '+' : '';
-    const turnDisp = s.cr >= 1 ? `₹${s.cr.toFixed(1)}Cr` : `₹${(s.cr*100).toFixed(0)}L`;
-    const tip = `${s.name || s.sym} (${s.ex})\nLTP: ₹${fm(s.c)} (${sign}${fm(s.chg)}%)\nHigh: ₹${fm(s.h)} | Low: ₹${fm(s.l)}\nTurnover: ${turnDisp}`;
-    
-    return `<div class="hm-tile" style="background:${bg};border:1px solid ${bd};color:${tx}" title="${tip}" data-c="${e(s.sym)}" data-ex="${s.ex}">
-      <div class="hm-tile-top">
-        <span class="hm-sym">${e(s.sym)}</span>
-        <span class="hm-badge">${s.ex}</span>
-      </div>
-      <div class="hm-tile-btm">
-        <span class="hm-price">₹${fm(s.c)}</span>
-        <span class="hm-chg">${sign}${fm(s.chg)}%</span>
-      </div>
-    </div>`;
-  }).join('');
-  
-  elGrid.querySelectorAll('.hm-tile').forEach(tile => {
-    tile.onclick = () => {
-      const sym = tile.getAttribute('data-c');
-      const ex = tile.getAttribute('data-ex');
-      if(sym) openChart(sym);
-    };
-  });
-}
+};
 
 function render(){
 
@@ -801,7 +818,7 @@ function render(){
   const d=rows(tab).slice(0,500);
   $('rbs').style.display=tab.id==='rbo'?'flex':'none';
 
-  const isHm = (cur === 'hm' || VIEW_MODE === 'heatmap');
+  const isHm = (cur === 'hm' || window.VIEW_MODE === 'heatmap');
   const tblWrap = document.querySelector('.w');
   const hmPanel = $('hm-panel');
   const btnTbl = $('v_tbl'), btnHm = $('v_hm');
@@ -810,7 +827,7 @@ function render(){
     if(btnTbl){ btnTbl.classList.remove('on'); btnTbl.style.background='var(--card)'; btnTbl.style.color='var(--tx)'; }
     if(tblWrap) tblWrap.style.display = 'none';
     if(hmPanel) hmPanel.style.display = 'block';
-    renderHeatmap(d);
+    window.renderHeatmap(d);
     return;
   } else {
     if(btnTbl){ btnTbl.classList.add('on'); btnTbl.style.background='var(--b)'; btnTbl.style.color='#fff'; }
