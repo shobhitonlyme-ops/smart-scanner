@@ -1064,13 +1064,15 @@ $('exp').onclick=()=>{
 // Initial IndexedDB open & load
 (async()=>{
   try{await DB.open();for(const v of await DB.all())DAYS[v.date]=v;}catch(x){$('err').textContent='⚠ Browser storage available nahi — data sirf is session me rahega (Backup button use karo).';}
-  refresh();
-  try{
-    const res = await fetch('data/latest.json');
+  refresh();fetch('data/latest.json?v=' + Date.now(), { cache: 'no-store' });
     if(res.ok){
       const cloudDay = await res.json();
-      if(cloudDay && cloudDay.date){await mergeDay(cloudDay);refresh();}
-    }
+      if(cloudDay && cloudDay.date){
+        await mergeDay(cloudDay);
+        SEL = cloudDay.date;
+        refresh();
+      }
+    } }
   }catch(e){}
 })();
 
