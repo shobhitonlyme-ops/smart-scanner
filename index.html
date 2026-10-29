@@ -385,6 +385,9 @@ function build(){
   for(const s of U){
     s.chg=s.p>0?(s.c-s.p)/s.p*100:0;
     s.gap=s.p>0?(s.o-s.p)/s.p*100:0; // Gap%
+    const openLowDiff = s.o>0?(s.o-s.l)/s.o*100:100;
+    s.olDiff = openLowDiff;
+    s.isOL = openLowDiff<=0.40 && Math.abs(s.gap)<=1.5 && s.c>s.o && s.chg>=2.0 && s.cp>=65;
     s.rng=s.c>0?(s.h-s.l)/s.c*100:0;
     s.cp=s.h>s.l?(s.c-s.l)/(s.h-s.l)*100:50;
     s.candle=Math.sign(s.c-s.o);
@@ -554,6 +557,7 @@ function nrCalc(){
 function score(s){
   let p=0;const t=[],a=(k,x)=>{p+=x;t.push(k)},w=(k)=>{p-=1;t.push(k+'⚠️')};
   if(s.candle>0)a('Bull',1);
+  if(s.isOL)a('🎯O=L_Rocket',2);
   if(s.cp>=70)a('CloseHigh',2);else if(s.cp>=55)a('CloseUp',1);
   if(s.chg>=2.5)a('+2.5%',2);else if(s.chg>=1)a('+1%',1);
   if(s.tp>=75)a('Liquid',1);
@@ -617,6 +621,7 @@ const PW=s=>s['r'+PWN]==null?-999:s['r'+PWN];
 
 const TABS=[
 {id:'hm',n:'🔥 Heatmap',d:'Market Heatmap view — Nifty & BSE ke stocks ka live visual color map. Green = Gainers, Red = Losers. Tile par click karke direct chart kholo.',ok:s=>true,so:'chg'},
+{id:'ol',n:'🎯 Open=Low Rocket',d:'Subah Flat khulne (-1.5% se +1.5%) ke baad Open ≈ Low (sellers zero, buyers aggressive) aur +2%+ rally karne wale high-momentum breakout stocks.',ok:s=>s.isOL||(s.o>0&&(s.o-s.l)/s.o<=0.004&&Math.abs(s.gap)<=1.5&&s.c>s.o&&s.chg>=2.0&&s.cp>=65),so:'chg'},
 {id:'perf',n:'🏆 Top Performers',d:'Saved din-ba-din data se compounded return — jo stock lagatar achha chal raha hai wo sabse upar. Window upar "Perf window" se badlo; har din ka Chg% heatmap me dikhta hai.',ok:s=>PW(s)>0,so:'pw'},
 {id:'wl',n:'⭐ Watchlist',d:'Apne chune hue stocks — filters ke bina, din-ba-din heatmap, signals, SL/targets aur note ke saath. ⭐ kisi bhi table se dabao ya upar symbol type karke Add karo. Note ke liye ✏️ par click karo.',ok:s=>WL.has(s.sym),so:'sc'},
 {id:'rbo',n:'🧱 Range Breakout',d:'Pichle N din ki tight consolidation range (resistance) ke upar close ya uske paas — jaise ONWARDTEC ka 310 breakout. Entry = resistance, SL = range ka beech, T1/T2 = range height ka 1x/2x. Settings neeche.',ok:s=>!!s.rb,so:'rb'},
@@ -669,7 +674,7 @@ function rows(tab){
   }
   const q=$('q').value.toUpperCase(),ex=$('ex').value,mp=+$('mp').value,mt=+$('mt').value,ms=+$('ms').value,hu=$('uc').checked;
   const idx=$('idx')?$('idx').value:'';
-  let d=U.filter(s=>tab.ok(s)&&s.c>=mp&&s.cr>=mt&&(tab.id==='hm'||tab.id==='perf'||tab.id==='rbo'||tab.id==='nr47'||tab.id==='nr'||s.sc>=ms)&&(!ex||s.ex===ex)&&(!idx||matchIndex(s,idx))&&(!q||s.sym.includes(q))&&!(hu&&s.uc));
+  let d=U.filter(s=>tab.ok(s)&&s.c>=mp&&s.cr>=mt&&(tab.id==='hm'||tab.id==='ol'||tab.id==='perf'||tab.id==='rbo'||tab.id==='nr47'||tab.id==='nr'||s.sc>=ms)&&(!ex||s.ex===ex)&&(!idx||matchIndex(s,idx))&&(!q||s.sym.includes(q))&&!(hu&&s.uc));
   const k=$('so').value==='auto'?tab.so:$('so').value;
   return d.sort((a,b)=>k==='rb'?(b.rb.st==='BO')-(a.rb.st==='BO')||b.rb.vx-a.rb.vx:k==='pw'?PW(b)-PW(a):k==='sc'?b.sc-a.sc||b.chg-a.chg:k==='chg'?b.chg-a.chg:k==='cr'?b.cr-a.cr:b.cp-a.cp);
 }
@@ -686,7 +691,7 @@ function nr47Rows(d){
     const qty=calcQty(s.c,s.sl);
     const isN50=N50.has(s.sym);
     return `<tr><td class="mu">${i+1}</td>
-    <td><span class="sym">${e(s.sym)}</span><span class="ex">${s.ex}</span>${isN50?'<span class="tg" style="color:var(--b);background:#0d1b33;border:1px solid #1e3a6a;font-size:9px">N50</span>':''}${s.uc?' 🔒':''}</td>
+    <td><span class="sym">${e(s.sym)}</span><span class="ex">${s.ex}</span>${isN50?'<span class="tg" style="color:var(--b);background:#0d1b33;border:1px solid #1e3a6a;font-size:9px">N50</span>':''}${s.isOL?'<span class="tg" style="background:#0f2e1a;color:#00e676;border:1px solid #1f6637;font-weight:700;font-size:9px">🎯 O=L</span>':''}${s.uc?' 🔒':''}</td>
     <td>₹${fm(s.c)}</td>
     <td class="${s.chg>=0?'up':'dn'}">${s.chg>=0?'+':''}${fm(s.chg)}%</td>
     <td><span class="tg" style="background:${s.nr7?'#3b1e54':'#1a2440'};color:${s.nr7?'#d49bff':'var(--t)'};font-weight:700">${s.nrType}</span></td>
@@ -849,7 +854,7 @@ function render(){
     const emaDist=s.ema20&&s.ema20>0?((s.c-s.ema20)/s.ema20*100):null;
     const emaDisp=emaDist!=null?`${emaDist>=0?'+':''}${emaDist.toFixed(1)}%`:'–';
     return `<tr><td class="mu">${i+1}</td>
-    <td><span class="sym">${e(s.sym)}</span><span class="ex">${s.ex}</span>${isN50?'<span class="tg" style="color:var(--b);background:#0d1b33;border:1px solid #1e3a6a;font-size:9px">N50</span>':''}${s.nrType?`<span class="tg" style="background:#3b1e54;color:#d49bff;font-size:9px;font-weight:700">${s.nrType}</span>`:''}${s.uc?' 🔒':''}${s.mc?`<div class="mu" style="font-size:10px">MCap ₹${fm(s.mc,0)} Cr</div>`:''}</td>
+    <td><span class="sym">${e(s.sym)}</span><span class="ex">${s.ex}</span>${isN50?'<span class="tg" style="color:var(--b);background:#0d1b33;border:1px solid #1e3a6a;font-size:9px">N50</span>':''}${s.isOL?'<span class="tg" style="background:#0f2e1a;color:#00e676;border:1px solid #1f6637;font-weight:700;font-size:9px">🎯 O=L</span>':''}${s.nrType?`<span class="tg" style="background:#3b1e54;color:#d49bff;font-size:9px;font-weight:700">${s.nrType}</span>`:''}${s.uc?' 🔒':''}${s.mc?`<div class="mu" style="font-size:10px">MCap ₹${fm(s.mc,0)} Cr</div>`:''}</td>
     <td>₹${fm(s.c)}</td>
     <td class="${s.chg>=0?'up':'dn'}">${s.chg>=0?'▲ +':'▼ '}${fm(s.chg)}%</td>
     <td class="${s.gap>0?'up':s.gap<0?'dn':'mu'}">${s.gap>0?'+':''}${fm(s.gap,1)}%</td>
@@ -881,7 +886,7 @@ function perfRows(d,wl){
     const r=PW(s),rs=r<-900?'–':(r>=0?'+':'')+fm(r)+'%';
     const isN50=N50.has(s.sym);
     const qty=calcQty(s.c,s.sl);
-    return `<tr><td class="mu">${i+1}</td><td><span class="sym">${e(s.sym)}</span><span class="ex">${s.ex}</span>${isN50?'<span class="tg" style="color:var(--b);background:#0d1b33;border:1px solid #1e3a6a;font-size:9px">N50</span>':''}${s.uc?' 🔒':''}</td><td>₹${fm(s.c)}</td><td class="${r>=0?'up':'dn'}"><b>${rs}</b></td>`
+    return `<tr><td class="mu">${i+1}</td><td><span class="sym">${e(s.sym)}</span><span class="ex">${s.ex}</span>${isN50?'<span class="tg" style="color:var(--b);background:#0d1b33;border:1px solid #1e3a6a;font-size:9px">N50</span>':''}${s.isOL?'<span class="tg" style="background:#0f2e1a;color:#00e676;border:1px solid #1f6637;font-weight:700;font-size:9px">🎯 O=L</span>':''}${s.uc?' 🔒':''}</td><td>₹${fm(s.c)}</td><td class="${r>=0?'up':'dn'}"><b>${rs}</b></td>`
     +s.hist.map(v=>v==null?'<td class="mu">–</td>':`<td class="${v>=0?'up':'dn'}" style="background:rgba(${v>=0?'0,230,118':'255,82,82'},${Math.min(.35,Math.abs(v)/12)})">${v>=0?'+':''}${fm(v,1)}</td>`).join('')
     +`<td>${s.hist.filter(v=>v>0).length}/${s.nd}</td><td>${s.st?'🔥'+s.st:'–'}</td><td>₹${fm(s.cr)}</td><td>${scBadge(s)}</td>`
     +(wl?`<td>${s.tags.map(g=>`<span class="tg ${g.includes('⚠️')?'x':''}">${e(g)}</span>`).join('')}</td><td><div><span class="dn">${fm(s.sl)}</span> · <span class="up">${fm(s.t1)}</span> · <span class="up">${fm(s.t2)}</span></div><div class="mu" style="font-size:10px">🎯 Qty: <b>${qty}</b></div></td><td class="wl" data-n="${e(s.sym)}">${NT[s.sym]?e(NT[s.sym]):'<span class="mu">✏️ note</span>'}</td>`:'')
@@ -917,7 +922,7 @@ function rbRows(d){
     const r=s.rb;
     const isN50=N50.has(s.sym);
     const qty=calcQty(s.c,s.sl);
-    return `<tr><td class="mu">${i+1}</td><td><span class="sym">${e(s.sym)}</span><span class="ex">${s.ex}</span>${isN50?'<span class="tg" style="color:var(--b);background:#0d1b33;border:1px solid #1e3a6a;font-size:9px">N50</span>':''}${s.uc?' 🔒':''}</td><td>₹${fm(s.c)}</td><td class="${s.chg>=0?'up':'dn'}">${s.chg>=0?'+':''}${fm(s.chg)}%</td>
+    return `<tr><td class="mu">${i+1}</td><td><span class="sym">${e(s.sym)}</span><span class="ex">${s.ex}</span>${isN50?'<span class="tg" style="color:var(--b);background:#0d1b33;border:1px solid #1e3a6a;font-size:9px">N50</span>':''}${s.isOL?'<span class="tg" style="background:#0f2e1a;color:#00e676;border:1px solid #1f6637;font-weight:700;font-size:9px">🎯 O=L</span>':''}${s.uc?' 🔒':''}</td><td>₹${fm(s.c)}</td><td class="${s.chg>=0?'up':'dn'}">${s.chg>=0?'+':''}${fm(s.chg)}%</td>
     <td>${SL[r.st]||r.st}</td><td>₹${fm(r.hi)}</td><td>₹${fm(r.lo)}</td><td>${fm(r.w,1)}%</td><td class="${r.dist>=0?'up':'dn'}">${r.dist>=0?'+':''}${fm(r.dist,1)}%</td><td>${fm(r.vx,1)}×</td><td class="mu">${r.n}</td>
     <td><div>₹${fm(r.hi)} · <span class="dn">${fm(r.sl)}</span> · <span class="up">${fm(r.t1)}</span> · <span class="up">${fm(r.t2)}</span></div><div class="mu" style="font-size:10px">🎯 Qty: <b>${qty}</b></div></td><td>₹${fm(s.cr)}</td>
     <td><a href="#" data-c="${e(s.sym)}">Chart</a> <span class="wl" data-w="${e(s.sym)}">${WL.has(s.sym)?'❌':'⭐'}</span></td></tr>`
