@@ -583,12 +583,47 @@ function build(){
     if(S.corp && S.corp[s.sym]){
       s.events = Array.isArray(S.corp[s.sym]) ? S.corp[s.sym] : [S.corp[s.sym]];
     }
-    // High-impact news score
+    // High-impact news & intraday catalyst detection
     let nScore = 0;
-    if(s.events.length) nScore += 40;
-    if(s.dl >= 1.0) nScore += 30;
-    if(s.deliv_per >= 65 && s.chg >= 2.0) nScore += 25;
-    if(s.cas) nScore += 15;
+    let catalystReasons = [];
+
+    if(s.events && s.events.length){
+      nScore += 45;
+      catalystReasons.push(...s.events);
+    }
+    if(s.dl >= 1.0){
+      nScore += 35;
+      catalystReasons.push(`Bulk/Block Deal Inflow +₹${s.dl.toFixed(1)} Cr`);
+    }
+    // Catalyst 1: Abnormal Volume Blast + Price Surge (Classic Breaking News Signature)
+    if(s.rv >= 2.5 && Math.abs(s.chg) >= 3.0){
+      nScore += 40;
+      catalystReasons.push(`🚀 Massive Volume Blast (${s.rv.toFixed(1)}× Vol with ${s.chg >= 0 ? '+' : ''}${s.chg.toFixed(1)}% move)`);
+    } else if(s.rv >= 1.8 && Math.abs(s.chg) >= 2.0){
+      nScore += 25;
+      catalystReasons.push(`⚡ High Volume Expansion (${s.rv.toFixed(1)}× Vol)`);
+    }
+
+    // Catalyst 2: New 52-Week High Breakout Surge
+    if(s.h52new && s.chg >= 1.5){
+      nScore += 30;
+      catalystReasons.push('🏆 All-Time / 52-Week High Breakout');
+    }
+
+    // Catalyst 3: Huge Delivery Accumulation Surge
+    if(s.deliv_per >= 70 && s.chg >= 1.5 && s.cr >= 2.0){
+      nScore += 25;
+      catalystReasons.push(`📦 Extreme Delivery Buying (${s.deliv_per.toFixed(0)}%)`);
+    }
+
+    // Catalyst 4: Circuit / Pre-Open Gap Surge
+    if(Math.abs(s.gap) >= 2.5){
+      nScore += 20;
+      catalystReasons.push(`🌅 Large Gap Action (${s.gap >= 0 ? '+' : ''}${s.gap.toFixed(1)}% Gap)`);
+    }
+
+    s.news_reasons = catalystReasons;
+    s.isNewsCatalyst = nScore >= 20;
     s.news_score = nScore;
     s.uc=S.band[s.sym]==='H';
     // NEW FEATURE 4: 52W High distinction (New vs Near)
@@ -845,7 +880,7 @@ const PW=s=>s['r'+PWN]==null?-999:s['r'+PWN];
 const TABS=[
 {id:'swing20',n:'⭐ Swing Top 20',d:'Consolidation + High Volume (1.5x–2x+ of 20D Avg) Breakouts & Low-Volume Pullbacks. Daily Curated Top 20 Swing setups strictly ranked by institutional conviction.',ok:s=>s.swingScore>=40&&s.c>=20&&s.cr>=1.0,so:'sw_score'},
 {id:'deliv',n:'📦 Top Delivery',d:'Extreme Institutional Accumulation — Total volume ka 55%–90%+ Delivery me uthaya gaya ho aur ₹1 Cr+ Delivery Value ho. Smart money buying before big moves.',ok:s=>(s.deliv_per>=55||(s.deliv_cr>=2.0&&s.deliv_per>=45))&&s.c>=15&&s.cr>=1.0,so:'deliv_cr'},
-{id:'news',n:'📰 News & Catalysts',d:'High-Impact Corporate Events & Breaking Announcements: Results, Big Orders, Bonus/Splits, Dividends, Promoter Buying. Intraday momentum catalyst setups.',ok:s=>!!(s.events&&s.events.length>0)||(s.news_score&&s.news_score>=30)||(s.cas),so:'news_score'},
+{id:'news',n:'📰 News & Catalysts',d:'High-Impact Catalysts: Badi corporate news, abnormal volume spike (2x+), 52W high breakout, ya sudden price surge jisse stock intraday bhaag ya gir raha ho.',ok:s=>s.isNewsCatalyst||(s.events&&s.events.length>0)||(s.news_score>=20),so:'news_score'},
 {id:'deals',n:'🏛️ FII/DII Deals',d:'Bulk Deals, Block Deals & Institutional Net Inflow — Bada paisa (Mutual Funds, FIIs, HNIs) kahan lag raha hai.',ok:s=>s.dl>=0.5||(S.deal&&S.deal[s.sym]),so:'cr'},
 {id:'patterns',n:'⭐ Swing Top 20',d:'Consolidation + High Volume (1.5x–2x+ of 20D Avg) Breakouts & Low-Volume Pullbacks. Daily Curated Top 20 Swing setups strictly ranked by institutional conviction.',ok:s=>s.swingScore>=40&&s.c>=20&&s.cr>=1.0,so:'sw_score'},
 {id:'patterns',n:'📐 Chart Patterns',d:'Fidelity & Rayner Classical Patterns: Bull Flag, Ascending Triangle, Double Bottom (W), Cup & Handle, Rectangle Box, Bullish Engulfing, Hammer, Piercing Line, Inside Bar (Harami), NR4/NR7, Explosion Gap.',ok:s=>s.patterns&&s.patterns.length>0,so:'sc'},
@@ -1235,7 +1270,7 @@ function newsRows(d){
   $('tb').innerHTML = d.map((s, i) => {
     const isUp = s.chg >= 0;
     const cl = isUp ? 'var(--g)' : 'var(--r)';
-    const evText = s.events && s.events.length ? s.events.join(' · ') : (s.cas ? 'Closing Auction Vol Surge' : (s.dl >= 1.0 ? `Bulk Deal Inflow ₹${s.dl.toFixed(1)} Cr` : 'High Momentum Catalyst'));
+    const evText = (s.news_reasons && s.news_reasons.length) ? s.news_reasons.join(' · ') : (s.events && s.events.length ? s.events.join(' · ') : 'High Momentum Vol Catalyst');
     const isBull = s.chg >= 1.5;
     const impactBadge = isBull ? `<span class="badge" style="background:#064e3b;color:#6ee7b7">🟢 Bullish Momentum</span>` : `<span class="badge" style="background:#450a0a;color:#fca5a5">🔴 High Volatility</span>`;
     const w = `<span class="wl" data-w="${e(s.sym)}" title="Watchlist">${WL.has(s.sym) ? '❌' : '⭐'}</span>`;
