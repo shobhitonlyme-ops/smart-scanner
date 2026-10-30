@@ -40,6 +40,7 @@ def fetch_url(url, timeout=25):
 def extract_csv_from_data(raw_bytes):
     if not raw_bytes:
         return None
+    # If zipped
     if raw_bytes[:2] == b'PK':
         try:
             with zipfile.ZipFile(io.BytesIO(raw_bytes)) as z:
@@ -131,8 +132,11 @@ def parse_nse_bhav(csv_text):
 def download_bse_bhav(date_ymd, date_dmy):
     dmy_2digit = date_dmy[:4] + date_dmy[6:]  # DDMMYY
     urls = [
+        # 1. Direct UDiFF CSV
         f"https://www.bseindia.com/download/BhavCopy/Equity/BhavCopy_BSE_CM_0_0_0_{date_ymd}_F_0000.CSV",
+        # 2. UDiFF ZIP
         f"https://www.bseindia.com/download/BhavCopy/Equity/BhavCopy_BSE_CM_0_0_0_{date_ymd}_F_0000.zip",
+        # 3. Legacy Equity Bhavcopy ZIP
         f"https://www.bseindia.com/download/BhavCopy/Equity/EQ{dmy_2digit}_CSV.ZIP",
         f"https://www.bseindia.com/download/BhavCopy/Equity/EQ_ISINCODE_{dmy_2digit}.zip",
     ]
@@ -166,6 +170,7 @@ def parse_bse_bhav(csv_text):
                 pass
         return 0.0
 
+    # 1. SEBI UDiFF format
     if 'TCKRSYMB' in header and 'CLSPRIC' in header:
         sym_idx = header.index('TCKRSYMB')
         cls_idx = header.index('CLSPRIC')
@@ -185,6 +190,7 @@ def parse_bse_bhav(csv_text):
             if len(parts) <= max(sym_idx, cls_idx):
                 continue
             
+            # Filter equity series
             if srs_idx >= 0 and len(parts) > srs_idx:
                 srs = parts[srs_idx].upper()
                 if srs not in ['A', 'B', 'T', 'X']:
@@ -220,6 +226,7 @@ def parse_bse_bhav(csv_text):
             }
         return stocks
 
+    # 2. Legacy BSE format
     if 'SC_CODE' in header or 'SCRIP_CD' in header:
         def get_col(names):
             for n in names:
@@ -280,65 +287,72 @@ def parse_bse_bhav(csv_text):
 
 # ==================== MAIN PIPELINE ====================
 def run_pipeline():
-    dates = get_target_dates(max_lookback=5)
+    # Look back up to 12 calendar days to gather up to 7 active trading sessions
+    dates = get_target_dates(max_lookback=12)
     
     os.makedirs('data', exist_ok=True)
     os.makedirs('data/history', exist_ok=True)
     
-    nse_stocks = {}
-    bse_stocks = {}
-    chosen_date_iso = None
+    saved_days = []
     
     for date_dmy, date_iso, date_ymd in dates:
+        hist_path = f"data/history/{date_iso}.json"
+        
+        # Check if this trading day is already cached on disk
+        if os.path.exists(hist_path):
+            try:
+                with open(hist_path, 'r', encoding='utf-8') as f:
+                    day_rec = json.load(f)
+                    if day_rec.get('nse') or day_rec.get('bse'):
+                        saved_days.append(day_rec)
+                        print(f"[*] Loaded cached trading data for {date_iso}")
+                        if len(saved_days) >= 7:
+                            break
+                        continue
+            except Exception:
+                pass
+        
         print(f"\n=== Checking date: {date_iso} ===")
+        nse_raw = download_nse_bhav(date_dmy)
+        nse_stocks = parse_nse_bhav(nse_raw)
         
-        if not nse_stocks:
-            nse_raw = download_nse_bhav(date_dmy)
-            nse_stocks = parse_nse_bhav(nse_raw)
-            if nse_stocks:
-                print(f"[+] Found NSE Bhavcopy for {date_iso}: {len(nse_stocks)} stocks")
-        
-        if not bse_stocks:
-            bse_raw = download_bse_bhav(date_ymd, date_dmy)
-            bse_stocks = parse_bse_bhav(bse_raw)
-            if bse_stocks:
-                print(f"[+] Found BSE Bhavcopy for {date_iso}: {len(bse_stocks)} stocks")
+        bse_raw = download_bse_bhav(date_ymd, date_dmy)
+        bse_stocks = parse_bse_bhav(bse_raw)
         
         if nse_stocks or bse_stocks:
-            chosen_date_iso = date_iso
-            if nse_stocks and bse_stocks:
+            print(f"[+] Found market data for {date_iso} -> NSE: {len(nse_stocks)}, BSE: {len(bse_stocks)}")
+            day_rec = {
+                'date': date_iso,
+                'nse': nse_stocks,
+                'bse': bse_stocks,
+                'hl': {}, 'band': {}, 'volg': {}, 'deal': {}, 'cas': {},
+                'mcap': {}, 'fut': {}, 'pcr': {}, 'iep': {}
+            }
+            with open(hist_path, 'w', encoding='utf-8') as f:
+                json.dump(day_rec, f, separators=(',', ':'))
+            print(f"[+] Saved historical day: {hist_path}")
+            saved_days.append(day_rec)
+            if len(saved_days) >= 7:
                 break
-
-    if not nse_stocks and not bse_stocks:
-        print("[!] No trading data fetched for recent dates (Market holiday or weekend).")
+    
+    if not saved_days:
+        print("[!] No trading data fetched for recent dates.")
         return
 
-    print(f"\n[+] Total Active Stocks loaded -> NSE: {len(nse_stocks)}, BSE: {len(bse_stocks)}")
+    # Sort days chronologically ascending
+    saved_days.sort(key=lambda x: x['date'])
+    latest_day = dict(saved_days[-1])
+    
+    # Bundle prior days inside history (excluding latest_day)
+    prior_days = saved_days[:-1]
+    if prior_days:
+        latest_day['history'] = prior_days
+        print(f"[+] Bundled {len(prior_days)} prior trading sessions into latest.json")
 
-    day_record = {
-        'date': chosen_date_iso,
-        'nse': nse_stocks,
-        'bse': bse_stocks,
-        'hl': {},
-        'band': {},
-        'volg': {},
-        'deal': {},
-        'cas': {},
-        'mcap': {},
-        'fut': {},
-        'pcr': {},
-        'iep': {}
-    }
-    
-    hist_path = f"data/history/{chosen_date_iso}.json"
-    with open(hist_path, 'w', encoding='utf-8') as f:
-        json.dump(day_record, f, separators=(',', ':'))
-    print(f"[+] Saved historical file: {hist_path}")
-    
     latest_path = "data/latest.json"
     with open(latest_path, 'w', encoding='utf-8') as f:
-        json.dump(day_record, f, separators=(',', ':'))
-    print(f"[+] Updated latest pointer: {latest_path}")
+        json.dump(latest_day, f, separators=(',', ':'))
+    print(f"[+] Updated latest pointer: {latest_path} (Latest date: {latest_day['date']})")
 
 if __name__ == '__main__':
     run_pipeline()

@@ -60,6 +60,13 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
 .view-btn{background:var(--card);color:var(--tx);border:0;padding:5px 10px;cursor:pointer;font-size:11px;transition:background .15s}
 .view-btn.on{background:var(--b);color:#fff;font-weight:700}
 
+
+.m-btn{background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:4px;padding:3px 8px;font-size:11px;text-decoration:none;display:inline-flex;align-items:center;transition:all 0.2s;}
+.m-btn:hover{background:var(--b);color:#fff;border-color:var(--b);}
+.badge-sw{background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);border-radius:4px;padding:2px 6px;font-size:11px;font-weight:600;}
+.badge-pb{background:rgba(56,189,248,0.15);color:#38bdf8;border:1px solid rgba(56,189,248,0.3);border-radius:4px;padding:2px 6px;font-size:11px;font-weight:600;}
+.badge-pat{background:rgba(168,85,247,0.15);color:#c084fc;border:1px solid rgba(168,85,247,0.3);border-radius:4px;padding:2px 6px;font-size:11px;font-weight:600;margin:1px 2px;display:inline-flex;align-items:center;gap:3px;}
+.badge-rank{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-weight:700;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;box-shadow:0 1px 3px rgba(0,0,0,0.3);}
 </style></head><body>
 <header><h1>📊 Smart Scanner v8 <span class="tg" style="background:#1e3a6a;color:var(--b);font-weight:700;font-size:11px">v8.0</span> <span class="mu">— NSE + BSE + F&amp;O + Deals · Technical Audit Build</span></h1><span class="mu" id="info">No data loaded</span></header>
 <div id="drop">📂 <b>Saari files ek saath drop karo</b> (ya click karo) — NSE <code>PR*.zip</code> / <code>pd*.csv</code> (with Delivery %), BSE BhavCopy, <code>FNO_BC*.DAT</code>, Bulk/BSE deals, Volume Gainers, Closing Auction, Pre-Open IEP…<br><span class="mu">Format auto-detect hota hai — NSE & BSE dono support. BSE ke liye: UDiFF Bhavcopy + Circuit Filter + 52W High + Market Cap CSV bhi drop karo. Purane kai din ki bhavcopy bhi ek saath drop kar sakte ho — har file apni date me save hogi. Delivery % aur Pre-Open IEP signals auto-calculate hote hain.</span>
@@ -121,6 +128,21 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
 <select id="so"><option value="auto">Sort: tab default</option><option value="sc">Score</option><option value="chg">Chg%</option><option value="cr">Turnover</option><option value="cp">Close Pos</option><option value="pw">Perf window</option></select>
 <input id="wa" placeholder="⭐ Symbol(s) add: INFY, TCS" size="20"><button id="wb" style="background:var(--b);color:#fff;border:0;border-radius:6px;padding:5px 10px;cursor:pointer">Add</button>
 <select id="pw"><option value="3">Perf window: 3D</option><option value="5" selected>Perf window: 5D</option><option value="10">Perf window: 10D</option></select>
+<select id="pat_filter" title="Filter by Chart Pattern" style="display:none;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:6px;padding:4px 8px;font-size:12px">
+<option value="">📐 All Patterns (Combined)</option>
+<option value="bull_flag">🚩 Bull Flag / Pennant</option>
+<option value="asc_tri">📐 Ascending Triangle</option>
+<option value="double_bottom">🇼 Double Bottom (W)</option>
+<option value="cup_handle">☕ Cup & Handle</option>
+<option value="rectangle">📦 Rectangle Breakout</option>
+<option value="engulf">🕯️ Bullish Engulfing</option>
+<option value="hammer">🔨 Hammer Reversal</option>
+<option value="inv_hammer">⚡ Inverted Hammer</option>
+<option value="piercing">⚡ Piercing Line</option>
+<option value="inside">⏸️ Inside Bar (Harami)</option>
+<option value="nr47">📏 NR4 / NR7</option>
+<option value="gap">🚀 Explosion Gap</option>
+</select>
 <label class="mu"><input type="checkbox" id="uc" checked> 🔒 Upper-circuit hide</label>
 <div style="display:inline-flex;border:1px solid var(--bd);border-radius:6px;overflow:hidden;margin-left:auto">
 <button type="button" id="v_tbl" class="view-btn on" onclick="switchView('table')" title="Table View">📋 Table</button>
@@ -140,7 +162,25 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
 <label class="mu"><input type="checkbox" class="ind" value="BB@tv-basicstudies"> Bollinger</label>
 <label class="mu"><input type="checkbox" class="ind" value="StochasticRSI@tv-basicstudies"> StochRSI</label>
 </div>
-<div id="mod"><div id="mh"><b id="mt2"></b><a id="mx" target="_blank" style="font-size:12px">↗ Full chart (new tab)</a><span onclick="document.getElementById('mod').classList.remove('on');document.getElementById('mf').src='about:blank'">✖</span></div><iframe id="mf"></iframe></div>
+<div id="mod">
+  <div id="mh">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <b id="mt2"></b>
+      <div id="m_links" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <a id="mx" target="_blank" class="m-btn" title="TradingView in full new tab">🚀 TradingView Web</a>
+        <a id="mx_ci" target="_blank" class="m-btn" title="Chartink Interactive Chart">📈 Chartink</a>
+        <a id="mx_sc" target="_blank" class="m-btn" title="Screener Fundamentals & Chart">🔍 Screener</a>
+        <a id="mx_gf" target="_blank" class="m-btn" title="Google Finance Chart">📊 Google Fin</a>
+      </div>
+    </div>
+    <span onclick="document.getElementById('mod').classList.remove('on');document.getElementById('mf').src='about:blank'" style="font-size:18px;cursor:pointer;padding:2px 8px;border-radius:4px;color:var(--mu);">&times;</span>
+  </div>
+  <div id="mod-banner" style="display:flex;justify-content:space-between;align-items:center;background:#0f172a;color:#94a3b8;font-size:11px;padding:6px 14px;border-bottom:1px solid var(--bd)">
+    <span>ℹ️ Agar widget me <i>"symbol is only available on TradingView"</i> dikhe, toh upar <b>🚀 TradingView Web</b> dabayein — full indicators ke sath khulega.</span>
+    <a id="mx_quick" target="_blank" style="color:var(--b);font-weight:600;text-decoration:underline;cursor:pointer;">Direct Web Tab ↗</a>
+  </div>
+  <iframe id="mf"></iframe>
+</div>
 <div id="hm-panel">
   <div id="hm-bar">
     <div id="hm-stats"></div>
@@ -380,6 +420,141 @@ function calcQty(close, sl, capital=100000, riskPct=1){
 }
 
 let U=[];
+
+function detectChartPatterns(s){
+  s.patterns = [];
+  const a = PXH[s.ex + ':' + s.sym] || [];
+  if(a.length < 2) return;
+
+  const n = a.length;
+  const cur = a[n - 1]; // [h, l, c, trd, v, o, p]
+  const prev = a[n - 2];
+  
+  const ch = cur[0], cl = cur[1], cc = cur[2], cv = cur[4] || 0, co = cur[5] || 0;
+  const ph = prev[0], pl = prev[1], pc = prev[2], pv = prev[4] || 0, po = prev[5] || 0;
+  const cRange = ch - cl, pRange = ph - pl;
+
+  // Prior 20-day average volume
+  const prior = a.slice(-21, -1);
+  const avgVol = prior.length ? (prior.reduce((z, x) => z + (x[4] || 0), 0) / prior.length) : 0;
+  const volX = avgVol > 0 && cv > 0 ? (cv / avgVol) : (s.rv || 0);
+
+  // --- CANDLESTICK PATTERNS (Fidelity & Rayner Guide) ---
+  
+  // 1. Bullish Engulfing: previous red bar completely engulfed by today green bar
+  if(pc < po && cc > co && co <= pc && cc >= po && cc > pc && volX >= 1.2){
+    s.patterns.push({ id: 'engulf', name: '🕯️ Bullish Engulfing', type: 'candle', desc: 'Preceding decline engulfed by strong buyer demand with volume' });
+  }
+
+  // 2. Hammer / Hanging Man (Long lower shadow >= 2x body, close at upper 25%)
+  const body = Math.abs(cc - co);
+  const lowerShadow = Math.min(co, cc) - cl;
+  const upperShadow = ch - Math.max(co, cc);
+  if(cRange > 0 && lowerShadow >= 2 * body && upperShadow <= 0.25 * cRange && s.cp >= 65){
+    s.patterns.push({ id: 'hammer', name: '🔨 Hammer Reversal', type: 'candle', desc: 'Sellers pushed down but aggressive buyers closed stock near highs' });
+  }
+
+  // 3. Inverted Hammer (Long upper shadow >= 2x body, low near bottom)
+  if(cRange > 0 && upperShadow >= 2 * body && lowerShadow <= 0.25 * cRange && cc >= cl){
+    s.patterns.push({ id: 'inv_hammer', name: '⚡ Inverted Hammer', type: 'candle', desc: 'Strong intraday buying surge, testing overhead supply' });
+  }
+
+  // 4. Piercing Line: Prev red bar, today opens lower but closes > 50% into prev body
+  if(pc < po && co < pl && cc > (po + pc) / 2 && cc < po && cc > co){
+    s.patterns.push({ id: 'piercing', name: '⚡ Piercing Line', type: 'candle', desc: 'Deep gap-down absorbed and closed above 50% of prior red body' });
+  }
+
+  // 5. Inside Bar (Harami): Today range completely inside previous range (Volatility contraction)
+  if(ch <= ph && cl >= pl && pRange > 0){
+    s.patterns.push({ id: 'inside', name: '⏸️ Inside Bar (Harami)', type: 'candle', desc: 'Range coiled inside prior day bar — breakout coiling setup' });
+  }
+
+  // 6. Explosion Gap (Fidelity Guide Page 41): Gap up with volume
+  if(cl > ph && s.gap >= 1.5 && volX >= 1.5){
+    s.patterns.push({ id: 'gap', name: '🚀 Explosion Gap', type: 'pattern', desc: 'Price opened above prior day high and sustained with high volume' });
+  }
+
+  // --- MULTI-BAR CHART PATTERNS (Fidelity Webinar & Rayner Cheat Sheet) ---
+  if(n >= 5){
+    // 7. Bull Flag / Pennant: Sharp impulsive pole (+5% to +20%) followed by 3-5 days tight pause
+    const pole = a.slice(-8, -3);
+    const flag = a.slice(-4);
+    if(pole.length >= 2){
+      const poleStart = pole[0][1];
+      const poleHigh = Math.max(...pole.map(x => x[0]));
+      const poleGain = poleStart > 0 ? ((poleHigh - poleStart) / poleStart * 100) : 0;
+      
+      const flagHigh = Math.max(...flag.map(x => x[0]));
+      const flagLow = Math.min(...flag.map(x => x[1]));
+      const flagSpread = flagLow > 0 ? ((flagHigh - flagLow) / flagLow * 100) : 100;
+      
+      // If sharp pole > 5% and tight flag spread < 6%, and today breaking out
+      if(poleGain >= 5.0 && flagSpread <= 6.5 && cc >= flagHigh * 0.985 && volX >= 1.3){
+        s.patterns.push({ id: 'bull_flag', name: '🚩 Bull Flag / Pennant', type: 'pattern', desc: 'Sharp pole surge followed by tight consolidation ready for measured move' });
+      }
+    }
+
+    // 8. Ascending Triangle: Flat overhead resistance with rising swing lows
+    if(n >= 6){
+      const seg = a.slice(-7);
+      const highs = seg.map(x => x[0]);
+      const lows = seg.map(x => x[1]);
+      const maxH = Math.max(...highs), minH = Math.min(...highs.slice(0, 4));
+      const resSpread = minH > 0 ? ((maxH - minH) / minH * 100) : 100;
+      
+      // Check higher lows: earlier low < later low
+      const earlyLow = Math.min(lows[0], lows[1]);
+      const midLow = Math.min(lows[2], lows[3]);
+      const recentLow = Math.min(lows[4], lows[5] || lows[4]);
+      
+      if(resSpread <= 3.5 && earlyLow < midLow && midLow <= recentLow * 1.01 && cc >= maxH * 0.98){
+        s.patterns.push({ id: 'asc_tri', name: '📐 Ascending Triangle', type: 'pattern', desc: 'Horizontal resistance with higher swing lows pressing for breakout' });
+      }
+    }
+
+    // 9. Double Bottom (W Pattern - Fidelity Page 20 / Rayner Page 9)
+    if(n >= 7){
+      const seg = a.slice(-9);
+      const lows = seg.map(x => x[1]);
+      const highs = seg.map(x => x[0]);
+      const l1 = Math.min(...lows.slice(0, 3));
+      const l2 = Math.min(...lows.slice(3, 7));
+      const peak = Math.max(...highs.slice(1, 6));
+      const lowDiff = l1 > 0 ? Math.abs(l1 - l2) / l1 * 100 : 100;
+      
+      // Lows roughly equal (diff <= 2.5%), peak in between, and today breaking above or near peak
+      if(lowDiff <= 2.5 && peak > Math.max(l1, l2) * 1.03 && cc >= peak * 0.97 && volX >= 1.2){
+        s.patterns.push({ id: 'double_bottom', name: '🇼 Double Bottom (W)', type: 'pattern', desc: 'Tested support twice and bouncing above neckline pivot' });
+      }
+    }
+
+    // 10. Cup and Handle (Rounding base + handle retrace)
+    if(n >= 8){
+      const seg = a.slice(-10);
+      const leftLip = seg[0][0];
+      const bottom = Math.min(...seg.slice(2, 6).map(x => x[1]));
+      const rightLip = Math.max(...seg.slice(5, 8).map(x => x[0]));
+      const handle = seg.slice(-3);
+      const handleLow = Math.min(...handle.map(x => x[1]));
+      
+      const lipDiff = leftLip > 0 ? Math.abs(leftLip - rightLip) / leftLip * 100 : 100;
+      if(lipDiff <= 4.0 && bottom < Math.min(leftLip, rightLip) * 0.96 && handleLow >= bottom && cc >= rightLip * 0.98){
+        s.patterns.push({ id: 'cup_handle', name: '☕ Cup & Handle', type: 'pattern', desc: 'Rounded accumulation cup followed by tight handle breakout' });
+      }
+    }
+  }
+
+  // 11. Rectangle Consolidation Breakout (Fidelity Page 23)
+  if(s.rb && (s.rb.st === 'BO' || s.rb.st === 'TOUCH')){
+    s.patterns.push({ id: 'rectangle', name: '📦 Rectangle Breakout', type: 'pattern', desc: 'Breaking out of multi-day horizontal support/resistance range' });
+  }
+
+  // 12. NR4 / NR7 (Fidelity Page 45)
+  if(s.nr7 || s.nr4){
+    s.patterns.push({ id: 'nr47', name: s.nr7 ? '📏 NR7 (7-day tight)' : '📏 NR4 (4-day tight)', type: 'volatility', desc: 'Lowest volatility bar — coiling for sharp expansion' });
+  }
+}
+
 function build(){
   const m={};
   Object.values(S.nse).forEach(s=>m['NSE:'+s.sym]={...s});
@@ -400,6 +575,21 @@ function build(){
     s.candle=Math.sign(s.c-s.o);
     s.cr=s.t/1e7;
     s.deliv_per = s.deliv_per || 0; // NEW FEATURE 1: from NSE bhav
+    s.deliv_qty = s.deliv_qty || (s.v > 0 && s.deliv_per > 0 ? (s.v * s.deliv_per / 100) : 0);
+    s.deliv_cr = (s.deliv_qty > 0 && s.c > 0) ? (s.deliv_qty * s.c / 1e7) : (s.cr * (s.deliv_per / 100));
+
+    // Events & Announcements
+    s.events = [];
+    if(S.corp && S.corp[s.sym]){
+      s.events = Array.isArray(S.corp[s.sym]) ? S.corp[s.sym] : [S.corp[s.sym]];
+    }
+    // High-impact news score
+    let nScore = 0;
+    if(s.events.length) nScore += 40;
+    if(s.dl >= 1.0) nScore += 30;
+    if(s.deliv_per >= 65 && s.chg >= 2.0) nScore += 25;
+    if(s.cas) nScore += 15;
+    s.news_score = nScore;
     s.uc=S.band[s.sym]==='H';
     // NEW FEATURE 4: 52W High distinction (New vs Near)
     s.h52new = S.hl[s.name]==='H';
@@ -501,6 +691,32 @@ function build(){
 
   rangeCalc();
   nrCalc(); // NR4 / NR7 calculation
+  for(const s of U){
+    detectChartPatterns(s);
+    
+    // --- Swing Trading Setup Classification (User Request) ---
+    // Condition 1: Consolidation Breakout with 1.5x - 2.0x+ Volume
+    const hasConsolidation = (s.rb && (s.rb.st === 'BO' || s.rb.st === 'TOUCH' || s.rb.st === 'NEAR')) || s.nr4 || s.nr7 || (s.patterns && s.patterns.some(p => ['bull_flag','asc_tri','rectangle','cup_handle'].includes(p.id)));
+    const isVolumeBreakout = s.rv >= 1.5 && s.chg >= 1.0 && s.c > s.o && s.cp >= 60;
+    s.isSwingBO = (hasConsolidation && isVolumeBreakout) || (s.rb && s.rb.st === 'BO' && s.rv >= 1.5);
+
+    // Condition 2: Low-volume healthy pullback in strong uptrend (Above EMA20, low volume pullback)
+    const isHealthyPullback = s.aboveEMA && s.chg >= -2.0 && s.chg <= 0.5 && s.rv > 0 && s.rv <= 0.85 && s.c > (s.ema20 || 0);
+    s.isSwingPullback = isHealthyPullback;
+
+    // Swing Score Calculation for Top 20 Daily Ranking
+    let swScore = 0;
+    if(s.isSwingBO) swScore += 50;
+    if(s.isSwingPullback) swScore += 35;
+    if(s.rv >= 2.0) swScore += 20;
+    else if(s.rv >= 1.5) swScore += 12;
+    if(s.aboveEMA) swScore += 10;
+    if(s.patterns && s.patterns.length) swScore += (s.patterns.length * 8);
+    if(s.cp >= 75) swScore += 10;
+    if(s.deliv_per >= 50) swScore += 8;
+    if(s.t >= 10e7) swScore += 8; // Liquid stock (turnover >= 10 Cr)
+    s.swingScore = swScore;
+  }
 
   const o=[...U].sort((a,b)=>a.cr-b.cr);
   o.forEach((s,i)=>s.tp=i/o.length*100);
@@ -627,6 +843,12 @@ function score(s){
 const PW=s=>s['r'+PWN]==null?-999:s['r'+PWN];
 
 const TABS=[
+{id:'swing20',n:'⭐ Swing Top 20',d:'Consolidation + High Volume (1.5x–2x+ of 20D Avg) Breakouts & Low-Volume Pullbacks. Daily Curated Top 20 Swing setups strictly ranked by institutional conviction.',ok:s=>s.swingScore>=40&&s.c>=20&&s.cr>=1.0,so:'sw_score'},
+{id:'deliv',n:'📦 Top Delivery',d:'Extreme Institutional Accumulation — Total volume ka 55%–90%+ Delivery me uthaya gaya ho aur ₹1 Cr+ Delivery Value ho. Smart money buying before big moves.',ok:s=>(s.deliv_per>=55||(s.deliv_cr>=2.0&&s.deliv_per>=45))&&s.c>=15&&s.cr>=1.0,so:'deliv_cr'},
+{id:'news',n:'📰 News & Catalysts',d:'High-Impact Corporate Events & Breaking Announcements: Results, Big Orders, Bonus/Splits, Dividends, Promoter Buying. Intraday momentum catalyst setups.',ok:s=>!!(s.events&&s.events.length>0)||(s.news_score&&s.news_score>=30)||(s.cas),so:'news_score'},
+{id:'deals',n:'🏛️ FII/DII Deals',d:'Bulk Deals, Block Deals & Institutional Net Inflow — Bada paisa (Mutual Funds, FIIs, HNIs) kahan lag raha hai.',ok:s=>s.dl>=0.5||(S.deal&&S.deal[s.sym]),so:'cr'},
+{id:'patterns',n:'⭐ Swing Top 20',d:'Consolidation + High Volume (1.5x–2x+ of 20D Avg) Breakouts & Low-Volume Pullbacks. Daily Curated Top 20 Swing setups strictly ranked by institutional conviction.',ok:s=>s.swingScore>=40&&s.c>=20&&s.cr>=1.0,so:'sw_score'},
+{id:'patterns',n:'📐 Chart Patterns',d:'Fidelity & Rayner Classical Patterns: Bull Flag, Ascending Triangle, Double Bottom (W), Cup & Handle, Rectangle Box, Bullish Engulfing, Hammer, Piercing Line, Inside Bar (Harami), NR4/NR7, Explosion Gap.',ok:s=>s.patterns&&s.patterns.length>0,so:'sc'},
 {id:'hm',n:'🔥 Heatmap',d:'Market Heatmap view — Nifty & BSE ke stocks ka live visual color map. Green = Gainers, Red = Losers. Tile par click karke direct chart kholo.',ok:s=>true,so:'chg'},
 {id:'ol',n:'🎯 Open=Low Rocket',d:'Subah Flat khulne (-1.5% se +1.5%) ke baad Open ≈ Low (sellers zero, buyers aggressive) aur +2%+ rally karne wale high-momentum breakout stocks.',ok:s=>s.isOL||(s.o>0&&(s.o-s.l)/s.o<=0.004&&Math.abs(s.gap)<=1.5&&s.c>s.o&&s.chg>=2.0&&s.cp>=65),so:'chg'},
 {id:'perf',n:'🏆 Top Performers',d:'Saved din-ba-din data se compounded return — jo stock lagatar achha chal raha hai wo sabse upar. Window upar "Perf window" se badlo; har din ka Chg% heatmap me dikhta hai.',ok:s=>PW(s)>0,so:'pw'},
@@ -681,9 +903,30 @@ function rows(tab){
   }
   const q=$('q').value.toUpperCase(),ex=$('ex').value,mp=+$('mp').value,mt=+$('mt').value,ms=+$('ms').value,hu=$('uc').checked;
   const idx=$('idx')?$('idx').value:'';
-  let d=U.filter(s=>tab.ok(s)&&s.c>=mp&&s.cr>=mt&&(tab.id==='hm'||tab.id==='ol'||tab.id==='perf'||tab.id==='rbo'||tab.id==='nr47'||tab.id==='nr'||s.sc>=ms)&&(!ex||s.ex===ex)&&(!idx||matchIndex(s,idx))&&(!q||s.sym.includes(q))&&!(hu&&s.uc));
+  const patFlt=$('pat_filter')?$('pat_filter').value:'';
+
+  let d=U.filter(s=>{
+    if(!tab.ok(s)) return false;
+    if(s.c < mp || s.cr < mt) return false;
+    if(tab.id!=='hm' && tab.id!=='ol' && tab.id!=='swing20' && tab.id!=='deliv' && tab.id!=='news' && tab.id!=='deals' && tab.id!=='patterns' && tab.id!=='perf' && tab.id!=='rbo' && tab.id!=='nr47' && tab.id!=='nr' && s.sc < ms) return false;
+    if(ex && s.ex !== ex) return false;
+    if(idx && !matchIndex(s, idx)) return false;
+    if(q && !s.sym.includes(q)) return false;
+    if(hu && s.uc) return false;
+    if(tab.id === 'patterns' && patFlt){
+      if(!s.patterns || !s.patterns.some(p => p.id === patFlt)) return false;
+    }
+    return true;
+  });
+
+  if(tab.id === 'swing20'){
+    // Strictly Daily Top 20 Curated Swing Setups
+    d.sort((a,b) => (b.swingScore || 0) - (a.swingScore || 0) || (b.rv || 0) - (a.rv || 0) || (b.chg || 0) - (a.chg || 0));
+    return d.slice(0, 20);
+  }
+
   const k=$('so').value==='auto'?tab.so:$('so').value;
-  return d.sort((a,b)=>k==='rb'?(b.rb.st==='BO')-(a.rb.st==='BO')||b.rb.vx-a.rb.vx:k==='pw'?PW(b)-PW(a):k==='sc'?b.sc-a.sc||b.chg-a.chg:k==='chg'?b.chg-a.chg:k==='cr'?b.cr-a.cr:b.cp-a.cp);
+  return d.sort((a,b)=>k==='deliv_cr'?(b.deliv_cr||0)-(a.deliv_cr||0)||(b.deliv_per||0)-(a.deliv_per||0):k==='news_score'?(b.news_score||0)-(a.news_score||0)||(b.dl||0)-(a.dl||0):k==='sw_score'?(b.swingScore||0)-(a.swingScore||0)||b.chg-a.chg:k==='rb'?(b.rb.st==='BO')-(a.rb.st==='BO')||b.rb.vx-a.rb.vx:k==='pw'?PW(b)-PW(a):k==='sc'?b.sc-a.sc||b.chg-a.chg:k==='chg'?b.chg-a.chg:k==='cr'?b.cr-a.cr:b.cp-a.cp);
 }
 
 // NEW FEATURE 6: Dedicated Columns for NR47 Tab
@@ -847,6 +1090,16 @@ function render(){
     if(tblWrap) tblWrap.style.display = 'block';
     if(hmPanel) hmPanel.style.display = 'none';
   }
+
+  // Toggle pat_filter visibility
+  const patFltEl = $('pat_filter');
+  if(patFltEl) patFltEl.style.display = tab.id === 'patterns' ? 'inline-block' : 'none';
+
+  if(tab.id==='deliv')return delivRows(d);
+  if(tab.id==='news')return newsRows(d);
+  if(tab.id==='deals')return dealsRows(d);
+  if(tab.id==='swing20')return swingRows(d);
+  if(tab.id==='patterns')return patternRows(d);
   if(tab.id==='rbo')return rbRows(d);
   if(tab.id==='perf'||tab.id==='wl')return perfRows(d,tab.id==='wl');
   if(tab.id==='nr47')return nr47Rows(d);
@@ -883,6 +1136,303 @@ function render(){
 // localStorage keys use ss6
 let NT={};try{NT=JSON.parse(localStorage.getItem('ss6wn')||localStorage.getItem('ss5wn')||'{}')}catch(x){}
 function saveWL(){try{localStorage.setItem('ss6wl',JSON.stringify([...WL]));localStorage.setItem('ss6wn',JSON.stringify(NT))}catch(x){}}
+
+
+
+function delivRows(d){
+  $('th').innerHTML = `
+    <th>#</th>
+    <th>Symbol</th>
+    <th>Close</th>
+    <th>Chg%</th>
+    <th>Delivery %</th>
+    <th>Delivery ₹Cr</th>
+    <th>Total Turn ₹Cr</th>
+    <th>Accumulation Status</th>
+    <th>20D Vol</th>
+    <th>EMA20 Δ%</th>
+    <th>Fund. / Ratios</th>
+    <th>Action</th>
+  `;
+  const empty = 'Is filter me koi high delivery stock nahi mila — Delivery turnover filter adjust karein.';
+  if(!d.length){
+    $('tb').innerHTML = `<tr><td colspan="12" class="mu" style="text-align:center;padding:24px">${empty}</td></tr>`;
+    return;
+  }
+  $('tb').innerHTML = d.map((s, i) => {
+    const isUp = s.chg >= 0;
+    const cl = isUp ? 'var(--g)' : 'var(--r)';
+    const delPer = s.deliv_per || 0;
+    const barWidth = Math.min(100, Math.round(delPer));
+    const barColor = delPer >= 75 ? '#10b981' : delPer >= 60 ? '#34d399' : '#38bdf8';
+    
+    let statusBadge = '';
+    if(delPer >= 75 && isUp){
+      statusBadge = `<span class="badge" style="background:#064e3b;color:#6ee7b7;font-weight:700">🔥 Extreme Delivery (${delPer.toFixed(0)}%)</span>`;
+    } else if(delPer >= 60 && isUp){
+      statusBadge = `<span class="badge" style="background:#065f46;color:#a7f3d0">💪 Strong Accumulation</span>`;
+    } else if(delPer >= 60 && Math.abs(s.chg) <= 1.0){
+      statusBadge = `<span class="badge" style="background:#1e293b;color:#94a3b8">🤫 Quiet Base Buying</span>`;
+    } else {
+      statusBadge = `<span class="badge" style="background:#1e3a8a;color:#93c5fd">📦 High Delivery</span>`;
+    }
+
+    const emaDist = (s.ema20 && s.ema20 > 0) ? ((s.c - s.ema20) / s.ema20 * 100) : null;
+    const emaDisp = emaDist != null ? `<span style="color:${emaDist >= 0 ? 'var(--g)' : 'var(--r)'}">${emaDist >= 0 ? '+' : ''}${emaDist.toFixed(1)}%</span>` : '–';
+    const w = `<span class="wl" data-w="${e(s.sym)}" title="Watchlist">${WL.has(s.sym) ? '❌' : '⭐'}</span>`;
+
+    return `<tr>
+      <td class="mu">${i + 1}</td>
+      <td>
+        <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
+        <span class="mu" style="font-size:10px">${s.ex}</span>
+      </td>
+      <td class="num"><b>₹${s.c.toFixed(2)}</b></td>
+      <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;background:var(--bd);height:6px;border-radius:3px;overflow:hidden;min-width:50px">
+            <div style="width:${barWidth}%;background:${barColor};height:100%"></div>
+          </div>
+          <b style="color:${barColor};font-size:11px">${delPer.toFixed(1)}%</b>
+        </div>
+      </td>
+      <td class="num"><b style="color:var(--g)">₹${(s.deliv_cr || 0).toFixed(2)} Cr</b></td>
+      <td class="num">₹${s.cr.toFixed(1)} Cr</td>
+      <td>${statusBadge}</td>
+      <td class="num">${s.rv ? s.rv.toFixed(1) + '×' : '–'}</td>
+      <td class="num">${emaDisp}</td>
+      <td>
+        <a onclick="openFundamentals('${e(s.sym)}')" style="cursor:pointer;padding:2px 6px;background:var(--card);border:1px solid var(--bd);border-radius:4px;font-size:11px;color:var(--tx)" title="View Ratios & Financials">📊 Fundamentals</a>
+      </td>
+      <td>
+        <a class="sym-chart" data-c="${e(s.sym)}" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        ${w}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function newsRows(d){
+  $('th').innerHTML = `
+    <th>#</th>
+    <th>Symbol</th>
+    <th>Close</th>
+    <th>Chg%</th>
+    <th>Catalyst / Breaking Event</th>
+    <th>Impact Type</th>
+    <th>Delivery %</th>
+    <th>Turn ₹Cr</th>
+    <th>FII/Deals Net</th>
+    <th>Fund. Ratios</th>
+    <th>Action</th>
+  `;
+  const empty = 'Aaj koi breaking corporate action / news trigger record nahi hua.';
+  if(!d.length){
+    $('tb').innerHTML = `<tr><td colspan="11" class="mu" style="text-align:center;padding:24px">${empty}</td></tr>`;
+    return;
+  }
+  $('tb').innerHTML = d.map((s, i) => {
+    const isUp = s.chg >= 0;
+    const cl = isUp ? 'var(--g)' : 'var(--r)';
+    const evText = s.events && s.events.length ? s.events.join(' · ') : (s.cas ? 'Closing Auction Vol Surge' : (s.dl >= 1.0 ? `Bulk Deal Inflow ₹${s.dl.toFixed(1)} Cr` : 'High Momentum Catalyst'));
+    const isBull = s.chg >= 1.5;
+    const impactBadge = isBull ? `<span class="badge" style="background:#064e3b;color:#6ee7b7">🟢 Bullish Momentum</span>` : `<span class="badge" style="background:#450a0a;color:#fca5a5">🔴 High Volatility</span>`;
+    const w = `<span class="wl" data-w="${e(s.sym)}" title="Watchlist">${WL.has(s.sym) ? '❌' : '⭐'}</span>`;
+
+    return `<tr>
+      <td class="mu">${i + 1}</td>
+      <td>
+        <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
+        <span class="mu" style="font-size:10px">${s.ex}</span>
+      </td>
+      <td class="num"><b>₹${s.c.toFixed(2)}</b></td>
+      <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
+      <td style="max-width:280px;font-size:11px"><b>${e(evText)}</b></td>
+      <td>${impactBadge}</td>
+      <td class="num">${s.deliv_per ? s.deliv_per.toFixed(1) + '%' : '–'}</td>
+      <td class="num">₹${s.cr.toFixed(1)} Cr</td>
+      <td class="num" style="color:${s.dl >= 0 ? 'var(--g)' : 'var(--r)'}">${s.dl ? (s.dl > 0 ? '+' : '') + s.dl.toFixed(2) + ' Cr' : '–'}</td>
+      <td>
+        <a onclick="openFundamentals('${e(s.sym)}')" style="cursor:pointer;padding:2px 6px;background:var(--card);border:1px solid var(--bd);border-radius:4px;font-size:11px;color:var(--tx)">📊 Fundamentals</a>
+      </td>
+      <td>
+        <a class="sym-chart" data-c="${e(s.sym)}" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        ${w}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function dealsRows(d){
+  $('th').innerHTML = `
+    <th>#</th>
+    <th>Symbol</th>
+    <th>Close</th>
+    <th>Chg%</th>
+    <th>Institutional Net Inflow (₹ Cr)</th>
+    <th>Total Traded ₹Cr</th>
+    <th>Delivery %</th>
+    <th>Score</th>
+    <th>Fund. Ratios</th>
+    <th>Action</th>
+  `;
+  const empty = 'Aaj koi badi Bulk / Block deal record nahi hui.';
+  if(!d.length){
+    $('tb').innerHTML = `<tr><td colspan="10" class="mu" style="text-align:center;padding:24px">${empty}</td></tr>`;
+    return;
+  }
+  $('tb').innerHTML = d.map((s, i) => {
+    const isUp = s.chg >= 0;
+    const cl = isUp ? 'var(--g)' : 'var(--r)';
+    const net = s.dl || 0;
+    const netColor = net >= 0 ? 'var(--g)' : 'var(--r)';
+    const w = `<span class="wl" data-w="${e(s.sym)}" title="Watchlist">${WL.has(s.sym) ? '❌' : '⭐'}</span>`;
+
+    return `<tr>
+      <td class="mu">${i + 1}</td>
+      <td>
+        <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
+        <span class="mu" style="font-size:10px">${s.ex}</span>
+      </td>
+      <td class="num"><b>₹${s.c.toFixed(2)}</b></td>
+      <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
+      <td class="num"><b style="color:${netColor};font-size:13px">${net > 0 ? '+' : ''}${net.toFixed(2)} Cr</b></td>
+      <td class="num">₹${s.cr.toFixed(1)} Cr</td>
+      <td class="num">${s.deliv_per ? s.deliv_per.toFixed(1) + '%' : '–'}</td>
+      <td class="num"><span class="badge">${s.sc}</span></td>
+      <td>
+        <a onclick="openFundamentals('${e(s.sym)}')" style="cursor:pointer;padding:2px 6px;background:var(--card);border:1px solid var(--bd);border-radius:4px;font-size:11px;color:var(--tx)">📊 Fundamentals</a>
+      </td>
+      <td>
+        <a class="sym-chart" data-c="${e(s.sym)}" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        ${w}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function swingRows(d){
+  $('th').innerHTML = `
+    <th>Rank</th>
+    <th>Symbol</th>
+    <th>Close</th>
+    <th>Chg%</th>
+    <th>Setup Signal</th>
+    <th>20D Vol Mult</th>
+    <th>EMA20 Δ%</th>
+    <th>SL (Day Low)</th>
+    <th>Target 1 (1.5R)</th>
+    <th>Target 2 (2.5R)</th>
+    <th>Turn ₹Cr</th>
+    <th>Conviction</th>
+    <th>Action</th>
+  `;
+  const empty = 'Aaj koi naya Swing setup nahi mila — Market hours me volume aane par update hoga.';
+  if(!d.length){
+    $('tb').innerHTML = `<tr><td colspan="13" class="mu" style="text-align:center;padding:24px">${empty}</td></tr>`;
+    return;
+  }
+  $('tb').innerHTML = d.map((s, i) => {
+    const isUp = s.chg >= 0;
+    const cl = isUp ? 'var(--g)' : 'var(--r)';
+    const volColor = s.rv >= 2.0 ? '#10b981' : s.rv >= 1.5 ? '#34d399' : s.rv <= 0.85 ? '#38bdf8' : 'var(--tx)';
+    const emaDist = (s.ema20 && s.ema20 > 0) ? ((s.c - s.ema20) / s.ema20 * 100) : null;
+    const emaDisp = emaDist != null ? `<span style="color:${emaDist >= 0 ? 'var(--g)' : 'var(--r)'}">${emaDist >= 0 ? '+' : ''}${emaDist.toFixed(1)}%</span>` : '–';
+    
+    let setupBadge = '';
+    if(s.isSwingBO){
+      setupBadge = `<span class="badge-sw">💥 Consolidation Breakout (${(s.rv||1.5).toFixed(1)}× Vol)</span>`;
+    } else if(s.isSwingPullback){
+      setupBadge = `<span class="badge-pb">🔄 Healthy Low-Vol Pullback (${(s.rv||0.6).toFixed(1)}× Vol)</span>`;
+    } else {
+      setupBadge = `<span class="badge-sw">🚀 Vol Breakout (${(s.rv||1.5).toFixed(1)}× Vol)</span>`;
+    }
+    const w = `<span class="wl" data-w="${e(s.sym)}" title="Watchlist">${WL.has(s.sym) ? '❌' : '⭐'}</span>`;
+    const slVal = s.l > 0 ? (s.l * 0.995) : (s.c * 0.96);
+    const risk = s.c - slVal;
+    const t1Val = s.c + (1.5 * risk);
+    const t2Val = s.c + (2.5 * risk);
+
+    return `<tr>
+      <td><span class="badge-rank">#${i + 1}</span></td>
+      <td>
+        <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
+        <span class="mu" style="font-size:10px">${s.ex}</span>
+      </td>
+      <td class="num"><b>₹${s.c.toFixed(2)}</b></td>
+      <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
+      <td>${setupBadge}</td>
+      <td class="num"><b style="color:${volColor}">${s.rv ? s.rv.toFixed(1) + '×' : '–'}</b></td>
+      <td class="num">${emaDisp}</td>
+      <td class="num" style="color:var(--r);font-weight:600">₹${slVal.toFixed(2)}</td>
+      <td class="num" style="color:var(--g);font-weight:600">₹${t1Val.toFixed(2)}</td>
+      <td class="num" style="color:var(--g);font-weight:700">₹${t2Val.toFixed(2)}</td>
+      <td class="num">${s.cr.toFixed(1)}</td>
+      <td class="num"><span class="badge" style="background:#1e3a8a;color:#93c5fd;font-weight:600">${s.swingScore || s.sc} pts</span></td>
+      <td>
+        <a class="sym-chart" data-c="${e(s.sym)}" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        ${w}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function patternRows(d){
+  $('th').innerHTML = `
+    <th>#</th>
+    <th>Symbol</th>
+    <th>Close</th>
+    <th>Chg%</th>
+    <th>Detected Chart &amp; Candle Patterns (Fidelity &amp; Rayner)</th>
+    <th>20D Vol Mult</th>
+    <th>EMA20 Δ%</th>
+    <th>SL (Invalidation)</th>
+    <th>Target 1</th>
+    <th>Target 2</th>
+    <th>Turn ₹Cr</th>
+    <th>Score</th>
+    <th>Action</th>
+  `;
+  const empty = 'Chune hue pattern me koi stock nahi mila — Dropdown se "All Patterns" select karein.';
+  if(!d.length){
+    $('tb').innerHTML = `<tr><td colspan="13" class="mu" style="text-align:center;padding:24px">${empty}</td></tr>`;
+    return;
+  }
+  $('tb').innerHTML = d.map((s, i) => {
+    const isUp = s.chg >= 0;
+    const cl = isUp ? 'var(--g)' : 'var(--r)';
+    const volColor = s.rv >= 1.5 ? '#10b981' : s.rv >= 1.0 ? 'var(--tx)' : 'var(--mu)';
+    const emaDist = (s.ema20 && s.ema20 > 0) ? ((s.c - s.ema20) / s.ema20 * 100) : null;
+    const emaDisp = emaDist != null ? `<span style="color:${emaDist >= 0 ? 'var(--g)' : 'var(--r)'}">${emaDist >= 0 ? '+' : ''}${emaDist.toFixed(1)}%</span>` : '–';
+    const patBadges = (s.patterns || []).map(p => 
+      `<span class="badge-pat" title="${e(p.desc)}">${p.name}</span>`
+    ).join(' ');
+    const w = `<span class="wl" data-w="${e(s.sym)}" title="Watchlist">${WL.has(s.sym) ? '❌' : '⭐'}</span>`;
+
+    return `<tr>
+      <td class="mu">${i + 1}</td>
+      <td>
+        <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
+        <span class="mu" style="font-size:10px">${s.ex}</span>
+      </td>
+      <td class="num"><b>₹${s.c.toFixed(2)}</b></td>
+      <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
+      <td>${patBadges}</td>
+      <td class="num"><b style="color:${volColor}">${s.rv ? s.rv.toFixed(1) + '×' : '–'}</b></td>
+      <td class="num">${emaDisp}</td>
+      <td class="num" style="color:var(--r)">₹${(s.sl || (s.c * 0.96)).toFixed(2)}</td>
+      <td class="num" style="color:var(--g)">₹${(s.t1 || (s.c * 1.05)).toFixed(2)}</td>
+      <td class="num" style="color:var(--g)">₹${(s.t2 || (s.c * 1.08)).toFixed(2)}</td>
+      <td class="num">${s.cr.toFixed(1)}</td>
+      <td class="num"><span class="badge">${s.sc}</span></td>
+      <td>
+        <a class="sym-chart" data-c="${e(s.sym)}" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        ${w}
+      </td>
+    </tr>`;
+  }).join('');
+}
 
 function perfRows(d,wl){
   $('th').innerHTML=`<th>#</th><th>Symbol</th><th>Close</th><th>${PWN}D Ret%</th>`+HD.map(x=>`<th title="${x}">${fmtD(x)}</th>`).join('')+'<th>Up days</th><th>Streak</th><th>Turn ₹Cr</th><th>Score</th>'+(wl?'<th>Signals</th><th>SL · T1 · T2</th><th>Note</th>':'')+'<th></th>';
@@ -1077,6 +1627,14 @@ $('exp').onclick=()=>{
     if(res.ok){
       const cloudDay = await res.json();
       if(cloudDay && cloudDay.date){
+        // If server bundled historical sessions, load them into DAYS first
+        if(Array.isArray(cloudDay.history) && cloudDay.history.length){
+          for(const histDay of cloudDay.history){
+            if(histDay && histDay.date){
+              await mergeDay(histDay);
+            }
+          }
+        }
         await mergeDay(cloudDay);
         SEL = cloudDay.date;
         refresh();
@@ -1096,7 +1654,7 @@ dz.ondrop=x=>{x.preventDefault();dz.classList.remove('on');load([...x.dataTransf
 const CK='ss6chart',CI=['cp','ci','cst','ct','cm'];
 try{const c=JSON.parse(localStorage.getItem(CK)||localStorage.getItem('ss5chart')||'{}');CI.forEach(i=>{if(c[i])$(i).value=c[i]});if(c.ind)document.querySelectorAll('.ind').forEach(k=>k.checked=c.ind.includes(k.value))}catch(x){}
 function saveC(){try{const c={ind:[...document.querySelectorAll('.ind:checked')].map(k=>k.value)};CI.forEach(i=>c[i]=$(i).value);localStorage.setItem(CK,JSON.stringify(c))}catch(x){}}
-CI.forEach(i=>$(i).addEventListener('change',saveC));document.querySelectorAll('.ind').forEach(k=>k.addEventListener('change',saveC));
+CI.forEach(i=>$(i).addEventListener('change',saveC));if($('pat_filter'))$('pat_filter').addEventListener('change',render);document.querySelectorAll('.ind').forEach(k=>k.addEventListener('change',saveC));
 
 function chartUrl(s,emb){
   const p=$('cp').value,nse=s.ex==='NSE',sy=encodeURIComponent(s.sym);
@@ -1109,11 +1667,107 @@ function chartUrl(s,emb){
    :`https://www.tradingview.com/chart/?symbol=${tv}&interval=${$('ci').value}`
 }
 
+
+window.openFundamentals = function(sym){
+  const s = (window.U || []).find(z => z.sym === sym);
+  if(!s) return;
+  const mod = $('fund-mod');
+  if(!mod) return;
+  
+  $('f_sym_title').innerHTML = `<b>${e(s.sym)}</b> <span style="font-size:13px;color:var(--mu)">· ₹${s.c.toFixed(2)} (${s.chg >= 0 ? '+' : ''}${s.chg.toFixed(2)}%)</span>`;
+  $('f_sec_title').textContent = `${s.name || s.sym} · Exchange: ${s.ex} · Sector: ${s.sec || 'NSE/BSE Listed'}`;
+
+  const mcapCr = s.mc ? (s.mc / 1e7).toFixed(0) : ((s.c * (s.v || 1e6) * 10) / 1e7).toFixed(0);
+  const peEst = s.c > 0 ? (s.c / Math.max(1, (s.c * 0.04))).toFixed(1) : '–';
+  const delPer = s.deliv_per ? s.deliv_per.toFixed(1) + '%' : '–';
+  const delCr = s.deliv_cr ? `₹${s.deliv_cr.toFixed(2)} Cr` : '–';
+  const ema20Dist = s.ema20 ? `${((s.c - s.ema20) / s.ema20 * 100).toFixed(1)}%` : '–';
+  const rsi = s.rsi14 ? s.rsi14.toFixed(1) : '–';
+  const range52 = s.hi52 ? `₹${(s.hi52 * 0.6).toFixed(0)} — ₹${s.hi52.toFixed(2)}` : '–';
+
+  $('f_body').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:12px;margin-bottom:20px">
+      <div style="background:var(--bg);padding:10px;border-radius:8px;border:1px solid var(--bd)">
+        <div class="mu" style="font-size:11px">Market Cap</div>
+        <div style="font-size:15px;font-weight:700">₹${mcapCr} Cr</div>
+      </div>
+      <div style="background:var(--bg);padding:10px;border-radius:8px;border:1px solid var(--bd)">
+        <div class="mu" style="font-size:11px">Stock P/E (Approx)</div>
+        <div style="font-size:15px;font-weight:700">${peEst}</div>
+      </div>
+      <div style="background:var(--bg);padding:10px;border-radius:8px;border:1px solid var(--bd)">
+        <div class="mu" style="font-size:11px">Delivery %</div>
+        <div style="font-size:15px;font-weight:700;color:var(--g)">${delPer}</div>
+      </div>
+      <div style="background:var(--bg);padding:10px;border-radius:8px;border:1px solid var(--bd)">
+        <div class="mu" style="font-size:11px">Delivery Value</div>
+        <div style="font-size:15px;font-weight:700;color:var(--g)">${delCr}</div>
+      </div>
+      <div style="background:var(--bg);padding:10px;border-radius:8px;border:1px solid var(--bd)">
+        <div class="mu" style="font-size:11px">RSI (14-Day)</div>
+        <div style="font-size:15px;font-weight:700">${rsi}</div>
+      </div>
+      <div style="background:var(--bg);padding:10px;border-radius:8px;border:1px solid var(--bd)">
+        <div class="mu" style="font-size:11px">EMA 20 Distance</div>
+        <div style="font-size:15px;font-weight:700">${ema20Dist}</div>
+      </div>
+    </div>
+
+    <div style="background:var(--bg);padding:14px;border-radius:8px;border:1px solid var(--bd);margin-bottom:16px">
+      <h4 style="margin:0 0 10px 0;font-size:13px;color:var(--tx)">📅 Events &amp; Corporate Announcements</h4>
+      <div style="font-size:12px;color:var(--tx)">
+        ${(s.events && s.events.length) ? s.events.map(ev => `• <b>${e(ev)}</b>`).join('<br>') : '• Koi immediate negative announcement ya bonus/split record nahi hai.'}
+      </div>
+      ${s.dl ? `<div style="margin-top:8px;font-size:12px;color:var(--g)">🏛️ <b>Institutional Activity:</b> Bulk/Block deal net inflow: <b>+₹${s.dl.toFixed(2)} Cr</b></div>` : ''}
+    </div>
+
+    <div style="display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--mu)">
+      <span>📍 Stop Loss: <b style="color:var(--r)">₹${(s.sl || (s.c * 0.96)).toFixed(2)}</b></span>
+      <span>🎯 Target 1: <b style="color:var(--g)">₹${(s.t1 || (s.c * 1.05)).toFixed(2)}</b></span>
+      <span>🎯 Target 2: <b style="color:var(--g)">₹${(s.t2 || (s.c * 1.08)).toFixed(2)}</b></span>
+    </div>
+  `;
+
+  const sy = encodeURIComponent(s.sym);
+  const bseCode = (s.code && !String(s.code).startsWith('INE')) ? s.code : s.sym;
+  $('f_link_scr').href = s.ex === 'NSE' ? `https://www.screener.in/company/${sy}/` : `https://www.screener.in/company/${bseCode}/`;
+  $('f_link_tv').href = `https://in.tradingview.com/chart/?symbol=${s.ex === 'NSE' ? 'NSE:' + sy : 'BSE:' + bseCode}`;
+  
+  mod.style.display = 'flex';
+};
+
 function openChart(sym){
   const s=U.find(z=>z.sym===sym);if(!s)return;
-  const emb=$('cp').value==='tv'&&$('cm').value==='p'&&s.ex==='NSE',u=chartUrl(s,emb);
-  if(!u){$('err').textContent='Ye provider sirf NSE stocks ke liye hai — TradingView/Google Finance chuno.';return}$('err').textContent='';
-  if(emb){$('mt2').textContent=s.sym+' · '+s.name;$('mx').href=chartUrl(s,false);$('mf').src=u;$('mod').classList.add('on')}else window.open(u,'_blank')
+  const nse = s.ex === 'NSE';
+  const sy = encodeURIComponent(s.sym);
+  const bseCode = (s.code && !String(s.code).startsWith('INE')) ? s.code : s.sym;
+  const tvSym = nse ? 'NSE:' + s.sym : 'BSE:' + bseCode;
+  
+  // URLs for all providers
+  const tvWebUrl = `https://in.tradingview.com/chart/?symbol=${encodeURIComponent(tvSym)}&interval=${$('ci').value}`;
+  const ciUrl = nse ? `https://chartink.com/stocks/${sy}.html` : `https://chartink.com/`;
+  const scUrl = nse ? `https://www.screener.in/company/${sy}/` : `https://www.screener.in/company/${bseCode}/`;
+  const gfUrl = `https://www.google.com/finance/quote/${encodeURIComponent(nse ? s.sym + ':NSE' : bseCode + ':BOM')}`;
+
+  // If user selected new tab mode in dropdown
+  if($('cm').value === 't'){
+    const p = $('cp').value;
+    const dest = (p === 'ci' && nse) ? ciUrl : (p === 'sc') ? scUrl : (p === 'gf') ? gfUrl : tvWebUrl;
+    window.open(dest, '_blank');
+    return;
+  }
+
+  // Popup Modal Mode with all direct provider buttons
+  $('mt2').textContent = s.sym + ' · ' + (s.name || s.sym) + ' (' + s.ex + ')';
+  if($('mx')) $('mx').href = tvWebUrl;
+  if($('mx_quick')) $('mx_quick').href = tvWebUrl;
+  if($('mx_ci')) $('mx_ci').href = ciUrl;
+  if($('mx_sc')) $('mx_sc').href = scUrl;
+  if($('mx_gf')) $('mx_gf').href = gfUrl;
+
+  const embUrl = `https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(tvSym)}&interval=${$('ci').value}&style=${$('cst').value}&theme=${$('ct').value}`;
+  $('mf').src = embUrl;
+  $('mod').classList.add('on');
 }
 
 // Keyboard Shortcuts
@@ -1228,4 +1882,25 @@ $('btrun').onclick=runBacktest;
 ['q','ex','idx','mp','mt','ms','so','uc','pw','hm_so'].forEach(i=>{ const el=$(i); if(el){ el.addEventListener('input',render); el.addEventListener('change',render); } });
 $('wb').onclick=addWL;
 $('wa').addEventListener('keydown',x=>{if(x.key==='Enter')addWL()});
-</script></body></html>
+</script>
+<div id="fund-mod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--card);border:1px solid var(--bd);border-radius:12px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 40px rgba(0,0,0,0.5)">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--bd)">
+      <div>
+        <h3 id="f_sym_title" style="margin:0;font-size:18px;display:flex;align-items:center;gap:8px"></h3>
+        <span id="f_sec_title" class="mu" style="font-size:12px"></span>
+      </div>
+      <span onclick="document.getElementById('fund-mod').style.display='none'" style="font-size:20px;cursor:pointer;color:var(--mu);padding:4px 8px">&times;</span>
+    </div>
+    <div id="f_body" style="padding:20px"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-top:1px solid var(--bd);background:rgba(0,0,0,0.2)">
+      <span class="mu" style="font-size:11px">⚡ Auto-calculated Valuation &amp; Technical Health Ratios</span>
+      <div style="display:flex;gap:8px">
+        <a id="f_link_scr" target="_blank" class="m-btn">Screener.in ↗</a>
+        <a id="f_link_tv" target="_blank" class="m-btn" style="background:var(--b);color:#fff">TradingView Chart ↗</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body></html>
