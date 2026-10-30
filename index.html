@@ -557,8 +557,24 @@ function detectChartPatterns(s){
 
 function build(){
   const m={};
-  Object.values(S.nse).forEach(s=>m['NSE:'+s.sym]={...s});
-  Object.values(S.bse).forEach(s=>{m['BSE:'+s.sym]={...s}});
+  // 1. First add NSE stocks (NSE gets primary priority)
+  Object.values(S.nse).forEach(s => {
+    m[s.sym] = { ...s };
+  });
+  
+  // 2. Add BSE stocks ONLY if not already present in NSE, OR merge BSE details
+  Object.values(S.bse).forEach(s => {
+    if(!m[s.sym]){
+      // Pure BSE stock
+      m[s.sym] = { ...s };
+    } else {
+      // Stock exists on both NSE and BSE -> keep NSE as primary, but attach BSE code & metrics
+      m[s.sym].bseCode = s.code || s.sym;
+      m[s.sym].hasBSE = true;
+      if(!m[s.sym].deliv_per && s.deliv_per) m[s.sym].deliv_per = s.deliv_per;
+    }
+  });
+
   U=Object.values(m);
     window.U=U;
     U.sort((a,b)=>(b.mc||0)-(a.mc||0) || (b.t||0)-(a.t||0));
