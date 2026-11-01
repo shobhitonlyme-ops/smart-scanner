@@ -155,7 +155,7 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
 <select id="ci"><option value="1">1 min</option><option value="5">5 min</option><option value="15">15 min</option><option value="60">1 hour</option><option value="D" selected>Daily</option><option value="W">Weekly</option><option value="M">Monthly</option></select>
 <select id="cst"><option value="1">Candles</option><option value="0">Bars</option><option value="2">Line</option><option value="9">Hollow candles</option><option value="8">Heikin Ashi</option></select>
 <select id="ct"><option value="dark">Dark</option><option value="light">Light</option></select>
-<select id="cm"><option value="p">Panel me kholo</option><option value="n">New tab</option></select>
+<select id="cm"><option value="n" selected>New tab (Fast &amp; Full)</option><option value="p">Panel me kholo</option></select>
 <label class="mu"><input type="checkbox" class="ind" value="MAExp@tv-basicstudies" checked> EMA</label>
 <label class="mu"><input type="checkbox" class="ind" value="RSI@tv-basicstudies"> RSI</label>
 <label class="mu"><input type="checkbox" class="ind" value="MACD@tv-basicstudies"> MACD</label>
@@ -176,9 +176,9 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
     </div>
     <span onclick="document.getElementById('mod').classList.remove('on');document.getElementById('mf').src='about:blank';const c=document.getElementById('tv_chart_container');if(c)c.innerHTML=''" style="font-size:18px;cursor:pointer;padding:2px 8px;border-radius:4px;color:var(--mu);">&times;</span>
   </div>
-  <div id="mod-banner" style="display:flex;justify-content:space-between;align-items:center;background:#0f172a;color:#94a3b8;font-size:11px;padding:6px 14px;border-bottom:1px solid var(--bd)">
-    <span>ℹ️ Agar widget me <i>"symbol is only available on TradingView"</i> dikhe, toh upar <b>🚀 TradingView Web</b> dabayein — full indicators ke sath khulega.</span>
-    <a id="mx_quick" target="_blank" style="color:var(--b);font-weight:600;text-decoration:underline;cursor:pointer;">Direct Web Tab ↗</a>
+  <div id="mod-banner" style="display:flex;justify-content:space-between;align-items:center;background:#1e1b4b;color:#c7d2fe;font-size:12px;padding:8px 16px;border-bottom:1px solid #4338ca">
+    <span>⚡ TradingView ne iframe widget me free symbol restriction lagayi hai. Full interactive chart dekhne ke liye:</span>
+    <a id="mx_quick" target="_blank" style="background:#2563eb;color:#fff;font-weight:700;padding:4px 12px;border-radius:6px;text-decoration:none;cursor:pointer;">🚀 Open in Full TradingView Web ↗</a>
   </div>
   <div id="tv_chart_container" style="width:100%;height:calc(100% - 75px);"></div>
 <iframe id="mf" style="display:none;width:100%;height:calc(100% - 75px);border:none"></iframe>
@@ -1802,8 +1802,13 @@ function openChart(sym){
   const scUrl = nse ? `https://www.screener.in/company/${sy}/` : `https://www.screener.in/company/${bseCode}/`;
   const gfUrl = `https://www.google.com/finance/quote/${encodeURIComponent(nse ? s.sym + ':NSE' : bseCode + ':BOM')}`;
 
-  // If user selected new tab mode in dropdown
-  if($('cm').value === 't'){
+  // Default mode: Open full interactive TradingView Web directly in new tab (bina kisi symbol block error ke!)
+  if($('cm').value === 'n' || $('cm').value === 't'){
+    const p = $('cp').value;
+    const dest = (p === 'ci' && nse) ? ciUrl : (p === 'sc') ? scUrl : (p === 'gf') ? gfUrl : tvWebUrl;
+    window.open(dest, '_blank');
+    return;
+  }
     const p = $('cp').value;
     const dest = (p === 'ci' && nse) ? ciUrl : (p === 'sc') ? scUrl : (p === 'gf') ? gfUrl : tvWebUrl;
     window.open(dest, '_blank');
