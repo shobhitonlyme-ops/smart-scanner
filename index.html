@@ -1259,7 +1259,7 @@ function delivRows(d){
         <a onclick="openFundamentals('${e(s.sym)}')" style="cursor:pointer;padding:2px 6px;background:var(--card);border:1px solid var(--bd);border-radius:4px;font-size:11px;color:var(--tx)" title="View Ratios & Financials">📊 Fundamentals</a>
       </td>
       <td>
-        <a class="sym-chart" data-c="${e(s.sym)}" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        <a class="sym-chart" href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(s.ex==='NSE'?'NSE:'+s.sym:'BSE:'+(s.code||s.sym))}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
         ${w}
       </td>
     </tr>`;
@@ -1310,7 +1310,7 @@ function newsRows(d){
         <a onclick="openFundamentals('${e(s.sym)}')" style="cursor:pointer;padding:2px 6px;background:var(--card);border:1px solid var(--bd);border-radius:4px;font-size:11px;color:var(--tx)">📊 Fundamentals</a>
       </td>
       <td>
-        <a class="sym-chart" data-c="${e(s.sym)}" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        <a class="sym-chart" href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(s.ex==='NSE'?'NSE:'+s.sym:'BSE:'+(s.code||s.sym))}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
         ${w}
       </td>
     </tr>`;
@@ -1358,7 +1358,7 @@ function dealsRows(d){
         <a onclick="openFundamentals('${e(s.sym)}')" style="cursor:pointer;padding:2px 6px;background:var(--card);border:1px solid var(--bd);border-radius:4px;font-size:11px;color:var(--tx)">📊 Fundamentals</a>
       </td>
       <td>
-        <a class="sym-chart" data-c="${e(s.sym)}" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        <a class="sym-chart" href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(s.ex==='NSE'?'NSE:'+s.sym:'BSE:'+(s.code||s.sym))}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
         ${w}
       </td>
     </tr>`;
@@ -1424,7 +1424,7 @@ function swingRows(d){
       <td class="num">${s.cr.toFixed(1)}</td>
       <td class="num"><span class="badge" style="background:#1e3a8a;color:#93c5fd;font-weight:600">${s.swingScore || s.sc} pts</span></td>
       <td>
-        <a class="sym-chart" data-c="${e(s.sym)}" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        <a class="sym-chart" href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(s.ex==='NSE'?'NSE:'+s.sym:'BSE:'+(s.code||s.sym))}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
         ${w}
       </td>
     </tr>`;
@@ -1480,7 +1480,7 @@ function patternRows(d){
       <td class="num">${s.cr.toFixed(1)}</td>
       <td class="num"><span class="badge">${s.sc}</span></td>
       <td>
-        <a class="sym-chart" data-c="${e(s.sym)}" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        <a class="sym-chart" href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(s.ex==='NSE'?'NSE:'+s.sym:'BSE:'+(s.code||s.sym))}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
         ${w}
       </td>
     </tr>`;
@@ -1705,7 +1705,7 @@ dz.ondrop=x=>{x.preventDefault();dz.classList.remove('on');load([...x.dataTransf
 
 // Chart preferences & persistence
 const CK='ss6chart',CI=['cp','ci','cst','ct','cm'];
-try{const c=JSON.parse(localStorage.getItem(CK)||localStorage.getItem('ss5chart')||'{}');CI.forEach(i=>{if(c[i])$(i).value=c[i]});if(c.ind)document.querySelectorAll('.ind').forEach(k=>k.checked=c.ind.includes(k.value))}catch(x){}
+try{const c=JSON.parse(localStorage.getItem(CK)||localStorage.getItem('ss5chart')||'{}');CI.forEach(i=>{if(c[i])$(i).value=c[i]});if($('cm'))$('cm').value='n';if(c.ind)document.querySelectorAll('.ind').forEach(k=>k.checked=c.ind.includes(k.value))}catch(x){}
 function saveC(){try{const c={ind:[...document.querySelectorAll('.ind:checked')].map(k=>k.value)};CI.forEach(i=>c[i]=$(i).value);localStorage.setItem(CK,JSON.stringify(c))}catch(x){}}
 CI.forEach(i=>$(i).addEventListener('change',saveC));if($('pat_filter'))$('pat_filter').addEventListener('change',render);document.querySelectorAll('.ind').forEach(k=>k.addEventListener('change',saveC));
 
@@ -1895,7 +1895,13 @@ document.addEventListener('click',async x=>{
   if(dx){x.stopPropagation();const d=dx.dataset.x;if(confirm(d+' ka data delete karna hai?')){delete DAYS[d];await DB.del(d);refresh()}return}
   if(dd){SEL=dd.dataset.d;refresh();return}
   const nn=x.target.closest('[data-n]');if(nn){const y=nn.dataset.n,v=prompt('Note — '+y,NT[y]||'');if(v!==null){v.trim()?NT[y]=v.trim():delete NT[y];saveWL();render()}return}
-  const c=x.target.closest('[data-c]');if(c){x.preventDefault();openChart(c.dataset.c)}
+  const c=x.target.closest('[data-c]');if(c){
+    x.preventDefault();
+    const sym = c.dataset.c;
+    const s = (window.U || []).find(z => z.sym === sym);
+    const tvSym = s ? (s.ex === 'NSE' ? 'NSE:' + s.sym : 'BSE:' + (s.code || s.sym)) : ('NSE:' + sym);
+    window.open(`https://in.tradingview.com/chart/?symbol=${encodeURIComponent(tvSym)}`, '_blank');
+  }
   const t=x.target.closest('[data-t]'),w=x.target.closest('[data-w]');
   if(t){cur=t.dataset.t; if(cur==='hm'){ VIEW_MODE='heatmap'; } else if(cur!=='hm' && cur!=='perf' && VIEW_MODE==='heatmap' && t.dataset.t!=='hm'){ /* keep view mode */ } render();}
   if(w){const s=w.dataset.w;WL.has(s)?WL.delete(s):WL.add(s);saveWL();render()}
