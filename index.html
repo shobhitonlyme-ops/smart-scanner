@@ -1488,7 +1488,7 @@ function patternRows(d){
 }
 
 function perfRows(d,wl){
-  $('th').innerHTML=`<th>#</th><th>Symbol</th><th>Close</th><th>${PWN}D Ret%</th>`+HD.map(x=>`<th title="${x}">${fmtD(x)}</th>`).join('')+'<th>Up days</th><th>Streak</th><th>Turn ₹Cr</th><th>Score</th>'+(wl?'<th>Signals</th><th>SL · T1 · T2</th><th>Note</th>':'')+'<th></th>';
+  $('th').innerHTML=`<th>#</th><th>Symbol</th><th>Latest Close</th><th>${PWN}D Ret%</th>`+HD.map((x,idx)=>`<th title="${x}">D-${HD.length-idx}</th>`).join('')+'<th>Up days</th><th>Streak</th><th>Turn ₹Cr</th><th>Score</th>'+(wl?'<th>Signals</th><th>SL · T1 · T2</th><th>Note</th>':'')+'<th></th>';
   const empty=wl?'⭐ Watchlist khali hai — kisi bhi table me ⭐ dabao ya upar symbol type karke Add karo.':'Koi stock nahi mila — Turnover/Price filter kam karo.';
   $('tb').innerHTML=d.map((s,i)=>{
     const w=`<span class="wl" data-w="${e(s.sym)}">${WL.has(s.sym)?'❌':'⭐'}</span>`;
@@ -1591,7 +1591,9 @@ function refresh(){
   S=SEL?DAYS[SEL]:NS();U=[];
   const n=SEL?build():0;
   $('info').textContent=n?`${SEL} · ${n.toLocaleString()} stocks · ${DL.length} din saved${DB.ok?'':' · ⚠ save nahi ho raha'}`:'No data loaded';
-  $('dl').innerHTML=DL.map(d=>`<span class="chip dc ${d===SEL?'sel':''}" data-d="${d}">${fmtD(d)} '${d.slice(2,4)} · ${Object.keys(DAYS[d].nse).length+Object.keys(DAYS[d].bse).length}<i data-x="${d}" title="Delete">🗑</i></span>`).join('')||'<span class="mu">abhi kuch nahi</span>';
+  // Only show the Latest Active Day pill on screen (keep historical sessions in background memory)
+  const lastD = DL[DL.length-1];
+  $('dl').innerHTML = lastD ? `<span class="chip dc sel" data-d="${lastD}"><b>📅 Latest: ${fmtD(lastD)} '${lastD.slice(2,4)}</b> · ${(Object.keys(DAYS[lastD].nse||{}).length+Object.keys(DAYS[lastD].bse||{}).length).toLocaleString()} stocks</span><span class="mu" style="font-size:11px;margin-left:8px">(${DL.length} sessions history cached for 20D Vol &amp; Patterns)</span>` : '<span class="mu">No data</span>';
   if(SEL)$('dt').value=SEL;
   render();
 }

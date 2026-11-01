@@ -288,7 +288,7 @@ def parse_bse_bhav(csv_text):
 # ==================== MAIN PIPELINE ====================
 def run_pipeline():
     # Look back up to 12 calendar days to gather up to 7 active trading sessions
-    dates = get_target_dates(max_lookback=12)
+    dates = get_target_dates(max_lookback=35)
     
     os.makedirs('data', exist_ok=True)
     os.makedirs('data/history', exist_ok=True)
@@ -306,7 +306,7 @@ def run_pipeline():
                     if day_rec.get('nse') or day_rec.get('bse'):
                         saved_days.append(day_rec)
                         print(f"[*] Loaded cached trading data for {date_iso}")
-                        if len(saved_days) >= 7:
+                        if len(saved_days) >= 20:
                             break
                         continue
             except Exception:
@@ -332,7 +332,7 @@ def run_pipeline():
                 json.dump(day_rec, f, separators=(',', ':'))
             print(f"[+] Saved historical day: {hist_path}")
             saved_days.append(day_rec)
-            if len(saved_days) >= 7:
+            if len(saved_days) >= 20:
                 break
     
     if not saved_days:
