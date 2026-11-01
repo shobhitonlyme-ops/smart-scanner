@@ -1488,16 +1488,16 @@ function patternRows(d){
 }
 
 function perfRows(d,wl){
-  $('th').innerHTML=`<th>#</th><th>Symbol</th><th>Latest Close</th><th>${PWN}D Ret%</th>`+HD.map((x,idx)=>`<th title="${x}">D-${HD.length-idx}</th>`).join('')+'<th>Up days</th><th>Streak</th><th>Turn ₹Cr</th><th>Score</th>'+(wl?'<th>Signals</th><th>SL · T1 · T2</th><th>Note</th>':'')+'<th></th>';
+  $('th').innerHTML=`<th>#</th><th>Symbol</th><th>Latest Close</th><th>Chg% (Today)</th><th>${PWN}D Ret%</th><th>Up days</th><th>Streak</th><th>Turn ₹Cr</th><th>Score</th>'+(wl?'<th>Signals</th><th>SL · T1 · T2</th><th>Note</th>':'')+'<th></th>';
   const empty=wl?'⭐ Watchlist khali hai — kisi bhi table me ⭐ dabao ya upar symbol type karke Add karo.':'Koi stock nahi mila — Turnover/Price filter kam karo.';
   $('tb').innerHTML=d.map((s,i)=>{
     const w=`<span class="wl" data-w="${e(s.sym)}">${WL.has(s.sym)?'❌':'⭐'}</span>`;
-    if(s.missing)return `<tr><td class="mu">${i+1}</td><td><span class="sym">${e(s.sym)}</span></td><td class="mu" colspan="${HD.length+6+(wl?3:0)}">Is date ke data me nahi mila</td><td>${w}</td></tr>`;
+    if(s.missing)return `<tr><td class="mu">${i+1}</td><td><span class="sym">${e(s.sym)}</span></td><td class="mu" colspan="${7+(wl?3:0)}">Is date ke data me nahi mila</td><td>${w}</td></tr>`;
     const r=PW(s),rs=r<-900?'–':(r>=0?'+':'')+fm(r)+'%';
     const isN50=N50.has(s.sym);
     const qty=calcQty(s.c,s.sl);
     return `<tr><td class="mu">${i+1}</td><td><span class="sym">${e(s.sym)}</span><span class="ex">${s.ex}</span>${isN50?'<span class="tg" style="color:var(--b);background:#0d1b33;border:1px solid #1e3a6a;font-size:9px">N50</span>':''}${s.isOL?'<span class="tg" style="background:#0f2e1a;color:#00e676;border:1px solid #1f6637;font-weight:700;font-size:9px">🎯 O=L</span>':''}${s.uc?' 🔒':''}</td><td>₹${fm(s.c)}</td><td class="${r>=0?'up':'dn'}"><b>${rs}</b></td>`
-    +s.hist.map(v=>v==null?'<td class="mu">–</td>':`<td class="${v>=0?'up':'dn'}" style="background:rgba(${v>=0?'0,230,118':'255,82,82'},${Math.min(.35,Math.abs(v)/12)})">${v>=0?'+':''}${fm(v,1)}</td>`).join('')
+    +`<td class="${s.chg>=0?'up':'dn'}" style="font-weight:600">${s.chg>=0?'+':''}${s.chg.toFixed(2)}%</td>`
     +`<td>${s.hist.filter(v=>v>0).length}/${s.nd}</td><td>${s.st?'🔥'+s.st:'–'}</td><td>₹${fm(s.cr)}</td><td>${scBadge(s)}</td>`
     +(wl?`<td>${s.tags.map(g=>`<span class="tg ${g.includes('⚠️')?'x':''}">${e(g)}</span>`).join('')}</td><td><div><span class="dn">${fm(s.sl)}</span> · <span class="up">${fm(s.t1)}</span> · <span class="up">${fm(s.t2)}</span></div><div class="mu" style="font-size:10px">🎯 Qty: <b>${qty}</b></div></td><td class="wl" data-n="${e(s.sym)}">${NT[s.sym]?e(NT[s.sym]):'<span class="mu">✏️ note</span>'}</td>`:'')
     +`<td><a href="#" data-c="${e(s.sym)}">Chart</a> ${w}</td></tr>`
