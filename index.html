@@ -1587,7 +1587,9 @@ async function mergeDay(v){
 
 function refresh(){
   DL=Object.keys(DAYS).sort();
-  if(!DAYS[SEL])SEL=DL[DL.length-1]||null;
+  if(!DAYS[SEL] || !SEL){
+    SEL=DL.length ? DL[DL.length-1] : null;
+  }
   S=SEL?DAYS[SEL]:NS();U=[];
   const n=SEL?build():0;
   $('info').textContent=n?`${SEL} · ${n.toLocaleString()} stocks · ${DL.length} din saved${DB.ok?'':' · ⚠ save nahi ho raha'}`:'No data loaded';
@@ -1682,7 +1684,6 @@ $('exp').onclick=()=>{
     if(res.ok){
       const cloudDay = await res.json();
       if(cloudDay && cloudDay.date){
-        // If server bundled historical sessions, load them into DAYS first
         if(Array.isArray(cloudDay.history) && cloudDay.history.length){
           for(const histDay of cloudDay.history){
             if(histDay && histDay.date){
@@ -1694,9 +1695,12 @@ $('exp').onclick=()=>{
         SEL = cloudDay.date;
         refresh();
       }
+    } else {
+      if($('err')) $('err').textContent = 'data/latest.json load nahi hua (HTTP ' + res.status + '). GitHub Actions sync check karein.';
     }
   }catch(e){
     console.error('Failed to load latest.json:', e);
+    if($('err')) $('err').textContent = 'Data parse error: ' + e.message;
   }
 })();
 
