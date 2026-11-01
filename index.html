@@ -1790,84 +1790,23 @@ window.openFundamentals = function(sym){
 };
 
 function openChart(sym){
-  const s=U.find(z=>z.sym===sym);if(!s)return;
-  const nse = s.ex === 'NSE';
-  const sy = encodeURIComponent(s.sym);
-  const bseCode = (s.code && !String(s.code).startsWith('INE')) ? s.code : s.sym;
-  const tvSym = nse ? 'NSE:' + s.sym : 'BSE:' + bseCode;
+  const s = (window.U || []).find(z => z.sym === sym);
+  const nse = s ? (s.ex === 'NSE') : true;
+  const sy = encodeURIComponent(sym);
+  const bseCode = (s && s.code && !String(s.code).startsWith('INE')) ? s.code : sym;
+  const tvSym = nse ? ('NSE:' + sym) : ('BSE:' + bseCode);
   
-  // URLs for all providers
-  const tvWebUrl = `https://in.tradingview.com/chart/?symbol=${encodeURIComponent(tvSym)}&interval=${$('ci').value}`;
+  const ciVal = $('ci') ? $('ci').value : 'D';
+  const tvWebUrl = `https://in.tradingview.com/chart/?symbol=${encodeURIComponent(tvSym)}&interval=${ciVal}`;
   const ciUrl = nse ? `https://chartink.com/stocks/${sy}.html` : `https://chartink.com/`;
   const scUrl = nse ? `https://www.screener.in/company/${sy}/` : `https://www.screener.in/company/${bseCode}/`;
-  const gfUrl = `https://www.google.com/finance/quote/${encodeURIComponent(nse ? s.sym + ':NSE' : bseCode + ':BOM')}`;
+  const gfUrl = `https://www.google.com/finance/quote/${encodeURIComponent(nse ? sym + ':NSE' : bseCode + ':BOM')}`;
 
-  // Default mode: Open full interactive TradingView Web directly in new tab (bina kisi symbol block error ke!)
-  if($('cm').value === 'n' || $('cm').value === 't'){
-    const p = $('cp').value;
-    const dest = (p === 'ci' && nse) ? ciUrl : (p === 'sc') ? scUrl : (p === 'gf') ? gfUrl : tvWebUrl;
-    window.open(dest, '_blank');
-    return;
-  }
-    const p = $('cp').value;
-    const dest = (p === 'ci' && nse) ? ciUrl : (p === 'sc') ? scUrl : (p === 'gf') ? gfUrl : tvWebUrl;
-    window.open(dest, '_blank');
-    return;
-  }
-
-  // Popup Modal Mode with all direct provider buttons
-  $('mt2').textContent = s.sym + ' · ' + (s.name || s.sym) + ' (' + s.ex + ')';
-  if($('mx')) $('mx').href = tvWebUrl;
-  if($('mx_quick')) $('mx_quick').href = tvWebUrl;
-  if($('mx_ci')) $('mx_ci').href = ciUrl;
-  if($('mx_sc')) $('mx_sc').href = scUrl;
-  if($('mx_gf')) $('mx_gf').href = gfUrl;
-
-  const prov = $('cp').value;
-  $('mod').classList.add('on');
-
-  if(prov === 'tv'){
-    // Official TradingView Advanced Realtime Widget (No Symbol Block error!)
-    if($('mf')) $('mf').style.display = 'none';
-    const tvBox = $('tv_chart_container');
-    if(tvBox){
-      tvBox.style.display = 'block';
-      tvBox.innerHTML = ''; // reset
-      try {
-        if(window.TradingView){
-          new TradingView.widget({
-            "autosize": true,
-            "symbol": tvSym,
-            "interval": $('ci').value || "D",
-            "timezone": "Asia/Kolkata",
-            "theme": $('ct').value === 'd' ? 'dark' : 'light',
-            "style": $('cst').value || "1",
-            "locale": "in",
-            "toolbar_bg": "#131722",
-            "enable_publishing": false,
-            "allow_symbol_change": true,
-            "container_id": "tv_chart_container"
-          });
-        } else {
-          // Fallback if script loading delayed
-          const embUrl = `https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(tvSym)}&interval=${$('ci').value}&style=${$('cst').value}&theme=${$('ct').value}&timezone=Asia%2FKolkata`;
-          $('mf').src = embUrl;
-          $('mf').style.display = 'block';
-          tvBox.style.display = 'none';
-        }
-      } catch(e) {
-        console.error('TradingView widget error:', e);
-      }
-    }
-  } else {
-    // Non-TV provider (Chartink, Screener, Google Finance)
-    const u = chartUrl(s, true);
-    if(u && $('mf')){
-      $('mf').src = u;
-      $('mf').style.display = 'block';
-      if($('tv_chart_container')) $('tv_chart_container').style.display = 'none';
-    }
-  }
+  const p = $('cp') ? $('cp').value : 'tv';
+  const dest = (p === 'ci' && nse) ? ciUrl : (p === 'sc') ? scUrl : (p === 'gf') ? gfUrl : tvWebUrl;
+  
+  // Directly open full web chart in a new tab without any iframe restrictions
+  window.open(dest, '_blank');
 }
 
 // Keyboard Shortcuts
