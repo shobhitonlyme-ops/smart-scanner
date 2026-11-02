@@ -76,7 +76,7 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
 .badge-rank{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-weight:700;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;box-shadow:0 1px 3px rgba(0,0,0,0.3);}
 </style><script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 </head><body>
-<header><h1>📊 Smart Scanner v8 <span class="tg" style="background:#059669;color:#ffffff;font-weight:700;font-size:11px">v8.1 FIXED</span> <span class="mu">— NSE + BSE + F&amp;O + Deals · Technical Audit Build</span></h1><div style="display:flex;align-items:center;gap:12px"><span id="market-regime"></span><span class="mu" id="info">No data loaded</span></div></header>
+<header><h1>📊 Smart Scanner v8 <span class="tg" style="background:#059669;color:#ffffff;font-weight:700;font-size:11px">v8.2 LIVE</span> <span class="mu">— NSE + BSE + F&amp;O + Deals · Technical Audit Build</span></h1><div style="display:flex;align-items:center;gap:12px"><span id="market-regime"></span><span class="mu" id="info">No data loaded</span></div></header>
 <div id="drop">📂 <b>Saari files ek saath drop karo</b> (ya click karo) — NSE <code>PR*.zip</code> / <code>pd*.csv</code> (with Delivery %), BSE BhavCopy, <code>FNO_BC*.DAT</code>, Bulk/BSE deals, Volume Gainers, Closing Auction, Pre-Open IEP…<br><span class="mu">Format auto-detect hota hai — NSE & BSE dono support. BSE ke liye: UDiFF Bhavcopy + Circuit Filter + 52W High + Market Cap CSV bhi drop karo. Purane kai din ki bhavcopy bhi ek saath drop kar sakte ho — har file apni date me save hogi. Delivery % aur Pre-Open IEP signals auto-calculate hote hain.</span>
 <input type="file" id="fi" multiple hidden></div>
 <div id="err"></div><div id="loaded"></div><div class="mu" style="margin:0 18px 8px">v8 data note: Relative volume, EMA20, RSI14, Delivery % &amp; NR4/7 require prior saved sessions. BSE: 52W-Hi, Price-Band, Market Cap, Volume Gainers, Pre-Open IEP ab support karta hai. ZIP import uses JSZip offline; CSV/DAT work directly. Charts require internet. Shortcuts: [1-9] Tabs · [/] Search · [Esc] Close chart.</div>
@@ -241,6 +241,13 @@ window.onerror = function(msg, url, lineNo, colNo, error) {
   const errEl = document.getElementById('err');
   if(errEl) {
     errEl.textContent = 'JS Error (Line ' + lineNo + '): ' + msg;
+    errEl.style.color = '#ef4444';
+  }
+};
+window.onunhandledrejection = function(event) {
+  const errEl = document.getElementById('err');
+  if(errEl && event.reason) {
+    errEl.textContent = 'Promise Error: ' + (event.reason.message || event.reason);
     errEl.style.color = '#ef4444';
   }
 };
@@ -974,6 +981,25 @@ function score(s){
 
   return [Math.max(0, Math.round(p * 10) / 10), t];
 }
+
+const PW = s => (s && s['r' + PWN] != null) ? s['r' + PWN] : -999;
+let WL = new Set();
+try { WL = new Set(JSON.parse(localStorage.getItem('ss6wl') || localStorage.getItem('ss5wl') || '[]')); } catch(e){}
+let cur = 'swing20';
+
+const TABS = [
+  { id: 'swing20', n: '⭐ Swing Top 20', d: 'Curated Daily Top 20 Swing Setups: Clean Breakouts (Volume expansion + Resistance break) aur High-Probability Pullbacks (Above EMA20 + healthy low-vol pullback).', ok: s => (s.swingScore >= 35 || s.isSwingBO || s.isSwingPullback), so: 'sw_score' },
+  { id: 'patterns', n: '📐 Chart Patterns', d: 'Classical technical chart patterns: Double Bottom, Bull Flag, Ascending Triangle, Inverse Head & Shoulders, Rectangle Breakout, aur Cup & Handle.', ok: s => s.patterns && s.patterns.length > 0, so: 'sc' },
+  { id: 'deliv', n: '📦 Delivery Spikes', d: 'High Delivery Accumulation: Delivery % ≥ 45%, Traded Value ≥ ₹2 Cr with institutional accumulation signature.', ok: s => s.deliv_per >= 45 && s.cr >= 1.5, so: 'deliv_cr' },
+  { id: 'news', n: '⚡ News & Catalysts', d: 'Real-time catalysts: Institutional deals (+₹1 Cr net inflow), corporate actions/bonus/splits, new 52W high, aur high-volume gap expansions.', ok: s => s.isNewsCatalyst || (s.dl >= 0.5) || (s.events && s.events.length > 0), so: 'news_score' },
+  { id: 'deals', n: '🏛️ Deals & Institutions', d: 'Institutions (Mutual Funds, FIIs, DIIs, Insurance) vs HNIs/Prop desks bulk & block deal tracker with net buying value.', ok: s => s.dl >= 0.5, so: 'cr' },
+  { id: 'ol', n: '🎯 Open=Low Rockets', d: 'Open = Low setups (diff ≤ 0.40%, gap ≤ 1.5%, close > open, +2%+, close pos ≥ 65%). High intraday & swing momentum.', ok: s => s.isOL, so: 'chg' },
+  { id: 'perf', n: '🏆 Top Performers', d: 'Compounded return over performance window (3D/5D/10D) — consistent performers ranked at top.', ok: s => PW(s) > 0, so: 'pw' },
+  { id: 'wl', n: '⭐ Watchlist', d: 'Aapke personal saved stocks — multi-day returns, signals, calculated SL/targets aur custom notes.', ok: s => WL.has(s.sym), so: 'sc' },
+  { id: 'rbo', n: '🧱 Range Breakout', d: 'Consolidation range breakout: Tight base (lookback 10-60 din) breakout with volume expansion.', ok: s => !!s.rb, so: 'rb' },
+  { id: 'nr47', n: '📏 NR4 / NR7', d: 'Volatility contraction: Narrowest range of past 4 or 7 bars. Breakout expansion setup.', ok: s => s.nr4 || s.nr7, so: 'cr' },
+  { id: 'hm', n: '🗺️ Heatmap', d: 'Visual sector & market breadth heatmap color-coded by daily change % and turnover weight.', ok: () => true, so: 'chg' }
+];
 
 function fmtD(x){
   try{
