@@ -1488,7 +1488,7 @@ function patternRows(d){
 }
 
 function perfRows(d,wl){
-  $('th').innerHTML=`<th>#</th><th>Symbol</th><th>Latest Close</th><th>Chg% (Today)</th><th>${PWN}D Ret%</th><th>Up days</th><th>Streak</th><th>Turn ₹Cr</th><th>Score</th>'+(wl?'<th>Signals</th><th>SL · T1 · T2</th><th>Note</th>':'')+'<th></th>';
+  $('th').innerHTML=`<th>#</th><th>Symbol</th><th>Latest Close</th><th>Chg% (Today)</th><th>${PWN}D Ret%</th><th>Up days</th><th>Streak</th><th>Turn ₹Cr</th><th>Score</th>${wl?'<th>Signals</th><th>SL · T1 · T2</th><th>Note</th>':''}<th></th>`;
   const empty=wl?'⭐ Watchlist khali hai — kisi bhi table me ⭐ dabao ya upar symbol type karke Add karo.':'Koi stock nahi mila — Turnover/Price filter kam karo.';
   $('tb').innerHTML=d.map((s,i)=>{
     const w=`<span class="wl" data-w="${e(s.sym)}">${WL.has(s.sym)?'❌':'⭐'}</span>`;
@@ -1587,11 +1587,12 @@ async function mergeDay(v){
 
 function refresh(){
   DL=Object.keys(DAYS).sort();
-  if(!DAYS[SEL] || !SEL){
-    SEL=DL.length ? DL[DL.length-1] : null;
+  if(!SEL || !DAYS[SEL]){
+    SEL = DL.length ? DL[DL.length - 1] : null;
   }
-  S=SEL?DAYS[SEL]:NS();U=[];
-  const n=SEL?build():0;
+  S = (SEL && DAYS[SEL]) ? DAYS[SEL] : NS();
+  U = [];
+  const n = SEL ? build() : 0;
   $('info').textContent=n?`${SEL} · ${n.toLocaleString()} stocks · ${DL.length} din saved${DB.ok?'':' · ⚠ save nahi ho raha'}`:'No data loaded';
   // Only show the Latest Active Day pill on screen (keep historical sessions in background memory)
   const lastD = DL[DL.length-1];
@@ -1675,32 +1676,63 @@ $('exp').onclick=()=>{
   a.download='scanner_'+cur+'_'+(SEL||'nodate')+'.csv';a.click();
 };
 
-// Initial IndexedDB open & load
+// Initial IndexedDB open & load with High-Speed Immediate Render
 (async()=>{
-  try{await DB.open();for(const v of await DB.all())DAYS[v.date]=v;}catch(x){$('err').textContent='⚠ Browser storage available nahi — data sirf is session me rahega (Backup button use karo).';}
-  refresh();
+  if($('info')) $('info').innerHTML = '<span style="color:var(--b);font-weight:700">⏳ Loading market data...</span>';
+  
+  try{
+    await DB.open();
+    for(const v of await DB.all()) DAYS[v.date]=v;
+  }catch(x){
+    if($('err')) $('err').textContent='⚠ Browser storage: Local session mode active.';
+  }
+  
+  // Set SEL to newest stored day if exists and render instantly from local cache
+  const existingDates = Object.keys(DAYS).sort();
+  if(existingDates.length){
+    SEL = existingDates[existingDates.length - 1];
+    refresh();
+  } else {
+    // If empty, show helpful loading text in dropzone
+    if($('info')) $('info').innerHTML = '<span style="color:var(--b);font-weight:700">⏳ Downloading latest market data from GitHub...</span>';
+  }
+
+  // Fetch cloud latest.json
   try{
     const res = await fetch('data/latest.json?v=' + Date.now(), { cache: 'no-store' });
     if(res.ok){
       const cloudDay = await res.json();
       if(cloudDay && cloudDay.date){
-        if(Array.isArray(cloudDay.history) && cloudDay.history.length){
-          for(const histDay of cloudDay.history){
-            if(histDay && histDay.date){
-              await mergeDay(histDay);
-            }
-          }
-        }
+        // STEP 1: IMMEDIATELY render today's latest data (Zero Wait!)
         await mergeDay(cloudDay);
         SEL = cloudDay.date;
         refresh();
+
+        // STEP 2: Background merge historical sessions for 20D Vol & Patterns
+        if(Array.isArray(cloudDay.history) && cloudDay.history.length){
+          setTimeout(async()=>{
+            try{
+              for(const histDay of cloudDay.history){
+                if(histDay && histDay.date && !DAYS[histDay.date]){
+                  await mergeDay(histDay);
+                }
+              }
+              // Silent refresh once history is fully populated so 20D metrics & patterns update
+              refresh();
+            }catch(err){
+              console.warn('History background sync note:', err);
+            }
+          }, 100);
+        }
       }
     } else {
-      if($('err')) $('err').textContent = 'data/latest.json load nahi hua (HTTP ' + res.status + '). GitHub Actions sync check karein.';
+      if(!existingDates.length && $('info')){
+        $('info').innerHTML = '<span style="color:var(--a)">Notice: Cloud data syncing (HTTP ' + res.status + '). Drop files to start immediately.</span>';
+      }
     }
   }catch(e){
     console.error('Failed to load latest.json:', e);
-    if($('err')) $('err').textContent = 'Data parse error: ' + e.message;
+    if(!existingDates.length && $('err')) $('err').textContent = 'Cloud data load notice: ' + e.message;
   }
 })();
 
