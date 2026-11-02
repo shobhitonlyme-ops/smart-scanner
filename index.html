@@ -69,13 +69,28 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
 .badge-rank{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-weight:700;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;box-shadow:0 1px 3px rgba(0,0,0,0.3);}
 </style><script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 </head><body>
-<header><h1>📊 Smart Scanner v8 <span class="tg" style="background:#1e3a6a;color:var(--b);font-weight:700;font-size:11px">v8.0</span> <span class="mu">— NSE + BSE + F&amp;O + Deals · Technical Audit Build</span></h1><span class="mu" id="info">No data loaded</span></header>
+<header><h1>📊 Smart Scanner v8 <span class="tg" style="background:#1e3a6a;color:var(--b);font-weight:700;font-size:11px">v8.0</span> <span class="mu">— NSE + BSE + F&amp;O + Deals · Technical Audit Build</span></h1><div style="display:flex;align-items:center;gap:12px"><span id="market-regime"></span><span class="mu" id="info">No data loaded</span></div></header>
 <div id="drop">📂 <b>Saari files ek saath drop karo</b> (ya click karo) — NSE <code>PR*.zip</code> / <code>pd*.csv</code> (with Delivery %), BSE BhavCopy, <code>FNO_BC*.DAT</code>, Bulk/BSE deals, Volume Gainers, Closing Auction, Pre-Open IEP…<br><span class="mu">Format auto-detect hota hai — NSE & BSE dono support. BSE ke liye: UDiFF Bhavcopy + Circuit Filter + 52W High + Market Cap CSV bhi drop karo. Purane kai din ki bhavcopy bhi ek saath drop kar sakte ho — har file apni date me save hogi. Delivery % aur Pre-Open IEP signals auto-calculate hote hain.</span>
-<input type="file" id="fi" multiple hidden></div>
 <input type="file" id="fi" multiple hidden></div>
 <div id="err"></div><div id="loaded"></div><div class="mu" style="margin:0 18px 8px">v8 data note: Relative volume, EMA20, RSI14, Delivery % &amp; NR4/7 require prior saved sessions. BSE: 52W-Hi, Price-Band, Market Cap, Volume Gainers, Pre-Open IEP ab support karta hai. ZIP import uses JSZip offline; CSV/DAT work directly. Charts require internet. Shortcuts: [1-9] Tabs · [/] Search · [Esc] Close chart.</div>
 <div id="days"><span class="mu">🗂 Saved days:</span><span id="dl"></span><span class="mu">📅 Data date:</span><input type="date" id="dt" title="Bhavcopy se auto-detect hoti hai; sirf deals/FNO jaisi alag files ke liye ye date use hogi">
-<button id="bk">⬇ Backup</button><button id="rs">⬆ Restore</button><button id="exp">📥 Export CSV</button><button id="bt">🧪 Backtest</button><button id="cl">🗑 Clear all</button><input type="file" id="rf" accept=".json" hidden></div><nav id="tabs"></nav><div id="desc"></div><section id="btpanel"><b>🧪 Historical breakout backtest</b> <span class="mu">Uses saved daily bhavcopies only. Educational test, not a prediction. Note: EOD simulation without intraday slippage modeling.</span><div style="margin-top:8px"><label class="mu">Round-trip cost % <input id="btc" type="number" min="0" max="3" step="0.05" value="0.10" style="width:72px;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:5px;padding:4px"></label> <button id="btrun">Run backtest</button> <button id="btx">Close</button></div><div id="btout" class="mu">Save at least 25 trading days, then run the test.</div></section>
+<button id="bk">⬇ Backup</button><button id="rs">⬆ Restore</button><button id="exp">📥 Export CSV</button><button id="bt">🧪 Backtest</button><button id="cl">🗑 Clear all</button><input type="file" id="rf" accept=".json" hidden></div><nav id="tabs"></nav><div id="desc"></div><section id="btpanel"><b>🧪 Portfolio Strategy Backtest &amp; Validation</b> <span class="mu">Multi-strategy simulation across saved daily bhavcopies with position sizing, portfolio equity tracking, and realistic transaction costs (STT + slippage).</span>
+<div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+  <label class="mu">Strategy: 
+    <select id="bt_strat" style="background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:6px;padding:5px 8px">
+      <option value="bo20">🚀 20-Day Breakout + Volume (≥1.5×)</option>
+      <option value="swing">⭐ Swing Top 20 (Breakout + Pullback)</option>
+      <option value="ol">🎯 Open=Low Rocket</option>
+      <option value="deliv">📦 High Delivery Accumulation (≥60%)</option>
+    </select>
+  </label>
+  <label class="mu">Capital: ₹<input id="bt_cap" type="number" value="1000000" step="100000" style="width:95px;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:5px;padding:4px"></label>
+  <label class="mu">Max Pos: <input id="bt_pos" type="number" min="1" max="20" value="5" style="width:50px;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:5px;padding:4px"></label>
+  <label class="mu">Round-trip cost %: <input id="btc" type="number" min="0" max="3" step="0.05" value="0.30" style="width:65px;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:5px;padding:4px"></label>
+  <button id="btrun" style="background:var(--b);color:#fff;font-weight:700">Run Portfolio Test</button>
+  <button id="btx">Close</button>
+</div>
+<div id="btout" class="mu" style="margin-top:12px">Save at least 20-25 trading days to run a statistically valid test.</div></section>
 <div id="rbs"><span class="mu">🧱 Range settings:</span>
 <select id="rb_lb"><option value="10">Lookback 10 din</option><option value="20">20 din</option><option value="30">30 din</option><option value="45">45 din</option><option value="60">60 din</option><option value="90">90 din</option><option value="120">120 din</option></select>
 <select id="rb_w"><option value="10">Range ≤10%</option><option value="15">≤15%</option><option value="20">≤20%</option><option value="25">≤25%</option><option value="30">≤30%</option><option value="40">≤40%</option></select>
@@ -249,7 +264,15 @@ function dmy(n){
   return m&&+m[2]<=12?'20'+m[3]+'-'+m[2]+'-'+m[1]:null;
 }
 
-const addDeal=(s,v)=>{const d=S.deal[s]||(S.deal[s]={net:0,n:0});d.net+=v;d.n++};
+const addDeal=(s,v,client='',dealType='')=>{
+  if(!s) return;
+  const key = String(s).trim().toUpperCase();
+  const d = S.deal[key] || (S.deal[key] = {net:0, n:0, clients:[], isInst:false});
+  d.net += v; d.n++;
+  const isInst = /(MUTUAL FUND|MF|INSURANCE|LIFE|PENSION|AIF|GOVERNMENT|INVESTMENT AUTHORITY|MORGAN STANLEY|GOLDMAN|NOMURA|CITIGROUP|JPMORGAN|BNP|SOCIETE|VANGUARD|BLACKROCK|FIDELITY|NORGES|ABU DHABI|SINGAPORE|TEMASEK|KOTAK|ICICI|HDFC|SBI|NIPPON|TATA|AXIS|BANDHAN|DSP|SUNDARAM|MIRAE)/i.test(client);
+  if(isInst) d.isInst = true;
+  if(client && d.clients.length < 3) d.clients.push(`${client} (${v >= 0 ? '+' : ''}₹${(v/1e7).toFixed(1)}Cr)`);
+};
 
 // Built-in Nifty 50 classification list
 const N50=new Set(['ADANIENT','ADANIPORTS','APOLLOHOSP','ASIANPAINT','AXISBANK','BAJAJ-AUTO','BAJFINANCE','BAJAJFINSV','BEL','BPCL','BHARTIARTL','BRITANNIA','CIPLA','COALINDIA','DRREDDY','EICHERMOT','GRASIM','HCLTECH','HDFCBANK','HDFCLIFE','HEROMOTOCO','HINDALCO','HINDUNILVR','ICICIBANK','ITC','INDUSINDBK','INFY','JSWSTEEL','KOTAKBANK','LT','M&M','MARUTI','NTPC','NESTLEIND','ONGC','POWERGRID','RELIANCE','SBILIFE','SHRIRAMFIN','SBIN','SUNPHARMA','TCS','TATACONSUM','TATAMOTORS','TATASTEEL','TECHM','TITAN','TRENT','ULTRACEMCO','WIPRO']);
@@ -306,6 +329,17 @@ BSE Missing Data — Download Links:
 */
 const KINDS=[
 // NEW FEATURE 1: Delivery % and Delivery Qty from NSE Bhav
+// B03 Fix: Standalone NSE Delivery MTO handler
+['NSE Delivery (MTO)',h=>h.includes('DELIV_QTY')&&h.includes('DELIV_PER')&&!h.includes('OPEN_PRICE'),o=>o.forEach(r=>{
+  const sym = r.SYMBOL || r['SECURITY'];
+  if(!sym) return;
+  const dQty = N(r.DELIV_QTY || r['DELIV_QTY'] || 0);
+  const dPer = N(r.DELIV_PER || r['DELIV_PER'] || r['DELIV. PER'] || 0);
+  if(S.nse[sym]){
+    S.nse[sym].deliv_qty = dQty;
+    S.nse[sym].deliv_per = dPer;
+  }
+})],
 ['NSE Bhav (pd)',h=>h.includes('PREV_CL_PR')&&h.includes('SERIES')&&h.includes('SYMBOL'),(o)=>o.forEach(r=>{
   const c=N(r.CLOSE_PRICE);if(r.MKT!=='N'||r.SERIES!=='EQ'||!r.SYMBOL||c<=0)return;
   S.nse[r.SYMBOL]={sym:r.SYMBOL,name:r.SECURITY,ex:'NSE',o:N(r.OPEN_PRICE),h:N(r.HIGH_PRICE),l:N(r.LOW_PRICE),c,p:N(r.PREV_CL_PR),t:N(r.NET_TRDVAL),v:V(r,['TOTTRDQTY','TOTALTRDQTY','TTLTRDQTY']),hi52:N(r.HI_52_WK),
@@ -320,8 +354,19 @@ const KINDS=[
 ['Price-band hits (bh)',h=>h.includes('HIGH/LOW')&&h.includes('SERIES'),o=>o.forEach(r=>S.band[r.SYMBOL]=r['HIGH/LOW'])],
 ['Market Cap (mcap)',h=>h.includes('MARKET CAP(RS.)'),o=>o.forEach(r=>S.mcap[r.SYMBOL]=N(r['MARKET CAP(RS.)'])/1e7)],
 ['Volume Gainers',h=>h.includes('TODAY - VOLUME'),o=>o.forEach(r=>S.volg[r.SYMBOL]={today:V(r,['TODAY - VOLUME','TODAY VOLUME']),avg:V(r,['10 DAY AVG VOLUME','10 DAY AVG. VOLUME']),weekChange:N(r['PAST WEEK - CHANGE'])})],
-['NSE Bulk deals',h=>h.includes('CLIENT NAME')&&h.includes('BUY/SELL'),o=>o.forEach(r=>addDeal(r.SYMBOL,(/^B/i.test(r['BUY/SELL'])?1:-1)*N(r.VOLUME)*N(r['TRADE PRICE/ WEIGHTED. AVG. PRICE'])))],
-['BSE deals',h=>h.includes('CLIENT NAME')&&h.includes('DEAL TYPE'),o=>o.forEach(r=>addDeal(r.COMPANY,(r['DEAL TYPE']==='P'?1:-1)*N(r.QUANTITY)*N(r.PRICE)))],
+['NSE Bulk deals',h=>h.includes('CLIENT NAME')&&h.includes('BUY/SELL'),o=>o.forEach(r=>{
+  const val = (/^B/i.test(r['BUY/SELL'])?1:-1)*N(r.VOLUME||r.QUANTITY)*N(r['TRADE PRICE/ WEIGHTED. AVG. PRICE']||r.PRICE);
+  addDeal(r.SYMBOL, val, r['CLIENT NAME']||'', r['BUY/SELL']||'');
+})],
+['BSE deals',h=>h.includes('CLIENT NAME')&&h.includes('DEAL TYPE'),o=>o.forEach(r=>{
+  const val = (r['DEAL TYPE']==='P'||/^B/i.test(r['DEAL TYPE'])?1:-1)*N(r.QUANTITY||r.VOLUME)*N(r.PRICE);
+  const client = r['CLIENT NAME']||'';
+  // B04 Fix: Map both company name, scrip code, and security name to deal
+  if(r.SC_CODE) addDeal(r.SC_CODE, val, client, r['DEAL TYPE']);
+  if(r.SCRIP_CD) addDeal(r.SCRIP_CD, val, client, r['DEAL TYPE']);
+  if(r.COMPANY) addDeal(r.COMPANY, val, client, r['DEAL TYPE']);
+  if(r.SECURITY_NAME) addDeal(r.SECURITY_NAME, val, client, r['DEAL TYPE']);
+})],
 ['Closing Auction (NSE)',h=>h.includes('FINAL PRICE')&&h.includes('REFERENCE PRICE'),o=>o.forEach(r=>{const x=N(r['REFERENCE PRICE']);if(x>0)S.cas[r.SYMBOL]=(N(r['FINAL PRICE'])-x)/x*100})],
 ['Closing Auction (BSE)',h=>h.includes('CAS REFERENCE PRICE'),o=>o.forEach(r=>{const x=N(r['CAS REFERENCE PRICE']);if(x>0&&N(r['CLOSE PRICE'])>0)S.cas[r['SECURITY NAME']]=(N(r['CLOSE PRICE'])-x)/x*100})],
 
@@ -352,18 +397,17 @@ const KINDS=[
   if(sym&&mc>0)S.bsemcap[sym.trim().toUpperCase()]=mc/1e7; // convert to Cr
 })],
 
-// BSE Price Band / Circuit Filter — columns: SCRIP_CD, SCRIPNAME, SCRIP_GRP, LTP, CHGPER
-['BSE Price Band (circuit)',h=>h.includes('SCRIPNAME')&&h.includes('SCRIP_GRP')||h.includes('SCRIP_CD')&&h.includes('CHGPER'),o=>o.forEach(r=>{
-  const sym=r['SCRIPNAME']||r['SC_NAME']||'';
-  const chgper=N(r['CHGPER']||r['LIMIT']||r['CIRCUIT LIMIT']||0);
+// BSE Price Band / Circuit Filter (B10 Fix: only treat real circuit band columns, NOT regular CHGPER)
+['BSE Price Band (circuit)',h=>(h.includes('CIRCUIT')||h.includes('PRICE_BAND')||h.includes('BAND'))&&h.includes('SCRIP_CD'),o=>o.forEach(r=>{
+  const sym=(r['SCRIPNAME']||r['SC_NAME']||r['SCRIP_CD']||'').trim().toUpperCase();
+  const band=N(r['BAND']||r['PRICE_BAND']||r['CIRCUIT LIMIT']||r['CIRCUIT_LIMIT']||0);
   const ltp=N(r['LTP']||r['LTRADERT']||r['CLOSE']||0);
   const prev=N(r['PREVCLOSE']||r['PREV CLOSE']||0);
-  if(sym&&ltp>0&&prev>0){
-    // Detect upper circuit: price at or very near upper limit
-    const upperLimit=prev*(1+chgper/100);
-    const lowerLimit=prev*(1-chgper/100);
-    if(Math.abs(ltp-upperLimit)/upperLimit<0.005)S.bseband[sym.trim().toUpperCase()]='H';
-    else if(Math.abs(ltp-lowerLimit)/lowerLimit<0.005)S.bseband[sym.trim().toUpperCase()]='L';
+  if(sym&&ltp>0&&prev>0&&band>=2&&band<=20){
+    const upperLimit=prev*(1+band/100);
+    const lowerLimit=prev*(1-band/100);
+    if(Math.abs(ltp-upperLimit)/upperLimit<0.003)S.bseband[sym]='H';
+    else if(Math.abs(ltp-lowerLimit)/lowerLimit<0.003)S.bseband[sym]='L';
   }
 })],
 
@@ -448,17 +492,30 @@ function detectChartPatterns(s){
     s.patterns.push({ id: 'engulf', name: '🕯️ Bullish Engulfing', type: 'candle', desc: 'Preceding decline engulfed by strong buyer demand with volume' });
   }
 
-  // 2. Hammer / Hanging Man (Long lower shadow >= 2x body, close at upper 25%)
+  // Candlestick Trend Context: Distinguish Reversals vs Exhaustion (Audit Fix)
+  const recentBars = a.slice(-6, -1);
+  const isDowntrend = recentBars.length >= 2 && recentBars[recentBars.length - 1][2] < recentBars[0][2];
+  const isUptrend = recentBars.length >= 2 && recentBars[recentBars.length - 1][2] > recentBars[0][2];
+
+  // 2. Hammer (in decline/pullback) vs Hanging Man (in extended uptrend)
   const body = Math.abs(cc - co);
   const lowerShadow = Math.min(co, cc) - cl;
   const upperShadow = ch - Math.max(co, cc);
   if(cRange > 0 && lowerShadow >= 2 * body && upperShadow <= 0.25 * cRange && s.cp >= 65){
-    s.patterns.push({ id: 'hammer', name: '🔨 Hammer Reversal', type: 'candle', desc: 'Sellers pushed down but aggressive buyers closed stock near highs' });
+    if(isDowntrend || !s.aboveEMA){
+      s.patterns.push({ id: 'hammer', name: '🔨 Hammer Reversal', type: 'candle', desc: 'Preceding decline rejected by aggressive dip buyers closing near highs' });
+    } else if(isUptrend){
+      s.patterns.push({ id: 'hanging_man', name: '⚠️ Hanging Man', type: 'warning', desc: 'Bearish reversal warning: seller emergence at top of uptrend' });
+    }
   }
 
-  // 3. Inverted Hammer (Long upper shadow >= 2x body, low near bottom)
+  // 3. Inverted Hammer (in decline) vs Shooting Star (in extended uptrend)
   if(cRange > 0 && upperShadow >= 2 * body && lowerShadow <= 0.25 * cRange && cc >= cl){
-    s.patterns.push({ id: 'inv_hammer', name: '⚡ Inverted Hammer', type: 'candle', desc: 'Strong intraday buying surge, testing overhead supply' });
+    if(isDowntrend || !s.aboveEMA){
+      s.patterns.push({ id: 'inv_hammer', name: '⚡ Inverted Hammer', type: 'candle', desc: 'Bottom reversal attempt: strong intraday buying surge testing overhead supply' });
+    } else if(isUptrend){
+      s.patterns.push({ id: 'shooting_star', name: '🌠 Shooting Star', type: 'warning', desc: 'Bearish rejection: intraday rally failed and was sold off heavily near highs' });
+    }
   }
 
   // 4. Piercing Line: Prev red bar, today opens lower but closes > 50% into prev body
@@ -559,225 +616,271 @@ function detectChartPatterns(s){
 
 function build(){
   const m={};
-  // 1. First add NSE stocks (NSE gets primary priority)
-  Object.values(S.nse).forEach(s => {
+  // 1. Deduplicate: NSE stocks get primary priority
+  Object.values(S.nse || {}).forEach(s => {
     m[s.sym] = { ...s };
   });
   
-  // 2. Add BSE stocks ONLY if not already present in NSE, OR merge BSE details
-  Object.values(S.bse).forEach(s => {
+  // 2. Add BSE stocks if not in NSE, or merge BSE details (BSOFT fix)
+  Object.values(S.bse || {}).forEach(s => {
     if(!m[s.sym]){
-      // Pure BSE stock
       m[s.sym] = { ...s };
     } else {
-      // Stock exists on both NSE and BSE -> keep NSE as primary, but attach BSE code & metrics
       m[s.sym].bseCode = s.code || s.sym;
       m[s.sym].hasBSE = true;
       if(!m[s.sym].deliv_per && s.deliv_per) m[s.sym].deliv_per = s.deliv_per;
     }
   });
 
-  U=Object.values(m);
-    window.U=U;
-    U.sort((a,b)=>(b.mc||0)-(a.mc||0) || (b.t||0)-(a.t||0));
-    U.forEach((s,idx)=>{s.capRank=idx+1;});
+  U = Object.values(m);
+  window.U = U;
 
+  // PASS 1: Basic metrics & assignments (B01 Fix: compute rng & cp BEFORE isOL)
   for(const s of U){
-    s.chg=s.p>0?(s.c-s.p)/s.p*100:0;
-    s.gap=s.p>0?(s.o-s.p)/s.p*100:0; // Gap%
-    const openLowDiff = s.o>0?(s.o-s.l)/s.o*100:100;
+    s.chg = s.p > 0 ? (s.c - s.p) / s.p * 100 : 0;
+    s.gap = s.p > 0 ? (s.o - s.p) / s.p * 100 : 0;
+    s.rng = s.c > 0 ? (s.h - s.l) / s.c * 100 : 0;
+    s.cp = s.h > s.l ? (s.c - s.l) / (s.h - s.l) * 100 : 50;
+    s.candle = Math.sign(s.c - s.o);
+    s.cr = s.t / 1e7;
+
+    const openLowDiff = s.o > 0 ? (s.o - s.l) / s.o * 100 : 100;
     s.olDiff = openLowDiff;
-    s.isOL = openLowDiff<=0.40 && Math.abs(s.gap)<=1.5 && s.c>s.o && s.chg>=2.0 && s.cp>=65;
-    s.rng=s.c>0?(s.h-s.l)/s.c*100:0;
-    s.cp=s.h>s.l?(s.c-s.l)/(s.h-s.l)*100:50;
-    s.candle=Math.sign(s.c-s.o);
-    s.cr=s.t/1e7;
-    s.deliv_per = s.deliv_per || 0; // NEW FEATURE 1: from NSE bhav
+    // B01 Fix: Now s.cp is defined and verified
+    s.isOL = openLowDiff <= 0.40 && Math.abs(s.gap) <= 1.5 && s.c > s.o && s.chg >= 2.0 && s.cp >= 65;
+
+    s.deliv_per = s.deliv_per || 0;
     s.deliv_qty = s.deliv_qty || (s.v > 0 && s.deliv_per > 0 ? (s.v * s.deliv_per / 100) : 0);
     s.deliv_cr = (s.deliv_qty > 0 && s.c > 0) ? (s.deliv_qty * s.c / 1e7) : (s.cr * (s.deliv_per / 100));
 
-    // Events & Announcements
-    s.events = [];
-    if(S.corp && S.corp[s.sym]){
-      s.events = Array.isArray(S.corp[s.sym]) ? S.corp[s.sym] : [S.corp[s.sym]];
-    }
-    // High-impact news & intraday catalyst detection
-    let nScore = 0;
-    let catalystReasons = [];
+    // B04 Fix: Deal lookup supporting symbol, BSE scrip code, and company name
+    const bseCode = s.code ? String(s.code).trim().toUpperCase() : '';
+    const upperName = s.name ? s.name.trim().toUpperCase() : '';
+    const dealObj = S.deal[s.sym] || (bseCode && S.deal[bseCode]) || (upperName && S.deal[upperName]);
+    s.dl = dealObj ? dealObj.net / 1e7 : 0;
+    s.dealObj = dealObj;
 
-    if(s.events && s.events.length){
-      nScore += 45;
-      catalystReasons.push(...s.events);
-    }
-    if(s.dl >= 1.0){
-      nScore += 35;
-      catalystReasons.push(`Bulk/Block Deal Inflow +₹${s.dl.toFixed(1)} Cr`);
-    }
-    // Catalyst 1: Abnormal Volume Blast + Price Surge (Classic Breaking News Signature)
-    if(s.rv >= 2.5 && Math.abs(s.chg) >= 3.0){
-      nScore += 40;
-      catalystReasons.push(`🚀 Massive Volume Blast (${s.rv.toFixed(1)}× Vol with ${s.chg >= 0 ? '+' : ''}${s.chg.toFixed(1)}% move)`);
-    } else if(s.rv >= 1.8 && Math.abs(s.chg) >= 2.0){
-      nScore += 25;
-      catalystReasons.push(`⚡ High Volume Expansion (${s.rv.toFixed(1)}× Vol)`);
-    }
+    // B06 Fix: Market Cap Assignment
+    s.mc = (S.mcap[s.sym] || (upperName && S.bsemcap[upperName]) || (bseCode && S.bsemcap[bseCode]) || 0);
 
-    // Catalyst 2: New 52-Week High Breakout Surge
-    if(s.h52new && s.chg >= 1.5){
-      nScore += 30;
-      catalystReasons.push('🏆 All-Time / 52-Week High Breakout');
-    }
+    // 52W High / Low
+    s.h52new = S.hl[s.name] === 'H';
+    s.h52near = s.hi52 > 0 && s.c >= 0.97 * s.hi52;
+    s.h52 = s.h52new || s.h52near;
+    s.uc = S.band[s.sym] === 'H';
+    s.vg = S.volg[s.sym] || null;
+    s.cas = S.cas[s.sym] || 0;
+    s.iep = (S.iep && S.iep[s.sym]) || 0;
 
-    // Catalyst 3: Huge Delivery Accumulation Surge
-    if(s.deliv_per >= 70 && s.chg >= 1.5 && s.cr >= 2.0){
-      nScore += 25;
-      catalystReasons.push(`📦 Extreme Delivery Buying (${s.deliv_per.toFixed(0)}%)`);
-    }
-
-    // Catalyst 4: Circuit / Pre-Open Gap Surge
-    if(Math.abs(s.gap) >= 2.5){
-      nScore += 20;
-      catalystReasons.push(`🌅 Large Gap Action (${s.gap >= 0 ? '+' : ''}${s.gap.toFixed(1)}% Gap)`);
-    }
-
-    s.news_reasons = catalystReasons;
-    s.isNewsCatalyst = nScore >= 20;
-    s.news_score = nScore;
-    s.uc=S.band[s.sym]==='H';
-    // NEW FEATURE 4: 52W High distinction (New vs Near)
-    s.h52new = S.hl[s.name]==='H';
-    s.h52near = s.hi52>0 && s.c>=.97*s.hi52;
-    s.h52 = s.h52new || s.h52near; // backward compat
-    s.vg=S.volg[s.sym]||null;
-    s.vm=0;s.rv=0;
-    s.cas=S.cas[s.sym];
-    s.mc=S.mcap[s.sym]||0;
-    s.dl=S.deal[s.sym]?S.deal[s.sym].net/1e7:0;
-    s.iep=(S.iep&&S.iep[s.sym])||0; // Pre-open IEP
-
-    // BSE-specific enrichment
-    if(s.ex==='BSE'){
-      const bseName=s.name?s.name.trim().toUpperCase():'';
-      // BSE 52W High (using name since BSE hl uses company name)
-      if(!s.h52new)s.h52new=S.bsehl[s.sym]||S.bsehl[bseName];
-      // BSE Price Band / Upper Circuit
-      if(!s.uc)s.uc=S.bseband[s.sym]==='H'||S.bseband[bseName]==='H';
-      // BSE Volume Gainers
-      if(!s.vg&&(S.bsevolg[s.sym]||S.bsevolg[bseName])){
-        const bv=S.bsevolg[s.sym]||S.bsevolg[bseName];
-        s.vg={today:bv.today,avg:0,weekChange:0};
+    // BSE specific enrichment
+    if(s.ex === 'BSE'){
+      if(!s.h52new) s.h52new = S.bsehl[s.sym] || S.bsehl[upperName];
+      if(!s.uc) s.uc = S.bseband[s.sym] === 'H' || S.bseband[upperName] === 'H';
+      if(!s.vg && (S.bsevolg[s.sym] || S.bsevolg[upperName])){
+        const bv = S.bsevolg[s.sym] || S.bsevolg[upperName];
+        s.vg = { today: bv.today, avg: 0, weekChange: 0 };
       }
-      // BSE Market Cap
-      if(!s.mc&&(S.bsemcap[s.sym]||S.bsemcap[bseName])){
-        s.mc=S.bsemcap[s.sym]||S.bsemcap[bseName]||0;
+      if(!s.mc && (S.bsemcap[s.sym] || S.bsemcap[upperName])){
+        s.mc = S.bsemcap[s.sym] || S.bsemcap[upperName] || 0;
       }
-      // BSE 52W near high (from hi52 in bhav — BSE UDiFF has HI_52_WK in some formats)
-      if(!s.h52near&&s.hi52>0)s.h52near=s.c>=0.97*s.hi52;
-      s.h52=s.h52new||s.h52near;
+      if(!s.h52near && s.hi52 > 0) s.h52near = s.c >= 0.97 * s.hi52;
+      s.h52 = s.h52new || s.h52near;
     }
 
-    const f=S.fut[s.sym];
-    s.fo=null;s.bu='';
+    // F&O Buildup
+    const f = S.fut[s.sym];
+    s.fo = null; s.bu = '';
     if(f){
-      const b=(f.oi-f.doi)>0?(f.oi-f.doi):f.oi;
-      s.fo=b>0?f.doi/b*100:0;
-      if(Math.abs(s.chg)>=.5&&Math.abs(s.fo)>=3){
-        s.bu=s.fo>0?(s.chg>0?'Long Buildup':'Short Buildup'):(s.chg>0?'Short Covering':'Long Unwinding');
+      const b = (f.oi - f.doi) > 0 ? (f.oi - f.doi) : f.oi;
+      s.fo = b > 0 ? f.doi / b * 100 : 0;
+      if(Math.abs(s.chg) >= 0.5 && Math.abs(s.fo) >= 3){
+        s.bu = s.fo > 0 ? (s.chg > 0 ? 'Long Buildup' : 'Short Buildup') : (s.chg > 0 ? 'Short Covering' : 'Long Unwinding');
       }
     }
 
-    const r=Math.max(s.c-Math.max(s.l*.998,s.c*.96),s.c*.005);
-    s.sl=s.c-r;s.t1=s.c+1.5*r;s.t2=s.c+2.5*r;
+    // Initial default stop loss / targets
+    const r = Math.max(s.c - Math.max(s.l * 0.998, s.c * 0.96), s.c * 0.005);
+    s.sl = s.c - r; s.t1 = s.c + 1.5 * r; s.t2 = s.c + 2.5 * r;
   }
 
-  const ds=DL.filter(d=>d<=SEL).slice(-10),hm={};HD=ds;
-  ds.forEach((d,i)=>['bse','nse'].forEach(k=>{
-    const m=DAYS[d]&&DAYS[d][k]||{};
-    for(const y in m){
-      const x=m[y],key=k.toUpperCase()+':'+y;
-      if(x.p>0&&x.c>0)(hm[key]||(hm[key]=Array(ds.length).fill(null)))[i]=(x.c-x.p)/x.p*100;
+  // B06 Fix: Rank capRank STRICTLY by real Market Cap now that s.mc is assigned!
+  U.sort((a,b) => (b.mc || 0) - (a.mc || 0) || (b.t || 0) - (a.t || 0));
+  U.forEach((s, idx) => { s.capRank = idx + 1; });
+
+  // Multi-day performance & Heatmap
+  const ds = DL.filter(d => d <= SEL).slice(-10), hm = {};
+  HD = ds;
+  ds.forEach((d, i) => ['bse','nse'].forEach(k => {
+    const dayMap = DAYS[d] && DAYS[d][k] || {};
+    for(const y in dayMap){
+      const x = dayMap[y], key = k.toUpperCase() + ':' + y;
+      if(x.p > 0 && x.c > 0) (hm[key] || (hm[key] = Array(ds.length).fill(null)))[i] = (x.c - x.p) / x.p * 100;
     }
   }));
 
-  const ret=(a,n)=>{let r=1,c=0;a.slice(-n).forEach(v=>{if(v!=null){r*=1+v/100;c++}});return c?(r-1)*100:null};
+  const ret = (a, n) => { let r = 1, c = 0; a.slice(-n).forEach(v => { if(v != null){ r *= 1 + v / 100; c++; } }); return c ? (r - 1) * 100 : null; };
   for(const s of U){
-    const h=hm[s.ex+':'+s.sym]||Array(ds.length).fill(null);
-    s.hist=h;s.r3=ret(h,3);s.r5=ret(h,5);s.r10=ret(h,10);
-    s.nd=h.filter(v=>v!=null).length;
-    let st=0;for(let i=h.length-1;i>=0&&h[i]>0;i--)st++;s.st=st;
+    const h = hm[s.ex + ':' + s.sym] || Array(ds.length).fill(null);
+    s.hist = h; s.r3 = ret(h, 3); s.r5 = ret(h, 5); s.r10 = ret(h, 10);
+    s.nd = h.filter(v => v != null).length;
+    let st = 0; for(let i = h.length - 1; i >= 0 && h[i] > 0; i--) st++; s.st = st;
   }
 
-  PXH={};
-  DL.filter(d=>d<=SEL).forEach(d=>{
-    ['bse','nse'].forEach(k=>{
-      const m=DAYS[d]&&DAYS[d][k]||{};
-      for(const y in m){
-        const x=m[y],key=k.toUpperCase()+':'+y;
-        if(x.c>0)(PXH[key]||(PXH[key]=[])).push([x.h,x.l,x.c,x.t/1e7,x.v||0,x.o||0,x.p||0]);
+  // PXH assembly with B17 Auto Corporate-Action (Split/Bonus) Adjustment
+  PXH = {};
+  DL.filter(d => d <= SEL).forEach(d => {
+    ['bse','nse'].forEach(k => {
+      const dayMap = DAYS[d] && DAYS[d][k] || {};
+      for(const y in dayMap){
+        const x = dayMap[y], key = k.toUpperCase() + ':' + y;
+        if(x.c > 0) (PXH[key] || (PXH[key] = [])).push([x.h, x.l, x.c, x.t / 1e7, x.v || 0, x.o || 0, x.p || 0]);
       }
     });
   });
 
-  for(const s of U){
-    const a=PXH[s.ex+':'+s.sym]||[];
-    const prior=a.slice(-21,-1);
-    const avgVol=prior.length?prior.reduce((z,x)=>z+(x[4]||0),0)/prior.length:0;
-    s.rv=avgVol>0&&s.v>0?s.v/avgVol:0;
-    s.vm=s.rv;
-    const tr=[];
-    for(let i=Math.max(1,a.length-14);i<a.length;i++){
-      const x=a[i],prev=a[i-1];
-      tr.push(Math.max(x[0]-x[1],Math.abs(x[0]-prev[2]),Math.abs(x[1]-prev[2])));
+  // B17: Normalize historical series for splits/bonuses
+  for(const key in PXH){
+    const a = PXH[key];
+    if(a.length >= 2){
+      for(let i = 1; i < a.length; i++){
+        const prevC = a[i-1][2], curC = a[i][2];
+        if(prevC > 0 && curC > 0 && curC / prevC <= 0.58){
+          const rawFactor = prevC / curC;
+          let factor = 1;
+          if(Math.abs(rawFactor - 2) < 0.25) factor = 2;
+          else if(Math.abs(rawFactor - 5) < 0.6) factor = 5;
+          else if(Math.abs(rawFactor - 10) < 1.2) factor = 10;
+          else if(Math.abs(rawFactor - 4) < 0.5) factor = 4;
+          else if(Math.abs(rawFactor - 3) < 0.4) factor = 3;
+          else factor = Math.round(rawFactor * 10) / 10;
+
+          if(factor >= 1.5){
+            for(let j = 0; j < i; j++){
+              a[j][0] /= factor; a[j][1] /= factor; a[j][2] /= factor;
+              a[j][4] *= factor; a[j][5] /= factor; a[j][6] /= factor;
+            }
+          }
+        }
+      }
     }
-    s.atr=tr.length?tr.reduce((z,x)=>z+x,0)/tr.length:0;
-    if(s.atr>0){
-      const risk=Math.max(1.5*s.atr,s.c*.005);
-      s.sl=s.c-risk;s.t1=s.c+1.5*risk;s.t2=s.c+2.5*risk;
+  }
+
+  // PASS 2: Indicators with B11 History Guard
+  for(const s of U){
+    const a = PXH[s.ex + ':' + s.sym] || [];
+    const prior = a.slice(-21, -1);
+    
+    // B11 Fix: Require minimum 10 bars of history before computing relative volume
+    if(prior.length >= 10){
+      const avgVol = prior.reduce((z, x) => z + (x[4] || 0), 0) / prior.length;
+      s.rv = avgVol > 0 && s.v > 0 ? s.v / avgVol : 0;
+      s.hasRvHistory = true;
+    } else {
+      s.rv = 0;
+      s.hasRvHistory = false;
+    }
+    s.vm = s.rv;
+
+    // ATR SL calculation
+    const tr = [];
+    for(let i = Math.max(1, a.length - 14); i < a.length; i++){
+      const x = a[i], prev = a[i-1];
+      tr.push(Math.max(x[0] - x[1], Math.abs(x[0] - prev[2]), Math.abs(x[1] - prev[2])));
+    }
+    s.atr = tr.length ? tr.reduce((z, x) => z + x, 0) / tr.length : 0;
+    if(s.atr > 0){
+      const risk = Math.max(1.5 * s.atr, s.c * 0.005);
+      s.sl = s.c - risk; s.t1 = s.c + 1.5 * risk; s.t2 = s.c + 2.5 * risk;
     }
 
-    // EMA20 + RSI14 calculation
-    const closes=a.map(x=>x[2]);
-    s.ema20=calcEMA(closes,20);
-    s.rsi14=calcRSI(closes,14);
-    s.aboveEMA=s.ema20!=null && s.ema20>0 && s.c > s.ema20;
+    // EMA20 + RSI14
+    const closes = a.map(x => x[2]);
+    s.ema20 = calcEMA(closes, 20);
+    s.rsi14 = calcRSI(closes, 14);
+    s.aboveEMA = s.ema20 != null && s.ema20 > 0 && s.c > s.ema20;
+
+    // B02 Fix: Catalysts evaluated AFTER rv, dl, and h52new are assigned!
+    let nScore = 0;
+    let catalystReasons = [];
+    if(s.events && s.events.length){
+      nScore += 45; catalystReasons.push(...s.events);
+    }
+    if(s.dl >= 1.0){
+      nScore += 35;
+      const instTag = (s.dealObj && s.dealObj.isInst) ? '🏛️ Institutional' : '💼 Bulk';
+      catalystReasons.push(`${instTag} Deal Net Inflow +₹${s.dl.toFixed(1)} Cr`);
+    }
+    if(s.rv >= 2.5 && Math.abs(s.chg) >= 2.5){
+      nScore += 40;
+      catalystReasons.push(`🚀 Volume Blast (${s.rv.toFixed(1)}× Vol with ${s.chg >= 0 ? '+' : ''}${s.chg.toFixed(1)}% move)`);
+    } else if(s.rv >= 1.8 && Math.abs(s.chg) >= 2.0){
+      nScore += 25;
+      catalystReasons.push(`⚡ High Volume Expansion (${s.rv.toFixed(1)}× Vol)`);
+    }
+    if(s.h52new && s.chg >= 1.5){
+      nScore += 30; catalystReasons.push('🏆 New 52-Week High Breakout');
+    }
+    if(s.deliv_per >= 60 && s.chg >= 1.0 && s.cr >= 2.0){
+      nScore += 25; catalystReasons.push(`📦 High Delivery Accumulation (${s.deliv_per.toFixed(0)}%)`);
+    }
+    if(Math.abs(s.gap) >= 2.5){
+      nScore += 20; catalystReasons.push(`🌅 Large Gap Action (${s.gap >= 0 ? '+' : ''}${s.gap.toFixed(1)}%)`);
+    }
+    s.news_reasons = catalystReasons;
+    s.isNewsCatalyst = nScore >= 20;
+    s.news_score = nScore;
   }
 
   rangeCalc();
-  nrCalc(); // NR4 / NR7 calculation
+  nrCalc();
+
+  // Pattern detection & Curated Swing Strategy
   for(const s of U){
     detectChartPatterns(s);
-    
-    // --- Swing Trading Setup Classification (User Request) ---
-    // Condition 1: Consolidation Breakout with 1.5x - 2.0x+ Volume
-    const hasConsolidation = (s.rb && (s.rb.st === 'BO' || s.rb.st === 'TOUCH' || s.rb.st === 'NEAR')) || s.nr4 || s.nr7 || (s.patterns && s.patterns.some(p => ['bull_flag','asc_tri','rectangle','cup_handle'].includes(p.id)));
-    const isVolumeBreakout = s.rv >= 1.5 && s.chg >= 1.0 && s.c > s.o && s.cp >= 60;
-    s.isSwingBO = (hasConsolidation && isVolumeBreakout) || (s.rb && s.rb.st === 'BO' && s.rv >= 1.5);
 
-    // Condition 2: Low-volume healthy pullback in strong uptrend (Above EMA20, low volume pullback)
-    const isHealthyPullback = s.aboveEMA && s.chg >= -2.0 && s.chg <= 0.5 && s.rv > 0 && s.rv <= 0.85 && s.c > (s.ema20 || 0);
-    s.isSwingPullback = isHealthyPullback;
+    // Strategy Audit Fix: Clean separation of Swing Breakout vs Pullback
+    const isBO = (s.rb && s.rb.st === 'BO') || (s.patterns && s.patterns.some(p => ['bull_flag','asc_tri','rectangle','cup_handle'].includes(p.id)));
+    const hasVolumeBO = s.rv >= 1.5 && s.chg >= 1.0 && s.c > s.o && s.cp >= 60;
+    s.isSwingBO = (isBO && hasVolumeBO) || (s.h52new && s.rv >= 1.5 && s.chg >= 1.5);
 
-    // Swing Score Calculation for Top 20 Daily Ranking
+    // Pullback Setup: Requires prior uptrend (above EMA20), low volume pullback, healthy close
+    s.isSwingPullback = s.aboveEMA && s.chg >= -2.0 && s.chg <= 0.5 && s.rv > 0 && s.rv <= 0.85;
+
+    s.swingType = s.isSwingBO ? 'BREAKOUT' : (s.isSwingPullback ? 'PULLBACK' : (s.nr4 || s.nr7 ? 'NR_SETUP' : 'NONE'));
+
     let swScore = 0;
-    if(s.isSwingBO) swScore += 50;
-    if(s.isSwingPullback) swScore += 35;
+    if(s.isSwingBO) swScore += 45;
+    if(s.isSwingPullback) swScore += 40;
     if(s.rv >= 2.0) swScore += 20;
     else if(s.rv >= 1.5) swScore += 12;
-    if(s.aboveEMA) swScore += 10;
-    if(s.patterns && s.patterns.length) swScore += (s.patterns.length * 8);
+    if(s.aboveEMA) swScore += 15;
+    if(s.patterns && s.patterns.length) swScore += Math.min(20, s.patterns.length * 8);
     if(s.cp >= 75) swScore += 10;
-    if(s.deliv_per >= 50) swScore += 8;
-    if(s.t >= 10e7) swScore += 8; // Liquid stock (turnover >= 10 Cr)
+    if(s.deliv_per >= 50) swScore += 10;
+    if(s.t >= 10e7) swScore += 10;
     s.swingScore = swScore;
   }
 
-  const o=[...U].sort((a,b)=>a.cr-b.cr);
-  o.forEach((s,i)=>s.tp=i/o.length*100);
+  // Calibrate final scores
+  const o = [...U].sort((a,b) => a.cr - b.cr);
+  o.forEach((s, i) => s.tp = i / o.length * 100);
 
-  U.forEach(s=>{
-    const[p,t]=score(s);
-    s.sc=p;s.tags=t;
+  U.forEach(s => {
+    const [p, t] = score(s);
+    s.sc = p; s.tags = t;
   });
+
+  // Step 5: Market Regime Breadth Indicator
+  const aboveCount = U.filter(s => s.aboveEMA).length;
+  const breadthPct = U.length ? (aboveCount / U.length * 100) : 50;
+  window.MARKET_BREADTH = breadthPct;
+  const regimeEl = $('market-regime');
+  if(regimeEl){
+    if(breadthPct >= 55) regimeEl.innerHTML = `<span class="chip" style="background:#064e3b;color:#6ee7b7;font-weight:700">🟢 Regime: Bullish (${breadthPct.toFixed(0)}% > EMA20)</span>`;
+    else if(breadthPct >= 40) regimeEl.innerHTML = `<span class="chip" style="background:#451a03;color:#fcd34d;font-weight:700">🟡 Regime: Neutral (${breadthPct.toFixed(0)}% > EMA20)</span>`;
+    else regimeEl.innerHTML = `<span class="chip" style="background:#450a0a;color:#fca5a5;font-weight:700">🔴 Regime: Caution (${breadthPct.toFixed(0)}% > EMA20)</span>`;
+  }
+
   return U.length;
 }
 
@@ -796,7 +899,7 @@ function rangeCalc(){
     if(w>RB.w)continue;
     const av=sv/pr.length,vx=av>0&&s.v>0?s.v/av:0,dist=(s.c-hi)/hi*100;
     let st='';
-    if(dist>0&&dist<=RB.ext)st=vx>=RB.vx?'BO':'BO—lowvol';
+    if(dist>0&&dist<=RB.ext)st=vx>=RB.vx?'BO':'BO·lowvol';
     else if(dist<=0&&s.h>hi)st='TOUCH';
     else if(dist<=0&&dist>=-RB.near)st='NEAR';
     if(!st)continue;
@@ -831,102 +934,38 @@ function nrCalc(){
 
 // Scoring system
 function score(s){
-  let p=0;const t=[],a=(k,x)=>{p+=x;t.push(k)},w=(k)=>{p-=1;t.push(k+'⚠️')};
-  if(s.candle>0)a('Bull',1);
-  if(s.isOL)a('🎯O=L_Rocket',2);
-  if(s.cp>=70)a('CloseHigh',2);else if(s.cp>=55)a('CloseUp',1);
-  if(s.chg>=2.5)a('+2.5%',2);else if(s.chg>=1)a('+1%',1);
-  if(s.tp>=75)a('Liquid',1);
-  if(s.rv>=1.5)a('RelVol—'+s.rv.toFixed(1),1);
+  let p = 0; const t = [];
+  const a = (name, pts) => { p += pts; t.push(name); };
 
-  // NEW FEATURE 4: 52W High distinction (New vs Near)
-  if(s.h52new)a('🆕52W-Hi',2);      // new high today = strong signal
-  else if(s.h52near)a('Near52W',1);  // near high = mild signal
+  // Pillar 1: Price Momentum & Candle Action (0 to 5 pts)
+  if(s.cp >= 75) a('CloseHigh', 1.5);
+  else if(s.cp >= 60) a('GoodClose', 1.0);
+  if(s.chg >= 2.5) a('StrongGain', 1.5);
+  else if(s.chg >= 1.0) a('Gain+1%', 1.0);
+  if(s.isOL) a('🎯O=L_Rocket', 2.0);
 
-  // NEW FEATURE 3: EMA & Wilder's RSI
-  if(s.aboveEMA)a('AbvEMA20',1);
-  if(s.rsi14!=null){
-    if(s.rsi14>=60&&s.rsi14<=78)a('RSI:'+s.rsi14.toFixed(0),1);      // momentum zone
-    else if(s.rsi14>=50&&s.rsi14<60)a('RSI:'+s.rsi14.toFixed(0),0);  // trending up, no bonus
-    if(s.rsi14>78)w('OB:'+s.rsi14.toFixed(0));  // overbought
-    if(s.rsi14<30)w('OS:'+s.rsi14.toFixed(0));  // oversold — avoid
-  }
+  // Pillar 2: Volume & Institutional Delivery (0 to 5 pts)
+  if(s.rv >= 2.5) a('VolSurge+' + s.rv.toFixed(1) + 'x', 2.5);
+  else if(s.rv >= 1.5) a('VolExpansion', 1.5);
+  if(s.deliv_per >= 60 && s.chg > 0) a('DelivHi%' + s.deliv_per.toFixed(0), 1.5);
+  if(s.dl >= 1.0) a('DealInflow', 1.5);
 
-  // NEW FEATURE 1: Delivery % signal
-  if(s.deliv_per>=60&&s.chg>0)a('DelivHi%'+s.deliv_per.toFixed(0),1);
-  if(s.deliv_per>=80&&s.chg>0)a('DelivMax',1); // extra point for very high delivery
+  // Pillar 3: Trend & Structural Setup (0 to 5 pts)
+  if(s.aboveEMA) a('AboveEMA20', 1.5);
+  if(s.h52new) a('52W-High', 2.0);
+  else if(s.h52near) a('Near52W', 1.0);
+  if(s.nr7) a('NR7_Coil', 1.5);
+  else if(s.nr4) a('NR4_Coil', 1.0);
+  if(s.rb && s.rb.st === 'BO') a('RangeBO', 2.0);
+  if(s.patterns && s.patterns.length) a(s.patterns[0].name.split(' ')[0], 1.5);
 
-  // NR4 / NR7
-  if(s.nr7)a('NR7',1);else if(s.nr4)a('NR4',1);
+  // Pillar 4: Risk / False Breakout Guards (Penalties)
+  if(s.cp < 35 && s.rv >= 1.5) { p -= 2.0; t.push('⚠️UpperRejection'); }
+  if(s.uc) { p -= 1.0; t.push('🔒CircuitLock'); }
 
-  // F&O Buildup
-  if(s.bu==='Long Buildup')a('LongBU',1);
-  if(s.bu==='Short Covering')a('ShortCov',1);
-  if(s.bu==='Short Buildup')w('ShortBU');
-
-  // PCR in score
-  const pcr=S.pcr[s.sym]||0;
-  if(pcr>=1.5)a('PCR+',1);
-  if(pcr>0&&pcr<=0.7)w('PCR-');
-
-  // Deal intensity normalized by Market Cap
-  const dealPct = s.mc>0 ? Math.abs(s.dl)/s.mc*100 : 0;
-  if(s.dl>=0.5&&(dealPct>=0.05||!s.mc))a('DealBuy',1);
-  if(s.dl<=-0.5&&(dealPct>=0.05||!s.mc))w('DealSell');
-
-  // NEW FEATURE 5: CAS Threshold Raised + IEP Gap Signal
-  if(s.cas>=1.5)a('CAS++',2);    // strong closing auction demand
-  else if(s.cas>=0.5)a('CAS+',1); // moderate demand
-
-  // IEP gap signal (Pre-Open)
-  if(s.iep>0&&s.p>0){
-    const iepGap=(s.iep-s.p)/s.p*100;
-    if(iepGap>=1)a('IEP+'+iepGap.toFixed(1)+'%',1);  // gap-up in pre-open
-    if(iepGap<=-1)w('IEP-'+Math.abs(iepGap).toFixed(1)+'%');  // gap-down warning
-  }
-
-  if(s.rb&&s.rb.st==='BO')a('RangeBO',2);
-  if(s.st>=3)a('Streak'+s.st,1);
-  if(s.r5>=5&&s.nd>=3)a('5D+'+s.r5.toFixed(0)+'%',1);
-
-  // Score floor at 0
-  return[Math.max(0,p),t];
+  return [Math.max(0, Math.round(p * 10) / 10), t];
 }
 
-const PW=s=>s['r'+PWN]==null?-999:s['r'+PWN];
-
-const TABS=[
-{id:'swing20',n:'⭐ Swing Top 20',d:'Consolidation + High Volume (1.5x–2x+ of 20D Avg) Breakouts & Low-Volume Pullbacks. Daily Curated Top 20 Swing setups strictly ranked by institutional conviction.',ok:s=>s.swingScore>=40&&s.c>=20&&s.cr>=1.0,so:'sw_score'},
-{id:'deliv',n:'📦 Top Delivery',d:'Extreme Institutional Accumulation — Total volume ka 55%–90%+ Delivery me uthaya gaya ho aur ₹1 Cr+ Delivery Value ho. Smart money buying before big moves.',ok:s=>(s.deliv_per>=55||(s.deliv_cr>=2.0&&s.deliv_per>=45))&&s.c>=15&&s.cr>=1.0,so:'deliv_cr'},
-{id:'news',n:'📰 News & Catalysts',d:'High-Impact Catalysts: Badi corporate news, abnormal volume spike (2x+), 52W high breakout, ya sudden price surge jisse stock intraday bhaag ya gir raha ho.',ok:s=>s.isNewsCatalyst||(s.events&&s.events.length>0)||(s.news_score>=20),so:'news_score'},
-{id:'deals',n:'🏛️ FII/DII Deals',d:'Bulk Deals, Block Deals & Institutional Net Inflow — Bada paisa (Mutual Funds, FIIs, HNIs) kahan lag raha hai.',ok:s=>s.dl>=0.5||(S.deal&&S.deal[s.sym]),so:'cr'},
-{id:'patterns',n:'⭐ Swing Top 20',d:'Consolidation + High Volume (1.5x–2x+ of 20D Avg) Breakouts & Low-Volume Pullbacks. Daily Curated Top 20 Swing setups strictly ranked by institutional conviction.',ok:s=>s.swingScore>=40&&s.c>=20&&s.cr>=1.0,so:'sw_score'},
-{id:'patterns',n:'📐 Chart Patterns',d:'Fidelity & Rayner Classical Patterns: Bull Flag, Ascending Triangle, Double Bottom (W), Cup & Handle, Rectangle Box, Bullish Engulfing, Hammer, Piercing Line, Inside Bar (Harami), NR4/NR7, Explosion Gap.',ok:s=>s.patterns&&s.patterns.length>0,so:'sc'},
-{id:'hm',n:'🔥 Heatmap',d:'Market Heatmap view — Nifty & BSE ke stocks ka live visual color map. Green = Gainers, Red = Losers. Tile par click karke direct chart kholo.',ok:s=>true,so:'chg'},
-{id:'ol',n:'🎯 Open=Low Rocket',d:'Subah Flat khulne (-1.5% se +1.5%) ke baad Open ≈ Low (sellers zero, buyers aggressive) aur +2%+ rally karne wale high-momentum breakout stocks.',ok:s=>s.isOL||(s.o>0&&(s.o-s.l)/s.o<=0.004&&Math.abs(s.gap)<=1.5&&s.c>s.o&&s.chg>=2.0&&s.cp>=65),so:'chg'},
-{id:'perf',n:'🏆 Top Performers',d:'Saved din-ba-din data se compounded return — jo stock lagatar achha chal raha hai wo sabse upar. Window upar "Perf window" se badlo; har din ka Chg% heatmap me dikhta hai.',ok:s=>PW(s)>0,so:'pw'},
-{id:'wl',n:'⭐ Watchlist',d:'Apne chune hue stocks — filters ke bina, din-ba-din heatmap, signals, SL/targets aur note ke saath. ⭐ kisi bhi table se dabao ya upar symbol type karke Add karo. Note ke liye ✏️ par click karo.',ok:s=>WL.has(s.sym),so:'sc'},
-{id:'rbo',n:'🧱 Range Breakout',d:'Pichle N din ki tight consolidation range (resistance) ke upar close ya uske paas — jaise ONWARDTEC ka 310 breakout. Entry = resistance, SL = range ka beech, T1/T2 = range height ka 1x/2x. Settings neeche.',ok:s=>!!s.rb,so:'rb'},
-{id:'swing',n:'🏹 Swing',d:'Bullish candle, upar close, +0.5%+. Entry ≈ close, SL = day low (max 4% risk), T1 1.5R, T2 2.5R.',ok:s=>s.candle>0&&s.chg>=.5&&s.cp>=60,so:'sc'},
-{id:'btst',n:'🌅 Next Day',d:'Strong close (Close Pos ≥70%, +1%+), upper-circuit nahi (usme exit nahi milta). Max 1—3 din hold.',ok:s=>s.candle>0&&s.chg>=1&&s.cp>=70,so:'sc'},
-{id:'brk',n:'🚀 Breakout',d:'+3%+ move, ≥70% close, 52-week high ke paas ya new 52W high — sirf liquid stocks me kaam karta hai.',ok:s=>s.candle>0&&s.chg>=3&&s.cp>=70&&s.h52,so:'chg'},
-{id:'vol',n:'🔊 Volume Surge',d:'Aaj ka traded quantity pichhle 20 saved sessions ke average se 3x+ ho aur price positive ho. Kam history/volume data ho to signal nahi banega.',ok:s=>s.rv>=3&&s.chg>0,so:'cr'},
-{id:'fno',n:'⚡ F&O Buildup',d:'Near-month futures: price + OI change se Long/Short buildup. FNO .DAT file chahiye.',ok:s=>!!s.bu,so:'sc'},
-{id:'deal',n:'🤝 Deals',d:'Bulk/BSE deals me net buying ≥ ₹0.5 Cr wale stocks.',ok:s=>s.dl>=.5,so:'cr'},
-{id:'nr',n:'🎯 Narrow Range',d:'Aaj ki range ≤ 2% aur |chg| ≤ 1%. NOTE: sirf 1 din ka data hai, asli consolidation ke liye multi-day history chahiye.',ok:s=>s.rng<=2&&Math.abs(s.chg)<=1,so:'cr'},
-{id:'nr47',n:'📐 NR4/NR7',d:'Last N bars ki sabse chhoti range (NR4 ya NR7). Volatility contraction — breakout ki taiyari. Dedicated columns: range ₹/%, prev max range, EMA Δ% & RSI. Sirf tab history wale stocks.',ok:s=>s.nr4||s.nr7,so:'cr'},
-];
-
-// localStorage keys use ss6
-let WL=new Set();try{WL=new Set(JSON.parse(localStorage.getItem('ss6wl')||localStorage.getItem('ss5wl')||'[]'))}catch(e){}
-//CORE-END
-
-let cur='perf';
-const $=id=>document.getElementById(id);
-const e=x=>String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;');
-const fm=(x,d=2)=>(x!=null&&Number.isFinite(+x))?(+x).toLocaleString('en-IN',{minimumFractionDigits:d,maximumFractionDigits:d}):'–';
-
-// Date format (e.g. 16-Oct)
 function fmtD(x){
   try{
     const parts=String(x).split('-');
@@ -942,7 +981,7 @@ function fmtD(x){
 function scBadge(s){
   const cls = s.sc>=8?'s3':s.sc>=5?'s2':s.sc>=3?'s1':'s0';
   const sigs = (s.tags&&s.tags.length)?s.tags.join(', '):'None';
-  return `<span class="sc ${cls}" title="Score: ${s.sc}/15+ | Signals: ${e(sigs)}">${s.sc}</span>`;
+  return `<span class="sc ${cls}" title="Score: ${s.sc} pts | Signals: ${e(sigs)}">${s.sc}</span>`;
 }
 
 // Default Table Headers (NEW FEATURE 7: Deliv% and NEW FEATURE 2: EMA20 Δ%)
@@ -1768,23 +1807,24 @@ window.openFundamentals = function(sym){
   $('f_sym_title').innerHTML = `<b>${e(s.sym)}</b> <span style="font-size:13px;color:var(--mu)">· ₹${s.c.toFixed(2)} (${s.chg >= 0 ? '+' : ''}${s.chg.toFixed(2)}%)</span>`;
   $('f_sec_title').textContent = `${s.name || s.sym} · Exchange: ${s.ex} · Sector: ${s.sec || 'NSE/BSE Listed'}`;
 
-  const mcapCr = s.mc ? (s.mc / 1e7).toFixed(0) : ((s.c * (s.v || 1e6) * 10) / 1e7).toFixed(0);
-  const peEst = s.c > 0 ? (s.c / Math.max(1, (s.c * 0.04))).toFixed(1) : '–';
+  const mcapDisp = s.mc ? `₹${Number(s.mc).toLocaleString('en-IN', {maximumFractionDigits:0})} Cr` : '–';
   const delPer = s.deliv_per ? s.deliv_per.toFixed(1) + '%' : '–';
   const delCr = s.deliv_cr ? `₹${s.deliv_cr.toFixed(2)} Cr` : '–';
+  const relVol = s.rv ? `${s.rv.toFixed(1)}× (20D Avg)` : '–';
   const ema20Dist = s.ema20 ? `${((s.c - s.ema20) / s.ema20 * 100).toFixed(1)}%` : '–';
   const rsi = s.rsi14 ? s.rsi14.toFixed(1) : '–';
   const range52 = s.hi52 ? `₹${(s.hi52 * 0.6).toFixed(0)} — ₹${s.hi52.toFixed(2)}` : '–';
 
+  // B16 Fix: Real Market Cap, Delivery %, 20D RelVol, and genuine institutional research links
   $('f_body').innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:12px;margin-bottom:20px">
       <div style="background:var(--bg);padding:10px;border-radius:8px;border:1px solid var(--bd)">
         <div class="mu" style="font-size:11px">Market Cap</div>
-        <div style="font-size:15px;font-weight:700">₹${mcapCr} Cr</div>
+        <div style="font-size:15px;font-weight:700;color:var(--t)">${mcapDisp}</div>
       </div>
       <div style="background:var(--bg);padding:10px;border-radius:8px;border:1px solid var(--bd)">
-        <div class="mu" style="font-size:11px">Stock P/E (Approx)</div>
-        <div style="font-size:15px;font-weight:700">${peEst}</div>
+        <div class="mu" style="font-size:11px">Relative Volume (20D)</div>
+        <div style="font-size:15px;font-weight:700">${relVol}</div>
       </div>
       <div style="background:var(--bg);padding:10px;border-radius:8px;border:1px solid var(--bd)">
         <div class="mu" style="font-size:11px">Delivery %</div>
