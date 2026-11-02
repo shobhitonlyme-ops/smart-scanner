@@ -1,5 +1,12 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<script>
+window.$ = function(id) { return document.getElementById(id); };
+window.e = function(x) { return (x == null ? '' : String(x)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+</script>
 <title>SmartScanner v8 — NSE + BSE + F&amp;O + Deals · Technical Audit Build</title>
 <style>
 :root{--bg:#0a0e1a;--card:#141929;--bd:#1e2d4a;--tx:#e2e8f0;--mu:#7a8aa5;--g:#00e676;--r:#ff5252;--a:#ffab40;--b:#448aff;--t:#64ffda}
@@ -69,7 +76,7 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
 .badge-rank{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-weight:700;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;box-shadow:0 1px 3px rgba(0,0,0,0.3);}
 </style><script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 </head><body>
-<header><h1>📊 Smart Scanner v8 <span class="tg" style="background:#1e3a6a;color:var(--b);font-weight:700;font-size:11px">v8.0</span> <span class="mu">— NSE + BSE + F&amp;O + Deals · Technical Audit Build</span></h1><div style="display:flex;align-items:center;gap:12px"><span id="market-regime"></span><span class="mu" id="info">No data loaded</span></div></header>
+<header><h1>📊 Smart Scanner v8 <span class="tg" style="background:#059669;color:#ffffff;font-weight:700;font-size:11px">v8.1 FIXED</span> <span class="mu">— NSE + BSE + F&amp;O + Deals · Technical Audit Build</span></h1><div style="display:flex;align-items:center;gap:12px"><span id="market-regime"></span><span class="mu" id="info">No data loaded</span></div></header>
 <div id="drop">📂 <b>Saari files ek saath drop karo</b> (ya click karo) — NSE <code>PR*.zip</code> / <code>pd*.csv</code> (with Delivery %), BSE BhavCopy, <code>FNO_BC*.DAT</code>, Bulk/BSE deals, Volume Gainers, Closing Auction, Pre-Open IEP…<br><span class="mu">Format auto-detect hota hai — NSE & BSE dono support. BSE ke liye: UDiFF Bhavcopy + Circuit Filter + 52W High + Market Cap CSV bhi drop karo. Purane kai din ki bhavcopy bhi ek saath drop kar sakte ho — har file apni date me save hogi. Delivery % aur Pre-Open IEP signals auto-calculate hote hain.</span>
 <input type="file" id="fi" multiple hidden></div>
 <div id="err"></div><div id="loaded"></div><div class="mu" style="margin:0 18px 8px">v8 data note: Relative volume, EMA20, RSI14, Delivery % &amp; NR4/7 require prior saved sessions. BSE: 52W-Hi, Price-Band, Market Cap, Volume Gainers, Pre-Open IEP ab support karta hai. ZIP import uses JSZip offline; CSV/DAT work directly. Charts require internet. Shortcuts: [1-9] Tabs · [/] Search · [Esc] Close chart.</div>
