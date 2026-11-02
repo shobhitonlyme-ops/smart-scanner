@@ -170,7 +170,7 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
 <select id="ci"><option value="1">1 min</option><option value="5">5 min</option><option value="15">15 min</option><option value="60">1 hour</option><option value="D" selected>Daily</option><option value="W">Weekly</option><option value="M">Monthly</option></select>
 <select id="cst"><option value="1">Candles</option><option value="0">Bars</option><option value="2">Line</option><option value="9">Hollow candles</option><option value="8">Heikin Ashi</option></select>
 <select id="ct"><option value="dark">Dark</option><option value="light">Light</option></select>
-<select id="cm"><option value="n" selected>New tab (Fast &amp; Full)</option><option value="p">Panel me kholo</option></select>
+<select id="cm"><option value="n" selected>New tab (Fast &amp; Full - No TV Restrictions)</option></select>
 <label class="mu"><input type="checkbox" class="ind" value="MAExp@tv-basicstudies" checked> EMA</label>
 <label class="mu"><input type="checkbox" class="ind" value="RSI@tv-basicstudies"> RSI</label>
 <label class="mu"><input type="checkbox" class="ind" value="MACD@tv-basicstudies"> MACD</label>
@@ -237,6 +237,8 @@ window.onerror = function(msg, url, lineNo, colNo, error) {
     errEl.style.color = '#ef4444';
   }
 };
+function $(id){ return document.getElementById(id); }
+function e(x){ return (x==null?'':String(x)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 //CORE-START
 const N=v=>{v=parseFloat(String(v==null?'':v).replace(/[,₹\s]/g,''));return isFinite(v)?v:0};
 const V=(o,keys)=>{for(const k of keys){if(o[k]!==undefined&&o[k]!==''&&o[k]!==null)return N(o[k])}return 0};
@@ -1554,13 +1556,16 @@ function addWL(){
 const RBK=['lb','w','vx','ext','near','min'];
 try{Object.assign(RB,JSON.parse(localStorage.getItem('ss6rb')||localStorage.getItem('ss5rb')||'{}'))}catch(x){}
 RBK.forEach(k=>{
-  $('rb_'+k).value=RB[k];
-  $('rb_'+k).addEventListener('change',()=>{
-    RB[k]=+$('rb_'+k).value;
-    try{localStorage.setItem('ss6rb',JSON.stringify(RB))}catch(x){}
-    if(U.length){rangeCalc();nrCalc();U.forEach(s=>{const[p,g]=score(s);s.sc=p;s.tags=g})}
-    render();
-  });
+  const el = $('rb_'+k);
+  if(el){
+    el.value=RB[k];
+    el.addEventListener('change',()=>{
+      RB[k]=+el.value;
+      try{localStorage.setItem('ss6rb',JSON.stringify(RB))}catch(x){}
+      if(U.length){rangeCalc();nrCalc();U.forEach(s=>{const[p,g]=score(s);s.sc=p;s.tags=g})}
+      render();
+    });
+  }
 });
 
 function rbRows(d){
@@ -1914,10 +1919,7 @@ document.addEventListener('click',async x=>{
   const nn=x.target.closest('[data-n]');if(nn){const y=nn.dataset.n,v=prompt('Note — '+y,NT[y]||'');if(v!==null){v.trim()?NT[y]=v.trim():delete NT[y];saveWL();render()}return}
   const c=x.target.closest('[data-c]');if(c){
     x.preventDefault();
-    const sym = c.dataset.c;
-    const s = (window.U || []).find(z => z.sym === sym);
-    const tvSym = s ? (s.ex === 'NSE' ? 'NSE:' + s.sym : 'BSE:' + (s.code || s.sym)) : ('NSE:' + sym);
-    window.open(`https://in.tradingview.com/chart/?symbol=${encodeURIComponent(tvSym)}`, '_blank');
+    openChart(c.dataset.c);
   }
   const t=x.target.closest('[data-t]'),w=x.target.closest('[data-w]');
   if(t){cur=t.dataset.t; if(cur==='hm'){ VIEW_MODE='heatmap'; } else if(cur!=='hm' && cur!=='perf' && VIEW_MODE==='heatmap' && t.dataset.t!=='hm'){ /* keep view mode */ } render();}
