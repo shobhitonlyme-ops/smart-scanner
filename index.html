@@ -77,12 +77,12 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
 .badge-rank{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-weight:700;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;box-shadow:0 1px 3px rgba(0,0,0,0.3);}
 </style><script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 </head><body>
-<header><h1>📊 Smart Scanner v8 <span class="tg" style="background:#059669;color:#ffffff;font-weight:700;font-size:11px">v8.4 LIVE</span> <span class="mu">— NSE + BSE + F&amp;O + Deals · Technical Audit Build</span></h1><div style="display:flex;align-items:center;gap:12px"><span id="market-regime"></span><span class="mu" id="info">No data loaded</span></div></header>
+<header><h1>📊 Smart Scanner v8 <span class="tg" style="background:#059669;color:#ffffff;font-weight:700;font-size:11px">v8.5 LIVE-INTRADAY</span> <span class="mu">— NSE + BSE + F&amp;O + Deals · Technical Audit Build</span></h1><div style="display:flex;align-items:center;gap:12px"><span id="market-regime"></span><span class="mu" id="info">No data loaded</span></div></header>
 <div id="drop">📂 <b>Saari files ek saath drop karo</b> (ya click karo) — NSE <code>PR*.zip</code> / <code>pd*.csv</code> (with Delivery %), BSE BhavCopy, <code>FNO_BC*.DAT</code>, Bulk/BSE deals, Volume Gainers, Closing Auction, Pre-Open IEP…<br><span class="mu">Format auto-detect hota hai — NSE & BSE dono support. BSE ke liye: UDiFF Bhavcopy + Circuit Filter + 52W High + Market Cap CSV bhi drop karo. Purane kai din ki bhavcopy bhi ek saath drop kar sakte ho — har file apni date me save hogi. Delivery % aur Pre-Open IEP signals auto-calculate hote hain.</span>
 <input type="file" id="fi" multiple hidden></div>
 <div id="err"></div><div id="loaded"></div><div class="mu" style="margin:0 18px 8px">v8 data note: Relative volume, EMA20, RSI14, Delivery % &amp; NR4/7 require prior saved sessions. BSE: 52W-Hi, Price-Band, Market Cap, Volume Gainers, Pre-Open IEP ab support karta hai. ZIP import uses JSZip offline; CSV/DAT work directly. Charts require internet. Shortcuts: [1-9] Tabs · [/] Search · [Esc] Close chart.</div>
 <div id="days"><span class="mu">🗂 Saved days:</span><span id="dl"></span><span class="mu">📅 Data date:</span><input type="date" id="dt" title="Bhavcopy se auto-detect hoti hai; sirf deals/FNO jaisi alag files ke liye ye date use hogi">
-<button id="bk">⬇ Backup</button><button id="rs">⬆ Restore</button><button id="exp">📥 Export CSV</button><button id="bt">🧪 Backtest</button><button id="cl">🗑 Clear all</button><input type="file" id="rf" accept=".json" hidden></div><nav id="tabs"></nav><div id="desc"></div><section id="btpanel"><b>🧪 Portfolio Strategy Backtest &amp; Validation</b> <span class="mu">Multi-strategy simulation across saved daily bhavcopies with position sizing, portfolio equity tracking, and realistic transaction costs (STT + slippage).</span>
+<button id="btn_refresh_live" onclick="window.syncLiveMarketData()" style="background:#065f46;color:#6ee7b7;border:1px solid #10b981;font-weight:700;cursor:pointer;border-radius:6px;padding:5px 12px;font-size:11px;display:inline-flex;align-items:center;gap:4px">🔄 Refresh Market (Live)</button><button id="bk">⬇ Backup</button><button id="rs">⬆ Restore</button><button id="exp">📥 Export CSV</button><button id="bt">🧪 Backtest</button><button id="cl">🗑 Clear all</button><input type="file" id="rf" accept=".json" hidden></div><nav id="tabs"></nav><div id="desc"></div><section id="btpanel"><b>🧪 Portfolio Strategy Backtest &amp; Validation</b> <span class="mu">Multi-strategy simulation across saved daily bhavcopies with position sizing, portfolio equity tracking, and realistic transaction costs (STT + slippage).</span>
 <div style="margin-top:10px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
   <label class="mu">Strategy: 
     <select id="bt_strat" style="background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:6px;padding:5px 8px">
@@ -1656,6 +1656,8 @@ const DB={db:null,ok:false,
 
 async function mergeDay(v){
   const day=DAYS[v.date]||(DAYS[v.date]=Object.assign({date:v.date},NS()));
+  if(v.intraday) day.intraday = true;
+  if(v.intraday_time) day.intraday_time = v.intraday_time;
   for(const k in NS()){
     if(v[k] && Object.keys(v[k]).length){
       day[k]=Object.assign(day[k]||{},v[k]);
@@ -1675,7 +1677,16 @@ function refresh(){
   $('info').textContent=n?`${SEL} · ${n.toLocaleString()} stocks · ${DL.length} din saved${DB.ok?'':' · ⚠ save nahi ho raha'}`:'No data loaded';
   // Only show the Latest Active Day pill on screen (keep historical sessions in background memory)
   const lastD = DL[DL.length-1];
-  $('dl').innerHTML = lastD ? `<span class="chip dc sel" data-d="${lastD}"><b>📅 Latest: ${fmtD(lastD)} '${lastD.slice(2,4)}</b> · ${(Object.keys(DAYS[lastD].nse||{}).length+Object.keys(DAYS[lastD].bse||{}).length).toLocaleString()} stocks</span><span class="mu" style="font-size:11px;margin-left:8px">(${DL.length} sessions history cached for 20D Vol &amp; Patterns)</span>` : '<span class="mu">No data</span>';
+  const lastDayObj = (lastD && DAYS[lastD]) || {};
+  const isLive = !!lastDayObj.intraday;
+  const liveTime = lastDayObj.intraday_time || '';
+  if(isLive){
+    $('info').innerHTML = `<span style="color:#10b981;font-weight:700">🟢 LIVE Market (${liveTime})</span> · ${n.toLocaleString()} stocks · ${DL.length} din saved`;
+  }
+  const statusBadge = isLive
+    ? `<span class="chip dc sel" data-d="${lastD}" style="background:#064e3b;border-color:#10b981;color:#6ee7b7"><b>🟢 LIVE: ${fmtD(lastD)} '${lastD.slice(2,4)} (${liveTime})</b> · ${(Object.keys(lastDayObj.nse||{}).length+Object.keys(lastDayObj.bse||{}).length).toLocaleString()} stocks</span><span class="mu" style="font-size:11px;margin-left:8px">(Intraday Live Snapshot · ${DL.length} sessions history)</span>`
+    : `<span class="chip dc sel" data-d="${lastD}"><b>📅 Latest: ${fmtD(lastD)} '${lastD.slice(2,4)}</b> · ${(Object.keys(lastDayObj.nse||{}).length+Object.keys(lastDayObj.bse||{}).length).toLocaleString()} stocks</span><span class="mu" style="font-size:11px;margin-left:8px">(${DL.length} sessions history cached for 20D Vol &amp; Patterns)</span>`;
+  $('dl').innerHTML = lastD ? statusBadge : '<span class="mu">No data</span>';
   if(SEL)$('dt').value=SEL;
   render();
 }
@@ -1926,6 +1937,26 @@ function openChart(sym){
   // Directly open full web chart in a new tab without any iframe restrictions
   window.open(dest, '_blank');
 }
+
+
+window.syncLiveMarketData = async function(){
+  const btn = $('btn_refresh_live');
+  if(btn) btn.innerHTML = '⏳ Syncing Live...';
+  try {
+    const res = await fetch('data/latest.json?v=' + Date.now(), { cache: 'no-store' });
+    if(res.ok){
+      const cloudDay = await res.json();
+      if(cloudDay && cloudDay.date){
+        await mergeDay(cloudDay);
+        SEL = cloudDay.date;
+        refresh();
+      }
+    }
+  } catch(e) {
+    console.warn('Sync error:', e);
+  }
+  if(btn) btn.innerHTML = '🔄 Refresh Market (Live)';
+};
 
 // Keyboard Shortcuts
 document.addEventListener('keydown',x=>{
