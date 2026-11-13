@@ -75,6 +75,8 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
 .badge-pb{background:rgba(56,189,248,0.15);color:#38bdf8;border:1px solid rgba(56,189,248,0.3);border-radius:4px;padding:2px 6px;font-size:11px;font-weight:600;}
 .badge-pat{background:rgba(168,85,247,0.15);color:#c084fc;border:1px solid rgba(168,85,247,0.3);border-radius:4px;padding:2px 6px;font-size:11px;font-weight:600;margin:1px 2px;display:inline-flex;align-items:center;gap:3px;}
 .badge-rank{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-weight:700;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;box-shadow:0 1px 3px rgba(0,0,0,0.3);}
+.badge{font-size:11px;padding:2px 8px;border-radius:4px;background:#1e2d4a;color:var(--t);font-weight:600;white-space:nowrap;}
+.num{text-align:right;font-variant-numeric:tabular-nums;}
 </style><script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 </head><body>
 <header><h1>📊 Smart Scanner v8 <span class="tg" style="background:#059669;color:#ffffff;font-weight:700;font-size:11px">v8.5 LIVE-INTRADAY</span> <span class="mu">— NSE + BSE + F&amp;O + Deals · Technical Audit Build</span></h1><div style="display:flex;align-items:center;gap:12px"><span id="market-regime"></span><span class="mu" id="info">No data loaded</span></div></header>
@@ -101,7 +103,7 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
 <div id="btout" class="mu" style="margin-top:12px">Save at least 20-25 trading days to run a statistically valid test.</div></section>
 <div id="rbs"><span class="mu">🧱 Range settings:</span>
 <select id="rb_lb"><option value="10">Lookback 10 din</option><option value="20">20 din</option><option value="30">30 din</option><option value="45">45 din</option><option value="60">60 din</option><option value="90">90 din</option><option value="120">120 din</option></select>
-<select id="rb_w"><option value="10">Range ≤10%</option><option value="15">≤15%</option><option value="20">≤20%</option><option value="25">≤25%</option><option value="30">≤30%</option><option value="40">≤40%</option></select>
+<select id="rb_w"><option value="10">Range ≤10%</option><option value="15" selected>≤15%</option><option value="20">≤20%</option><option value="25">≤25%</option><option value="30">≤30%</option><option value="40">≤40%</option></select>
 <select id="rb_vx"><option value="0">Volume: any</option><option value="1.5">≥1.5× avg</option><option value="2">≥2× avg</option><option value="3">≥3× avg</option></select>
 <select id="rb_ext"><option value="3">Breakout ke upar ≤3%</option><option value="5">≤5%</option><option value="10">≤10%</option><option value="20">≤20%</option></select>
 <select id="rb_near"><option value="2">Near: 2% neeche</option><option value="3">3%</option><option value="5">5%</option></select>
@@ -166,6 +168,8 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
 <option value="inside">⏸️ Inside Bar (Harami)</option>
 <option value="nr47">📏 NR4 / NR7</option>
 <option value="gap">🚀 Explosion Gap</option>
+<option value="hanging_man">⚠️ Hanging Man (Warning)</option>
+<option value="shooting_star">🌠 Shooting Star (Warning)</option>
 </select>
 <label class="mu"><input type="checkbox" id="uc" checked> 🔒 Upper-circuit hide</label>
 <div style="display:inline-flex;border:1px solid var(--bd);border-radius:6px;overflow:hidden;margin-left:auto">
@@ -270,7 +274,7 @@ function objs(t){const r=csv(t).filter(x=>x.length>1);if(r.length<2)return{h:[],
 
 // NS state container with iep (FIX 3)
 const NS=()=>({nse:{},bse:{},hl:{},band:{},volg:{},bsehl:{},bseband:{},bsevolg:{},bsemcap:{},deal:{},cas:{},mcap:{},fut:{},pcr:{},iep:{}});
-let S=NS(),BD=null,DAYS={},DL=[],SEL=null,HD=[],PWN=5,PXH={},RB={lb:30,w:25,vx:2,ext:10,near:3,min:10};
+let S=NS(),BD=null,DAYS={},DL=[],SEL=null,HD=[],PWN=5,PXH={},RB={lb:30,w:15,vx:2,ext:10,near:3,min:10};
 
 // Fix 1 — dmy() date parsing
 function dmy(n){
@@ -346,23 +350,56 @@ BSE Missing Data — Download Links:
 - BSE Pre-Open: https://www.bseindia.com/markets/equity/EQReports/preopenMarket.aspx
 */
 const KINDS=[
-// NEW FEATURE 1: Delivery % and Delivery Qty from NSE Bhav
-// B03 Fix: Standalone NSE Delivery MTO handler
-['NSE Delivery (MTO)',h=>h.includes('DELIV_QTY')&&h.includes('DELIV_PER')&&!h.includes('OPEN_PRICE'),o=>o.forEach(r=>{
-  const sym = r.SYMBOL || r['SECURITY'];
-  if(!sym) return;
-  const dQty = N(r.DELIV_QTY || r['DELIV_QTY'] || 0);
-  const dPer = N(r.DELIV_PER || r['DELIV_PER'] || r['DELIV. PER'] || 0);
-  if(S.nse[sym]){
-    S.nse[sym].deliv_qty = dQty;
-    S.nse[sym].deliv_per = dPer;
-  }
+// Finding #10 Fix: NSE Consolidated Bhavcopy (sec_bhavdata_full) with Delivery and Prices in single file
+['NSE Consolidated Bhav (sec_bhavdata_full)',h=>(h.includes('PREV_CLOSE')||h.includes('PREV_CL_PR'))&&h.includes('TURNOVER_LACS')&&h.includes('SYMBOL'),(o)=>o.forEach(r=>{
+  const c=N(r.CLOSE_PRICE||r.CLOSE||r.LAST_PRICE);
+  const srs=(r.SERIES||'').trim();
+  if(srs!=='EQ'||!r.SYMBOL||c<=0) return;
+  const sym=r.SYMBOL.trim();
+  const trdVal=r.TURNOVER_LACS?N(r.TURNOVER_LACS)*1e5:N(r.NET_TRDVAL||0);
+  const prevCl=N(r.PREV_CLOSE||r.PREV_CL_PR||r.PREVCLOSE||0);
+  const dQty=N(r.DELIV_QTY||r['DELIV_QTY']||0);
+  const dPer=N(r.DELIV_PER||r['DELIV_PER']||r['DELIV. PER']||0);
+  S.nse[sym]={
+    sym,
+    name:r.SECURITY||sym,
+    ex:'NSE',
+    o:N(r.OPEN_PRICE||r.OPEN),
+    h:N(r.HIGH_PRICE||r.HIGH),
+    l:N(r.LOW_PRICE||r.LOW),
+    c,
+    p:prevCl,
+    t:trdVal,
+    v:V(r,['TTL_TRD_QNTY','TOTTRDQTY','TOTALTRDQTY','TTLTRDQTY']),
+    hi52:N(r.HI_52_WK||0),
+    deliv_per:dPer,
+    deliv_qty:dQty
+  };
 })],
+
+// Standalone NSE Delivery MTO handler with pre-caching in S.mto
+['NSE Delivery (MTO)',h=>h.includes('DELIV_QTY')&&h.includes('DELIV_PER')&&!h.includes('OPEN_PRICE'),o=>o.forEach(r=>{
+  const sym=(r.SYMBOL||r['SECURITY']||'').trim();
+  if(!sym) return;
+  const dQty=N(r.DELIV_QTY||r['DELIV_QTY']||0);
+  const dPer=N(r.DELIV_PER||r['DELIV_PER']||r['DELIV. PER']||0);
+  if(S.nse[sym]){
+    S.nse[sym].deliv_qty=dQty;
+    S.nse[sym].deliv_per=dPer;
+  }
+  S.mto=S.mto||{};
+  S.mto[sym]={dQty,dPer};
+})],
+
 ['NSE Bhav (pd)',h=>h.includes('PREV_CL_PR')&&h.includes('SERIES')&&h.includes('SYMBOL'),(o)=>o.forEach(r=>{
   const c=N(r.CLOSE_PRICE);if(r.MKT!=='N'||r.SERIES!=='EQ'||!r.SYMBOL||c<=0)return;
-  S.nse[r.SYMBOL]={sym:r.SYMBOL,name:r.SECURITY,ex:'NSE',o:N(r.OPEN_PRICE),h:N(r.HIGH_PRICE),l:N(r.LOW_PRICE),c,p:N(r.PREV_CL_PR),t:N(r.NET_TRDVAL),v:V(r,['TOTTRDQTY','TOTALTRDQTY','TTLTRDQTY']),hi52:N(r.HI_52_WK),
-  deliv_per:N(r.DELIV_PER||r['DELIV_PER']||r['DELIV. PER']||0),
-  deliv_qty:N(r.DELIV_QTY||r['DELIV_QTY']||0)}})],
+  const sym=r.SYMBOL.trim();
+  const mto=(S.mto&&S.mto[sym])?S.mto[sym]:null;
+  const dPer=N(r.DELIV_PER||r['DELIV_PER']||r['DELIV. PER']||(mto?mto.dPer:0));
+  const dQty=N(r.DELIV_QTY||r['DELIV_QTY']||(mto?mto.dQty:0));
+  S.nse[sym]={sym,name:r.SECURITY||sym,ex:'NSE',o:N(r.OPEN_PRICE),h:N(r.HIGH_PRICE),l:N(r.LOW_PRICE),c,p:N(r.PREV_CL_PR),t:N(r.NET_TRDVAL),v:V(r,['TOTTRDQTY','TOTALTRDQTY','TTLTRDQTY']),hi52:N(r.HI_52_WK||0),
+  deliv_per:dPer,
+  deliv_qty:dQty}})],
 
 ['BSE Bhav (UDiFF)',h=>h.includes('TCKRSYMB')&&h.includes('CLSPRIC'),o=>o.forEach(r=>{
   const c=N(r.CLSPRIC);if(!['A','B'].includes(r.SCTYSRS)||r.FININSTRMTP!=='STK'||c<=0)return;
@@ -477,10 +514,15 @@ function calcRSI(prices, period=14){
   return al===0?100:100-100/(1+ag/al);
 }
 
-// FIX 2: Standalone Position Sizing Utility (not stored as function on stock object)
-function calcQty(close, sl, capital=100000, riskPct=1){
-  const risk=close-sl;
-  return risk>0&&sl>0?Math.floor(capital*riskPct/100/risk):0;
+// Finding #6 Fix: Standalone Position Sizing Utility with Position Value Cap (max 25% account per stock)
+function calcQty(close, sl, capital=100000, riskPct=1, maxAllocPct=25){
+  const risk = close - sl;
+  if(risk <= 0 || sl <= 0 || close <= 0) return 0;
+  const riskAmount = capital * (riskPct / 100);
+  const maxVal = capital * (maxAllocPct / 100);
+  const qtyFromRisk = Math.floor(riskAmount / risk);
+  const qtyFromVal = Math.floor(maxVal / close);
+  return Math.max(0, Math.min(qtyFromRisk, qtyFromVal));
 }
 
 let U=[];
@@ -515,23 +557,26 @@ function detectChartPatterns(s){
   const isDowntrend = recentBars.length >= 2 && recentBars[recentBars.length - 1][2] < recentBars[0][2];
   const isUptrend = recentBars.length >= 2 && recentBars[recentBars.length - 1][2] > recentBars[0][2];
 
-  // 2. Hammer (in decline/pullback) vs Hanging Man (in extended uptrend)
+  // Finding #1 & #8 Fix: Hammer vs Hanging Man & Inverted Hammer vs Shooting Star
   const body = Math.abs(cc - co);
   const lowerShadow = Math.min(co, cc) - cl;
   const upperShadow = ch - Math.max(co, cc);
-  if(cRange > 0 && lowerShadow >= 2 * body && upperShadow <= 0.25 * cRange && s.cp >= 65){
+
+  // Hammer vs Hanging Man
+  if(cRange > 0 && lowerShadow >= 2 * body && upperShadow <= 0.25 * cRange && s.cp >= 60){
     if(isDowntrend || !s.aboveEMA){
       s.patterns.push({ id: 'hammer', name: '🔨 Hammer Reversal', type: 'candle', desc: 'Preceding decline rejected by aggressive dip buyers closing near highs' });
-    } else if(isUptrend){
+    } else if(isUptrend || s.aboveEMA){
       s.patterns.push({ id: 'hanging_man', name: '⚠️ Hanging Man', type: 'warning', desc: 'Bearish reversal warning: seller emergence at top of uptrend' });
     }
   }
 
-  // 3. Inverted Hammer (in decline) vs Shooting Star (in extended uptrend)
-  if(cRange > 0 && upperShadow >= 2 * body && lowerShadow <= 0.25 * cRange && cc >= cl){
+  // Finding #8 Fix: Inverted Hammer (body in bottom half, not cc >= cl) vs Shooting Star
+  const isBottomHalf = Math.max(co, cc) <= cl + 0.45 * cRange;
+  if(cRange > 0 && upperShadow >= 2 * body && lowerShadow <= 0.25 * cRange && isBottomHalf){
     if(isDowntrend || !s.aboveEMA){
       s.patterns.push({ id: 'inv_hammer', name: '⚡ Inverted Hammer', type: 'candle', desc: 'Bottom reversal attempt: strong intraday buying surge testing overhead supply' });
-    } else if(isUptrend){
+    } else if(isUptrend || s.aboveEMA){
       s.patterns.push({ id: 'shooting_star', name: '🌠 Shooting Star', type: 'warning', desc: 'Bearish rejection: intraday rally failed and was sold off heavily near highs' });
     }
   }
@@ -552,22 +597,22 @@ function detectChartPatterns(s){
   }
 
   // --- MULTI-BAR CHART PATTERNS (Fidelity Webinar & Rayner Cheat Sheet) ---
-  if(n >= 5){
-    // 7. Bull Flag / Pennant: Sharp impulsive pole (+5% to +20%) followed by 3-5 days tight pause
-    const pole = a.slice(-8, -3);
-    const flag = a.slice(-4);
-    if(pole.length >= 2){
+  if(n >= 6){
+    // Finding #9 Fix: Bull Flag / Pennant: Sharp impulsive pole (+5% to +20%) followed by tight 3-bar consolidation EXCLUDING today
+    const pole = a.slice(-8, -4);
+    const flagPrior = a.slice(-4, -1); // 3 prior consolidation bars EXCLUDING today
+    if(pole.length >= 2 && flagPrior.length >= 2){
       const poleStart = pole[0][1];
-      const poleHigh = Math.max(...pole.map(x => x[0]));
-      const poleGain = poleStart > 0 ? ((poleHigh - poleStart) / poleStart * 100) : 0;
+      const poleEnd = pole[pole.length - 1][2];
+      const poleGain = poleStart > 0 ? ((poleEnd - poleStart) / poleStart * 100) : 0;
       
-      const flagHigh = Math.max(...flag.map(x => x[0]));
-      const flagLow = Math.min(...flag.map(x => x[1]));
+      const flagHigh = Math.max(...flagPrior.map(x => x[0]));
+      const flagLow = Math.min(...flagPrior.map(x => x[1]));
       const flagSpread = flagLow > 0 ? ((flagHigh - flagLow) / flagLow * 100) : 100;
       
-      // If sharp pole > 5% and tight flag spread < 6%, and today breaking out
-      if(poleGain >= 5.0 && flagSpread <= 6.5 && cc >= flagHigh * 0.985 && volX >= 1.3){
-        s.patterns.push({ id: 'bull_flag', name: '🚩 Bull Flag / Pennant', type: 'pattern', desc: 'Sharp pole surge followed by tight consolidation ready for measured move' });
+      // Upward pole gain >= 5%, tight flag spread <= 6.5%, and today breaking ABOVE flagHigh with volume expansion
+      if(poleGain >= 5.0 && flagSpread <= 6.5 && cc > flagHigh && volX >= 1.3){
+        s.patterns.push({ id: 'bull_flag', name: '🚩 Bull Flag / Pennant', type: 'pattern', desc: 'Upward pole surge followed by tight consolidation breakout' });
       }
     }
 
@@ -621,8 +666,8 @@ function detectChartPatterns(s){
     }
   }
 
-  // 11. Rectangle Consolidation Breakout (Fidelity Page 23)
-  if(s.rb && (s.rb.st === 'BO' || s.rb.st === 'TOUCH')){
+  // Finding #3 Fix: Rectangle Consolidation Breakout (Strictly BO, TOUCH excluded)
+  if(s.rb && s.rb.st === 'BO'){
     s.patterns.push({ id: 'rectangle', name: '📦 Rectangle Breakout', type: 'pattern', desc: 'Breaking out of multi-day horizontal support/resistance range' });
   }
 
@@ -811,11 +856,24 @@ function build(){
       s.sl = s.c - risk; s.t1 = s.c + 1.5 * risk; s.t2 = s.c + 2.5 * risk;
     }
 
-    // EMA20 + RSI14
+    // EMA20, EMA50 & RSI14 (Audit Page 4 Enhancement)
     const closes = a.map(x => x[2]);
     s.ema20 = calcEMA(closes, 20);
+    s.ema50 = calcEMA(closes, 50);
     s.rsi14 = calcRSI(closes, 14);
     s.aboveEMA = s.ema20 != null && s.ema20 > 0 && s.c > s.ema20;
+    s.aboveEMA50 = s.ema50 != null && s.ema50 > 0 && s.c > s.ema50;
+    s.isTrendAligned = s.aboveEMA && (s.ema50 ? (s.c > s.ema50 && s.ema20 >= s.ema50 * 0.99) : true);
+    s.emaDist = (s.ema20 && s.ema20 > 0) ? ((s.c - s.ema20) / s.ema20 * 100) : 0;
+    // Extension Guard: Do not chase overextended stocks
+    s.isExtended = s.chg > 8.0 || s.emaDist > 12.0 || (s.rsi14 != null && s.rsi14 >= 78);
+
+    // BUG 6 Fix: Compute 52W high from PXH history
+    const allHighs = a.map(x => x[0]);
+    s.hi52 = allHighs.length ? Math.max(...allHighs) : 0;
+    // BUG 7 Fix: Compute h52new and h52near from history
+    s.h52new = s.hi52 > 0 && s.h > 0 && s.h >= s.hi52 * 0.998;
+    s.h52near = !s.h52new && s.hi52 > 0 && s.c > 0 && s.c >= s.hi52 * 0.95;
 
     // B02 Fix: Catalysts evaluated AFTER rv, dl, and h52new are assigned!
     let nScore = 0;
@@ -852,31 +910,68 @@ function build(){
   rangeCalc();
   nrCalc();
 
-  // Pattern detection & Curated Swing Strategy
+  // Pattern detection & Curated Swing Strategy (Audit Page 4 Enhancement)
   for(const s of U){
     detectChartPatterns(s);
 
-    // Strategy Audit Fix: Clean separation of Swing Breakout vs Pullback
-    const isBO = (s.rb && s.rb.st === 'BO') || (s.patterns && s.patterns.some(p => ['bull_flag','asc_tri','rectangle','cup_handle'].includes(p.id)));
+    const warnPats = (s.patterns || []).filter(p => p.type === 'warning');
+    const bullPats = (s.patterns || []).filter(p => p.type !== 'warning');
+
+    // Swing Breakout: Requires breakout pattern/52W, volume expansion, green candle, NOT overextended
+    const isBO = (s.rb && s.rb.st === 'BO') || bullPats.some(p => ['bull_flag','asc_tri','rectangle','cup_handle','double_bottom'].includes(p.id));
     const hasVolumeBO = s.rv >= 1.5 && s.chg >= 1.0 && s.c > s.o && s.cp >= 60;
-    s.isSwingBO = (isBO && hasVolumeBO) || (s.h52new && s.rv >= 1.5 && s.chg >= 1.5);
+    s.isSwingBO = !s.isExtended && ((isBO && hasVolumeBO) || (s.h52new && s.rv >= 1.5 && s.chg >= 1.5));
 
-    // Pullback Setup: Requires prior uptrend (above EMA20), low volume pullback, healthy close
-    s.isSwingPullback = s.aboveEMA && s.chg >= -2.0 && s.chg <= 0.5 && s.rv > 0 && s.rv <= 0.85;
+    // Swing Pullback: In uptrend, within EMA20 proximity (-2.5% to +3.5%), low volume pullback (<=0.85x), green/stabilizing close, NOT overextended
+    s.isSwingPullback = !s.isExtended && s.aboveEMA && s.emaDist >= -2.5 && s.emaDist <= 3.5 && s.chg >= -2.0 && s.chg <= 1.0 && s.rv > 0 && s.rv <= 0.85 && s.cp >= 40;
 
-    s.swingType = s.isSwingBO ? 'BREAKOUT' : (s.isSwingPullback ? 'PULLBACK' : (s.nr4 || s.nr7 ? 'NR_SETUP' : 'NONE'));
+    s.swingType = s.isSwingBO ? 'BREAKOUT' : (s.isSwingPullback ? 'PULLBACK' : (s.isExtended ? 'EXTENDED' : (s.nr4 || s.nr7 ? 'NR_SETUP' : 'NONE')));
 
     let swScore = 0;
     if(s.isSwingBO) swScore += 45;
     if(s.isSwingPullback) swScore += 40;
-    if(s.rv >= 2.0) swScore += 20;
-    else if(s.rv >= 1.5) swScore += 12;
-    if(s.aboveEMA) swScore += 15;
-    if(s.patterns && s.patterns.length) swScore += Math.min(20, s.patterns.length * 8);
+    if(s.isTrendAligned) swScore += 15;
+    if(s.rv >= 2.0) swScore += 15;
+    else if(s.rv >= 1.5) swScore += 10;
     if(s.cp >= 75) swScore += 10;
     if(s.deliv_per >= 50) swScore += 10;
     if(s.t >= 10e7) swScore += 10;
-    s.swingScore = swScore;
+    if(bullPats.length) swScore += Math.min(20, bullPats.length * 8);
+
+    // Finding #1 Penalties & Overextension Guards
+    if(warnPats.length) swScore -= 25;
+    if(s.isExtended) swScore -= 30;
+    s.swingScore = Math.max(0, swScore);
+
+    // BTST Engine (Audit Page 5 Feature)
+    // 1. Close near day high (cp >= 80%), small upper wick (<=22%)
+    const upperWickPct = (s.h > s.l) ? ((s.h - s.c) / (s.h - s.l) * 100) : 0;
+    const isStrongClose = s.cp >= 80 && upperWickPct <= 22;
+    // 2. Solid green candle (+2% to +7.8%), not locked in circuit
+    const isGoodGain = s.chg >= 2.0 && s.chg <= 7.8 && !s.uc;
+    // 3. Healthy volume expansion (1.4x to 4.8x)
+    const isGoodVol = s.rv >= 1.4 && s.rv <= 4.8;
+    // 4. Above EMA20 or near 52W High
+    const isTrendOk = s.aboveEMA || s.h52near || s.h52new;
+    // 5. Backing: Delivery >= 40% or F&O Long Buildup or Turn >= ₹3 Cr
+    const isBacking = (s.deliv_per >= 40) || (s.bu && s.bu.toLowerCase().includes('long')) || (s.cr >= 3.0);
+    const hasWarning = warnPats.length > 0 || (s.rsi14 != null && s.rsi14 >= 82);
+
+    s.isBTST = isStrongClose && isGoodGain && isGoodVol && isTrendOk && isBacking && !hasWarning;
+
+    let bScore = 0;
+    if(s.cp >= 90) bScore += 30;
+    else if(s.cp >= 80) bScore += 20;
+    if(s.chg >= 3.0 && s.chg <= 6.0) bScore += 25;
+    else if(s.chg >= 2.0) bScore += 15;
+    if(s.rv >= 2.0 && s.rv <= 4.0) bScore += 25;
+    else if(s.rv >= 1.4) bScore += 15;
+    if(s.deliv_per >= 55) bScore += 20;
+    else if(s.deliv_per >= 40) bScore += 10;
+    if(s.bu && s.bu.toLowerCase().includes('long')) bScore += 15;
+    if(s.h52new || s.h52near) bScore += 15;
+    if(hasWarning) bScore -= 30;
+    s.btstScore = Math.max(0, bScore);
   }
 
   // Calibrate final scores
@@ -888,9 +983,10 @@ function build(){
     s.sc = p; s.tags = t;
   });
 
-  // Step 5: Market Regime Breadth Indicator
-  const aboveCount = U.filter(s => s.aboveEMA).length;
-  const breadthPct = U.length ? (aboveCount / U.length * 100) : 50;
+  // Step 5: Market Regime Breadth Indicator (Filter only stocks with valid EMA20)
+  const validEMAStocks = U.filter(s => s.ema20 != null && s.ema20 > 0);
+  const aboveCount = validEMAStocks.filter(s => s.aboveEMA).length;
+  const breadthPct = validEMAStocks.length ? (aboveCount / validEMAStocks.length * 100) : 50;
   window.MARKET_BREADTH = breadthPct;
   const regimeEl = $('market-regime');
   if(regimeEl){
@@ -975,11 +1071,21 @@ function score(s){
   if(s.nr7) a('NR7_Coil', 1.5);
   else if(s.nr4) a('NR4_Coil', 1.0);
   if(s.rb && s.rb.st === 'BO') a('RangeBO', 2.0);
-  if(s.patterns && s.patterns.length) a(s.patterns[0].name.split(' ')[0], 1.5);
+
+  // Finding #1 Fix: Only bullish patterns get positive points
+  const bullPatterns = (s.patterns || []).filter(pat => pat.type !== 'warning');
+  if(bullPatterns.length) a(bullPatterns[0].name.split(' ')[0], 1.5);
 
   // Pillar 4: Risk / False Breakout Guards (Penalties)
   if(s.cp < 35 && s.rv >= 1.5) { p -= 2.0; t.push('⚠️UpperRejection'); }
   if(s.uc) { p -= 1.0; t.push('🔒CircuitLock'); }
+
+  // Finding #1 Fix: Bearish/Warning patterns penalized in score
+  const warnPattern = (s.patterns || []).find(pat => pat.type === 'warning');
+  if(warnPattern){
+    p -= 2.0;
+    t.push(warnPattern.id === 'hanging_man' ? '⚠️HangingMan' : '⚠️ShootingStar');
+  }
 
   return [Math.max(0, Math.round(p * 10) / 10), t];
 }
@@ -991,6 +1097,7 @@ let cur = 'swing20';
 
 const TABS = [
   { id: 'swing20', n: '⭐ Swing Top 20', d: 'Curated Daily Top 20 Swing Setups: Clean Breakouts (Volume expansion + Resistance break) aur High-Probability Pullbacks (Above EMA20 + healthy low-vol pullback).', ok: s => (s.swingScore >= 35 || s.isSwingBO || s.isSwingPullback), so: 'sw_score' },
+  { id: 'btst', n: '⚡ BTST (3 PM Rocket)', d: 'Buy Today Sell Tomorrow (3:15 PM Setups): Strong close near day high (≥80%), tiny upper wick (≤22%), volume expansion (1.4×-4.8×), gain +2% to +7.8%, and delivery/F&O backing for next-day gap up.', ok: s => s.isBTST, so: 'btst_score' },
   { id: 'patterns', n: '📐 Chart Patterns', d: 'Classical technical chart patterns: Double Bottom, Bull Flag, Ascending Triangle, Inverse Head & Shoulders, Rectangle Breakout, aur Cup & Handle.', ok: s => s.patterns && s.patterns.length > 0, so: 'sc' },
   { id: 'deliv', n: '📦 Delivery Spikes', d: 'High Delivery Accumulation: Delivery % ≥ 45%, Traded Value ≥ ₹2 Cr with institutional accumulation signature.', ok: s => s.deliv_per >= 45 && s.cr >= 1.5, so: 'deliv_cr' },
   { id: 'news', n: '⚡ News & Catalysts', d: 'Real-time catalysts: Institutional deals (+₹1 Cr net inflow), corporate actions/bonus/splits, new 52W high, aur high-volume gap expansions.', ok: s => s.isNewsCatalyst || (s.dl >= 0.5) || (s.events && s.events.length > 0), so: 'news_score' },
@@ -1037,7 +1144,8 @@ function rows(tab){
   let d=U.filter(s=>{
     if(!tab.ok(s)) return false;
     if(s.c < mp || s.cr < mt) return false;
-    if(tab.id!=='hm' && tab.id!=='ol' && tab.id!=='swing20' && tab.id!=='deliv' && tab.id!=='news' && tab.id!=='deals' && tab.id!=='patterns' && tab.id!=='perf' && tab.id!=='rbo' && tab.id!=='nr47' && tab.id!=='nr' && s.sc < ms) return false;
+    // Finding #2 Fix: Score filter applies to all signal tabs (swing20, patterns, deliv, deals, ol, rbo, btst). Only Heatmap and NR volatility bypass it.
+    if(ms > 0 && tab.id !== 'hm' && tab.id !== 'nr47' && tab.id !== 'nr' && s.sc < ms) return false;
     if(ex && s.ex !== ex) return false;
     if(idx && !matchIndex(s, idx)) return false;
     if(q && !s.sym.includes(q)) return false;
@@ -1055,7 +1163,7 @@ function rows(tab){
   }
 
   const k=$('so').value==='auto'?tab.so:$('so').value;
-  return d.sort((a,b)=>k==='deliv_cr'?(b.deliv_cr||0)-(a.deliv_cr||0)||(b.deliv_per||0)-(a.deliv_per||0):k==='news_score'?(b.news_score||0)-(a.news_score||0)||(b.dl||0)-(a.dl||0):k==='sw_score'?(b.swingScore||0)-(a.swingScore||0)||b.chg-a.chg:k==='rb'?(b.rb.st==='BO')-(a.rb.st==='BO')||b.rb.vx-a.rb.vx:k==='pw'?PW(b)-PW(a):k==='sc'?b.sc-a.sc||b.chg-a.chg:k==='chg'?b.chg-a.chg:k==='cr'?b.cr-a.cr:b.cp-a.cp);
+  return d.sort((a,b)=>k==='btst_score'?(b.btstScore||0)-(a.btstScore||0)||(b.cp||0)-(a.cp||0)||(b.rv||0)-(a.rv||0):k==='deliv_cr'?(b.deliv_cr||0)-(a.deliv_cr||0)||(b.deliv_per||0)-(a.deliv_per||0):k==='news_score'?(b.news_score||0)-(a.news_score||0)||(b.dl||0)-(a.dl||0):k==='sw_score'?(b.swingScore||0)-(a.swingScore||0)||b.chg-a.chg:k==='rb'?(b.rb.st==='BO')-(a.rb.st==='BO')||b.rb.vx-a.rb.vx:k==='pw'?PW(b)-PW(a):k==='sc'?b.sc-a.sc||b.chg-a.chg:k==='chg'?b.chg-a.chg:k==='cr'?b.cr-a.cr:b.cp-a.cp);
 }
 
 // NEW FEATURE 6: Dedicated Columns for NR47 Tab
@@ -1228,6 +1336,7 @@ function render(){
   if(tab.id==='news')return newsRows(d);
   if(tab.id==='deals')return dealsRows(d);
   if(tab.id==='swing20')return swingRows(d);
+  if(tab.id==='btst')return btstRows(d);
   if(tab.id==='patterns')return patternRows(d);
   if(tab.id==='rbo')return rbRows(d);
   if(tab.id==='perf'||tab.id==='wl')return perfRows(d,tab.id==='wl');
@@ -1316,7 +1425,7 @@ function delivRows(d){
         <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
         <span class="mu" style="font-size:10px">${s.ex}</span>
       </td>
-      <td class="num"><b>₹${s.c.toFixed(2)}</b></td>
+      <td class="num"><b>₹${(s.c||0).toFixed(2)}</b></td>
       <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
       <td>
         <div style="display:flex;align-items:center;gap:6px">
@@ -1375,7 +1484,7 @@ function newsRows(d){
         <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
         <span class="mu" style="font-size:10px">${s.ex}</span>
       </td>
-      <td class="num"><b>₹${s.c.toFixed(2)}</b></td>
+      <td class="num"><b>₹${(s.c||0).toFixed(2)}</b></td>
       <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
       <td style="max-width:280px;font-size:11px"><b>${e(evText)}</b></td>
       <td>${impactBadge}</td>
@@ -1424,7 +1533,7 @@ function dealsRows(d){
         <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
         <span class="mu" style="font-size:10px">${s.ex}</span>
       </td>
-      <td class="num"><b>₹${s.c.toFixed(2)}</b></td>
+      <td class="num"><b>₹${(s.c||0).toFixed(2)}</b></td>
       <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
       <td class="num"><b style="color:${netColor};font-size:13px">${net > 0 ? '+' : ''}${net.toFixed(2)} Cr</b></td>
       <td class="num">₹${s.cr.toFixed(1)} Cr</td>
@@ -1433,6 +1542,70 @@ function dealsRows(d){
       <td>
         <a onclick="openFundamentals('${e(s.sym)}')" style="cursor:pointer;padding:2px 6px;background:var(--card);border:1px solid var(--bd);border-radius:4px;font-size:11px;color:var(--tx)">📊 Fundamentals</a>
       </td>
+      <td>
+        <a class="sym-chart" href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(s.ex==='NSE'?'NSE:'+s.sym:'BSE:'+(s.code||s.sym))}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        ${w}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function btstRows(d){
+  $('th').innerHTML = `
+    <th>Rank</th>
+    <th>Symbol</th>
+    <th>Close (3:15 PM)</th>
+    <th>Chg%</th>
+    <th>Day High</th>
+    <th>Close Pos / Wick</th>
+    <th>20D Vol Mult</th>
+    <th>Delivery % / F&amp;O</th>
+    <th>SL (Day Low)</th>
+    <th>Target 1 (+2%)</th>
+    <th>Target 2 (+3.5%)</th>
+    <th>Turn ₹Cr</th>
+    <th>Conviction</th>
+    <th>Action</th>
+  `;
+  const empty = 'Aaj koi clean BTST setup nahi mila — BTST setups 3:00 PM se 3:25 PM ke beech filter karein.';
+  if(!d.length){
+    $('tb').innerHTML = `<tr><td colspan="14" class="mu" style="text-align:center;padding:24px">${empty}</td></tr>`;
+    return;
+  }
+  $('tb').innerHTML = d.map((s, i) => {
+    const isUp = s.chg >= 0;
+    const cl = isUp ? 'var(--g)' : 'var(--r)';
+    const volColor = s.rv >= 2.0 ? '#10b981' : '#34d399';
+    const upperWick = (s.h > s.l) ? ((s.h - s.c) / (s.h - s.l) * 100).toFixed(0) : '0';
+    const slVal = s.l > 0 ? s.l : (s.c * 0.985);
+    const t1Val = s.c * 1.02;
+    const t2Val = s.c * 1.035;
+    const w = `<span class="wl" data-w="${e(s.sym)}" title="Watchlist">${WL.has(s.sym) ? '❌' : '⭐'}</span>`;
+    const foText = s.bu ? `<div class="mu" style="font-size:10px">${e(s.bu)}</div>` : '';
+
+    return `<tr>
+      <td><span class="badge-rank">#${i + 1}</span></td>
+      <td>
+        <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
+        <span class="mu" style="font-size:10px">${s.ex}</span>
+      </td>
+      <td class="num"><b>₹${(s.c||0).toFixed(2)}</b></td>
+      <td class="num" style="color:${cl};font-weight:600">+${s.chg.toFixed(2)}%</td>
+      <td class="num">₹${(s.h||s.c).toFixed(2)}</td>
+      <td class="num">
+        <span style="color:var(--g);font-weight:700">${s.cp.toFixed(0)}%</span>
+        <span class="mu" style="font-size:10px">(wick ${upperWick}%)</span>
+      </td>
+      <td class="num"><b style="color:${volColor}">${s.rv ? s.rv.toFixed(1) + '×' : '–'}</b></td>
+      <td class="num">
+        <span style="color:${s.deliv_per >= 50 ? 'var(--g)' : 'var(--t)'};font-weight:600">${s.deliv_per > 0 ? s.deliv_per.toFixed(0) + '%' : '–'}</span>
+        ${foText}
+      </td>
+      <td class="num" style="color:var(--r);font-weight:600">₹${slVal.toFixed(2)}</td>
+      <td class="num" style="color:var(--g);font-weight:600">₹${t1Val.toFixed(2)}</td>
+      <td class="num" style="color:var(--g);font-weight:700">₹${t2Val.toFixed(2)}</td>
+      <td class="num">${s.cr.toFixed(1)}</td>
+      <td class="num"><span class="badge" style="background:#064e3b;color:#6ee7b7;font-weight:700">${s.btstScore || s.sc} pts</span></td>
       <td>
         <a class="sym-chart" href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(s.ex==='NSE'?'NSE:'+s.sym:'BSE:'+(s.code||s.sym))}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
         ${w}
@@ -1470,10 +1643,12 @@ function swingRows(d){
     const emaDisp = emaDist != null ? `<span style="color:${emaDist >= 0 ? 'var(--g)' : 'var(--r)'}">${emaDist >= 0 ? '+' : ''}${emaDist.toFixed(1)}%</span>` : '–';
     
     let setupBadge = '';
-    if(s.isSwingBO){
+    if(s.isExtended){
+      setupBadge = `<span class="badge" style="background:#7f1d1d;color:#fca5a5">⚠️ Extended Rally (+${s.chg.toFixed(1)}%)</span>`;
+    } else if(s.isSwingBO){
       setupBadge = `<span class="badge-sw">💥 Consolidation Breakout (${(s.rv||1.5).toFixed(1)}× Vol)</span>`;
     } else if(s.isSwingPullback){
-      setupBadge = `<span class="badge-pb">🔄 Healthy Low-Vol Pullback (${(s.rv||0.6).toFixed(1)}× Vol)</span>`;
+      setupBadge = `<span class="badge-pb">🔄 EMA20 Pullback (${(s.rv||0.6).toFixed(1)}× Vol)</span>`;
     } else {
       setupBadge = `<span class="badge-sw">🚀 Vol Breakout (${(s.rv||1.5).toFixed(1)}× Vol)</span>`;
     }
@@ -1489,7 +1664,7 @@ function swingRows(d){
         <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
         <span class="mu" style="font-size:10px">${s.ex}</span>
       </td>
-      <td class="num"><b>₹${s.c.toFixed(2)}</b></td>
+      <td class="num"><b>₹${(s.c||0).toFixed(2)}</b></td>
       <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
       <td>${setupBadge}</td>
       <td class="num"><b style="color:${volColor}">${s.rv ? s.rv.toFixed(1) + '×' : '–'}</b></td>
@@ -1535,7 +1710,9 @@ function patternRows(d){
     const emaDist = (s.ema20 && s.ema20 > 0) ? ((s.c - s.ema20) / s.ema20 * 100) : null;
     const emaDisp = emaDist != null ? `<span style="color:${emaDist >= 0 ? 'var(--g)' : 'var(--r)'}">${emaDist >= 0 ? '+' : ''}${emaDist.toFixed(1)}%</span>` : '–';
     const patBadges = (s.patterns || []).map(p => 
-      `<span class="badge-pat" title="${e(p.desc)}">${p.name}</span>`
+      p.type === 'warning'
+        ? `<span class="badge-pat" style="background:rgba(239,68,68,0.18);color:#fca5a5;border-color:rgba(239,68,68,0.4)" title="${e(p.desc)}">${p.name}</span>`
+        : `<span class="badge-pat" title="${e(p.desc)}">${p.name}</span>`
     ).join(' ');
     const w = `<span class="wl" data-w="${e(s.sym)}" title="Watchlist">${WL.has(s.sym) ? '❌' : '⭐'}</span>`;
 
@@ -1545,7 +1722,7 @@ function patternRows(d){
         <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
         <span class="mu" style="font-size:10px">${s.ex}</span>
       </td>
-      <td class="num"><b>₹${s.c.toFixed(2)}</b></td>
+      <td class="num"><b>₹${(s.c||0).toFixed(2)}</b></td>
       <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
       <td>${patBadges}</td>
       <td class="num"><b style="color:${volColor}">${s.rv ? s.rv.toFixed(1) + '×' : '–'}</b></td>
@@ -1864,7 +2041,7 @@ window.openFundamentals = function(sym){
   const relVol = s.rv ? `${s.rv.toFixed(1)}× (20D Avg)` : '–';
   const ema20Dist = s.ema20 ? `${((s.c - s.ema20) / s.ema20 * 100).toFixed(1)}%` : '–';
   const rsi = s.rsi14 ? s.rsi14.toFixed(1) : '–';
-  const range52 = s.hi52 ? `₹${(s.hi52 * 0.6).toFixed(0)} — ₹${s.hi52.toFixed(2)}` : '–';
+  const allA = PXH[(s.ex+':'+s.sym)] || []; const lo52 = allA.length ? Math.min(...allA.map(x=>x[1])) : 0; const range52 = s.hi52 ? '₹'+lo52.toFixed(0)+' \u2014 ₹'+s.hi52.toFixed(2) : '\u2013';
 
   // B16 Fix: Real Market Cap, Delivery %, 20D RelVol, and genuine institutional research links
   $('f_body').innerHTML = `
@@ -1898,7 +2075,7 @@ window.openFundamentals = function(sym){
     <div style="background:var(--bg);padding:14px;border-radius:8px;border:1px solid var(--bd);margin-bottom:16px">
       <h4 style="margin:0 0 10px 0;font-size:13px;color:var(--tx)">📅 Events &amp; Corporate Announcements</h4>
       <div style="font-size:12px;color:var(--tx)">
-        ${(s.events && s.events.length) ? s.events.map(ev => `• <b>${e(ev)}</b>`).join('<br>') : '• Koi immediate negative announcement ya bonus/split record nahi hai.'}
+        ${(s.events && s.events.length) ? s.events.map(ev => `• <b>${e(ev)}</b>`).join('<br>') : '• Corporate action / announcements data abhi sync nahi hua (Screener.in par verify karein).'}
       </div>
       ${s.dl ? `<div style="margin-top:8px;font-size:12px;color:var(--g)">🏛️ <b>Institutional Activity:</b> Bulk/Block deal net inflow: <b>+₹${s.dl.toFixed(2)} Cr</b></div>` : ''}
     </div>
@@ -1992,78 +2169,320 @@ document.addEventListener('click',async x=>{
   if(w){const s=w.dataset.w;WL.has(s)?WL.delete(s):WL.add(s);saveWL();render()}
 });
 
-// Backtest algorithm with limitations note
+// Findings #4 & #5 Fix: Institutional-Grade Multi-Strategy Portfolio Backtest Engine
 function runBacktest(){
-  const out=$('btout'),dates=DL.slice().sort(),cost=Math.max(0,Math.min(3,N($('btc').value)))/100;
-  if(dates.length<25){out.textContent='Kam se kam 25 saved trading dates chahiye. Purani NSE/BSE bhavcopies import karein.';return}
-  const all={};
+  const out = $('btout');
+  const dates = DL.slice().sort();
+  const cost = Math.max(0, Math.min(3, N($('btc').value))) / 100;
+  const strat = $('bt_strat') ? $('bt_strat').value : 'bo20';
+  const initialCapital = Math.max(10000, N($('bt_cap') ? $('bt_cap').value : 1000000));
+  const maxPos = Math.max(1, Math.min(20, parseInt($('bt_pos') ? $('bt_pos').value : 5)));
+
+  if(dates.length < 20){
+    out.textContent = `Kam se kam 20 saved trading dates chahiye (Abhi sirf ${dates.length} dates hain). Purani NSE/BSE bhavcopies import karein.`;
+    return;
+  }
+
+  // Step 1: Organize symbol series across dates
+  const symData = {};
   for(const d of dates){
-    const day=DAYS[d]||{};
-    for(const ex of ['nse','bse']){
-      const m=day[ex]||{};
+    const day = DAYS[d] || {};
+    for(const ex of ['nse', 'bse']){
+      const m = day[ex] || {};
       for(const sym in m){
-        const x=m[sym];
-        if(x.c>0&&x.o>0&&x.h>0&&x.l>0){
-          const key=ex.toUpperCase()+':'+sym;
-          (all[key]||(all[key]=[])).push({date:d,...x,ex:ex.toUpperCase(),sym});
+        const x = m[sym];
+        if(x.c > 0 && x.o > 0 && x.h > 0 && x.l > 0){
+          const key = ex.toUpperCase() + ':' + sym;
+          (symData[key] || (symData[key] = [])).push({ date: d, ...x, ex: ex.toUpperCase(), sym });
         }
       }
     }
   }
-  const trades=[];
-  for(const key in all){
-    const a=all[key].sort((x,y)=>x.date.localeCompare(y.date));
-    for(let i=20;i<a.length-1;i++){
-      const prior=a.slice(Math.max(0,i-20),i);
-      if(prior.length<20)continue;
-      const cur=a[i],next=a[i+1];
-      const resistance=Math.max(...prior.map(x=>x.h)),avgVol=prior.reduce((z,x)=>z+(x.v||0),0)/prior.length;
-      const rel=avgVol>0&&cur.v>0?cur.v/avgVol:0,cp=cur.h>cur.l?(cur.c-cur.l)/(cur.h-cur.l)*100:50;
-      if(!(cur.c>resistance&&cur.c>cur.o&&cp>=70&&rel>=1.5&&next.o>0))continue;
-      const tr=[];
-      for(let j=Math.max(1,i-13);j<=i;j++){
-        const x=a[j],p=a[j-1];
-        tr.push(Math.max(x.h-x.l,Math.abs(x.h-p.c),Math.abs(x.l-p.c)));
-      }
-      const atr=tr.length?tr.reduce((z,x)=>z+x,0)/tr.length:cur.c*.02;
-      if(!(atr>0))continue;
-      const entry=next.o,sl=entry-1.5*atr,tp=entry+3*atr;
-      let exit=next.c,exitDate=next.date,reason='Time exit';
-      for(let j=i+1;j<Math.min(a.length,i+6);j++){
-        const bar=a[j];
-        if(bar.l<=sl){exit=sl;exitDate=bar.date;reason='Stop';break}
-        if(bar.h>=tp){exit=tp;exitDate=bar.date;reason='Target';break}
-        exit=bar.c;exitDate=bar.date;
-      }
-      const ret=(exit-entry)/entry-cost;
-      trades.push({sym:cur.sym,ex:cur.ex,signal:cur.date,entryDate:next.date,exitDate,entry,exit,ret,reason});
-      i=Math.max(i, a.findIndex(x=>x.date===exitDate)-1);
-    }
+
+  // Sort each symbol's timeline
+  for(const key in symData){
+    symData[key].sort((x, y) => x.date.localeCompare(y.date));
   }
-  trades.sort((a,b)=>a.exitDate.localeCompare(b.exitDate));
-  if(!trades.length){
-    out.innerHTML='Is saved data par strategy ke rules ke hisaab se koi trade nahi mila. Zyada history upload karein. Signal rules: 20-session breakout, bullish candle, close position ≥70%, relative volume ≥1.5×; next session open entry.';
+
+  let cash = initialCapital;
+  let openPositions = []; // { key, sym, ex, strat, signalDate, entryDate, entryPrice, qty, sl, tp, barsHeld }
+  const closedTrades = [];
+  const dailyEquity = [];
+
+  // Step 2: Day-by-day sequential simulation across history
+  for(let dIdx = 20; dIdx < dates.length; dIdx++){
+    const curDate = dates[dIdx];
+    const prevDate = dates[dIdx - 1];
+
+    // A) Process exits for existing positions on curDate bar
+    const remainingPositions = [];
+    for(const pos of openPositions){
+      const series = symData[pos.key];
+      const bar = series ? series.find(x => x.date === curDate) : null;
+      if(!bar){
+        pos.barsHeld++;
+        remainingPositions.push(pos);
+        continue;
+      }
+
+      pos.barsHeld++;
+      let exitPrice = 0;
+      let exitReason = '';
+
+      // Check Stop Loss hit
+      if(bar.l <= pos.sl){
+        exitPrice = Math.min(pos.sl, bar.o);
+        exitReason = 'Stop Hit';
+      }
+      // Check Profit Target hit
+      else if(bar.h >= pos.tp){
+        exitPrice = Math.max(pos.tp, bar.o);
+        exitReason = 'Target Hit';
+      }
+      // Time Exit after 5 trading days
+      else if(pos.barsHeld >= 5){
+        exitPrice = bar.c;
+        exitReason = 'Time Exit (5D)';
+      }
+
+      if(exitPrice > 0){
+        const grossPnl = pos.qty * (exitPrice - pos.entryPrice);
+        const fees = (pos.qty * pos.entryPrice + pos.qty * exitPrice) * (cost / 2);
+        const netPnl = grossPnl - fees;
+        const retPct = (exitPrice - pos.entryPrice) / pos.entryPrice - cost;
+
+        cash += (pos.qty * pos.entryPrice) + netPnl;
+        closedTrades.push({
+          sym: pos.sym,
+          ex: pos.ex,
+          strat: pos.strat,
+          signalDate: pos.signalDate,
+          entryDate: pos.entryDate,
+          exitDate: curDate,
+          entry: pos.entryPrice,
+          exit: exitPrice,
+          qty: pos.qty,
+          netPnl,
+          ret: retPct,
+          reason: exitReason
+        });
+      } else {
+        remainingPositions.push(pos);
+      }
+    }
+    openPositions = remainingPositions;
+
+    // B) Enter new candidate signals fired on prevDate at curDate OPEN
+    if(openPositions.length < maxPos){
+      const availableSlots = maxPos - openPositions.length;
+      const candidates = [];
+
+      for(const key in symData){
+        if(openPositions.some(p => p.key === key)) continue;
+
+        const series = symData[key];
+        const prevIdx = series.findIndex(x => x.date === prevDate);
+        if(prevIdx < 20) continue;
+
+        const curBar = series.find(x => x.date === curDate);
+        if(!curBar || curBar.o <= 0) continue;
+
+        const prevBar = series[prevIdx];
+        const priorBars = series.slice(prevIdx - 20, prevIdx);
+        if(priorBars.length < 20) continue;
+
+        // Finding #5 Guard: Skip split/bonus unadjusted drop
+        if(prevBar.c < priorBars[priorBars.length - 1].c * 0.65) continue;
+
+        const highs = priorBars.map(x => x.h);
+        const res20 = Math.max(...highs);
+        const sumVol = priorBars.reduce((z, x) => z + (x.v || 0), 0);
+        const avgVol = sumVol / priorBars.length;
+        const relVol = avgVol > 0 && prevBar.v > 0 ? (prevBar.v / avgVol) : 0;
+        const cp = (prevBar.h > prevBar.l) ? ((prevBar.c - prevBar.l) / (prevBar.h - prevBar.l) * 100) : 50;
+
+        let isSignal = false;
+        let scoreQuality = 0;
+
+        if(strat === 'bo20'){
+          if(prevBar.c > res20 && prevBar.c > prevBar.o && cp >= 65 && relVol >= 1.5){
+            isSignal = true;
+            scoreQuality = relVol * 10 + (prevBar.c - res20) / res20 * 100;
+          }
+        } else if(strat === 'swing'){
+          const closes = series.slice(Math.max(0, prevIdx - 20), prevIdx + 1).map(x => x.c);
+          const ema20 = closes.reduce((a, b) => a + b, 0) / closes.length;
+          const isAboveEMA = prevBar.c > ema20;
+          const emaDist = (prevBar.c - ema20) / ema20 * 100;
+
+          if(prevBar.c > res20 && relVol >= 1.5 && cp >= 60){
+            isSignal = true;
+            scoreQuality = 50 + relVol * 10;
+          } else if(isAboveEMA && emaDist >= -2.0 && emaDist <= 3.0 && relVol <= 0.85 && prevBar.c >= prevBar.o * 0.99){
+            isSignal = true;
+            scoreQuality = 40 + (3.0 - Math.abs(emaDist)) * 5;
+          }
+        } else if(strat === 'ol'){
+          const isOL = Math.abs(prevBar.o - prevBar.l) / (prevBar.o || 1) <= 0.004;
+          const gain = (prevBar.c - prevBar.o) / prevBar.o * 100;
+          if(isOL && gain >= 2.0 && cp >= 65 && relVol >= 1.3){
+            isSignal = true;
+            scoreQuality = gain * 5 + relVol * 10;
+          }
+        } else if(strat === 'deliv'){
+          const delivPer = prevBar.deliv_per || 0;
+          if(delivPer >= 55 && relVol >= 1.8 && prevBar.c > (prevBar.p || prevBar.o)){
+            isSignal = true;
+            scoreQuality = delivPer + relVol * 10;
+          }
+        }
+
+        if(isSignal){
+          candidates.push({
+            key,
+            sym: prevBar.sym,
+            ex: prevBar.ex,
+            signalDate: prevDate,
+            entryDate: curDate,
+            entryPrice: curBar.o,
+            scoreQuality,
+            prevBar,
+            series,
+            prevIdx
+          });
+        }
+      }
+
+      candidates.sort((a, b) => b.scoreQuality - a.scoreQuality);
+      const toEnter = candidates.slice(0, availableSlots);
+
+      for(const cand of toEnter){
+        const entryPrice = cand.entryPrice;
+        if(entryPrice <= 0) continue;
+
+        const tr = [];
+        for(let j = Math.max(1, cand.prevIdx - 13); j <= cand.prevIdx; j++){
+          const bar = cand.series[j], pBar = cand.series[j - 1];
+          tr.push(Math.max(bar.h - bar.l, Math.abs(bar.h - pBar.c), Math.abs(bar.l - pBar.c)));
+        }
+        const atr = tr.length ? (tr.reduce((z, x) => z + x, 0) / tr.length) : (entryPrice * 0.02);
+        const sl = Math.max(entryPrice - (1.5 * atr), entryPrice * 0.93);
+        const tp = entryPrice + (3.0 * atr);
+
+        const currentPosCap = Math.min(cash, initialCapital / maxPos);
+        const qty = Math.floor(currentPosCap / entryPrice);
+        if(qty > 0 && cash >= (qty * entryPrice)){
+          cash -= (qty * entryPrice);
+          openPositions.push({
+            key: cand.key,
+            sym: cand.sym,
+            ex: cand.ex,
+            strat,
+            signalDate: cand.signalDate,
+            entryDate: cand.entryDate,
+            entryPrice,
+            qty,
+            sl,
+            tp,
+            barsHeld: 0
+          });
+        }
+      }
+    }
+
+    // Daily equity calculation
+    let openVal = 0;
+    for(const pos of openPositions){
+      const series = symData[pos.key];
+      const bar = series ? series.find(x => x.date === curDate) : null;
+      openVal += pos.qty * (bar ? bar.c : pos.entryPrice);
+    }
+    dailyEquity.push({ date: curDate, equity: cash + openVal });
+  }
+
+  // Summary statistics
+  const finalEquity = dailyEquity.length ? dailyEquity[dailyEquity.length - 1].equity : initialCapital;
+  const totalReturn = (finalEquity - initialCapital) / initialCapital;
+
+  let peak = initialCapital;
+  let maxDD = 0;
+  for(const e of dailyEquity){
+    peak = Math.max(peak, e.equity);
+    const dd = (peak - e.equity) / peak;
+    maxDD = Math.max(maxDD, dd);
+  }
+
+  const wins = closedTrades.filter(t => t.ret > 0).length;
+  const winRate = closedTrades.length ? (wins / closedTrades.length * 100) : 0;
+  const grossWin = closedTrades.filter(t => t.netPnl > 0).reduce((z, t) => z + t.netPnl, 0);
+  const grossLoss = closedTrades.filter(t => t.netPnl < 0).reduce((z, t) => z + Math.abs(t.netPnl), 0);
+  const profitFactor = grossLoss > 0 ? (grossWin / grossLoss) : (grossWin > 0 ? Infinity : 0);
+  const totalNetPnl = closedTrades.reduce((z, t) => z + t.netPnl, 0);
+  const avgTradeRet = closedTrades.length ? (closedTrades.reduce((z, t) => z + t.ret, 0) / closedTrades.length) : 0;
+
+  const stratNames = {
+    bo20: '🚀 20-Day Breakout + Volume (≥1.5×)',
+    swing: '⭐ Swing Top 20 (Breakout + Pullback)',
+    ol: '🎯 Open=Low Rocket',
+    deliv: '📦 High Delivery Accumulation (≥60%)'
+  };
+
+  const fmtPct = (x) => ((x >= 0 ? '+' : '') + (x * 100).toFixed(2) + '%');
+  const fmtCurr = (x) => ((x >= 0 ? '+₹' : '-₹') + Math.abs(Math.round(x)).toLocaleString('en-IN'));
+
+  if(!closedTrades.length){
+    out.innerHTML = `<p style="padding:16px;background:rgba(255,255,255,0.03);border-radius:8px">Is saved data (${dates.length} sessions) par <b>${stratNames[strat] || strat}</b> ke hisaab se koi valid signal nahi mila. Zyada sessions ki bhavcopy upload karein.</p>`;
     return;
   }
-  let equity=1,peak=1,maxDD=0,grossWin=0,grossLoss=0,wins=0,sum=0;
-  for(const t of trades){
-    equity*=1+t.ret;
-    peak=Math.max(peak,equity);
-    maxDD=Math.max(maxDD,(peak-equity)/peak);
-    sum+=t.ret;
-    if(t.ret>0){wins++;grossWin+=t.ret}else grossLoss+=Math.abs(t.ret);
-  }
-  const fmtPct=(x)=>((x>=0?'+':'')+(x*100).toFixed(2)+'%');
-  const pf=grossLoss?grossWin/grossLoss:(grossWin?Infinity:0);
-  const recent=trades.slice(-50).reverse();
-  out.innerHTML=`<div class="kpi"><span class="mu">Trades</span><b>${trades.length}</b></div>`+
-    `<div class="kpi"><span class="mu">Win rate</span><b>${(wins/trades.length*100).toFixed(1)}%</b></div>`+
-    `<div class="kpi"><span class="mu">Compounded return</span><b class="${equity>=1?'up':'dn'}">${fmtPct(equity-1)}</b></div>`+
-    `<div class="kpi"><span class="mu">Avg trade (net)</span><b>${fmtPct(sum/trades.length)}</b></div>`+
-    `<div class="kpi"><span class="mu">Profit factor</span><b>${Number.isFinite(pf)?pf.toFixed(2):'∞'}</b></div>`+
-    `<div class="kpi"><span class="mu">Max drawdown</span><b class="dn">-${(maxDD*100).toFixed(2)}%</b></div>`+
-    `<p class="mu" style="margin:8px 0">Rules: 20 prior sessions breakout + bullish candle + close position ≥70% + relative volume ≥1.5×; next-session open entry; 1.5 ATR stop, 3 ATR target, max 5 sessions; stop checked before target if both hit same daily candle. Cost assumption: ${(cost*100).toFixed(2)}% round trip. ⚠ Limitations: Does not account for opening gap slippage, market-impact costs, or intraday path dependency (assumes fill at exact open; EOD simulation only).</p>`+
-    `<table><thead><tr><th>Symbol</th><th>Signal date</th><th>Entry date</th><th>Exit date</th><th>Entry</th><th>Exit</th><th>Net return</th><th>Exit reason</th></tr></thead><tbody>${recent.map(t=>`<tr><td>${e(t.sym)} <span class="ex">${t.ex}</span></td><td>${t.signal}</td><td>${t.entryDate}</td><td>${t.exitDate}</td><td>₹${fm(t.entry)}</td><td>₹${fm(t.exit)}</td><td class="${t.ret>=0?'up':'dn'}">${fmtPct(t.ret)}</td><td>${t.reason}</td></tr>`).join('')}</tbody></table>`;
+
+  const recent = closedTrades.slice(-50).reverse();
+  out.innerHTML = `
+    <div style="margin-bottom:12px;padding:8px 12px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);border-radius:6px;font-size:12px;color:#93c5fd">
+      <b>Strategy:</b> ${stratNames[strat] || strat} | <b>Capital:</b> ₹${initialCapital.toLocaleString('en-IN')} | <b>Max Positions:</b> ${maxPos} slots | <b>Tested Sessions:</b> ${dates.length}
+    </div>
+    <div class="kpi"><span class="mu">Total Trades</span><b>${closedTrades.length}</b></div>
+    <div class="kpi"><span class="mu">Win Rate</span><b>${winRate.toFixed(1)}%</b></div>
+    <div class="kpi"><span class="mu">Total Net P&amp;L</span><b class="${totalNetPnl >= 0 ? 'up' : 'dn'}">${fmtCurr(totalNetPnl)}</b></div>
+    <div class="kpi"><span class="mu">Portfolio Return</span><b class="${totalReturn >= 0 ? 'up' : 'dn'}">${fmtPct(totalReturn)}</b></div>
+    <div class="kpi"><span class="mu">Profit Factor</span><b>${Number.isFinite(profitFactor) ? profitFactor.toFixed(2) : '∞'}</b></div>
+    <div class="kpi"><span class="mu">Max Drawdown</span><b class="dn">-${(maxDD * 100).toFixed(2)}%</b></div>
+    <div class="kpi"><span class="mu">Avg Trade (Net)</span><b>${fmtPct(avgTradeRet)}</b></div>
+    <p class="mu" style="margin:8px 0;font-size:11px">
+      Simulation Rules: Portfolio position sized to ${maxPos} equal slots (₹${(initialCapital / maxPos).toLocaleString('en-IN')} max per slot); Next session Open entry; 1.5 ATR Stop Loss, 3.0 ATR Target, max 5 holding days; Round-trip cost: ${(cost * 100).toFixed(2)}% (STT, exchange turnover fees, slippage).
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Symbol</th>
+          <th>Signal Date</th>
+          <th>Entry Date</th>
+          <th>Exit Date</th>
+          <th>Entry ₹</th>
+          <th>Exit ₹</th>
+          <th>Qty</th>
+          <th>Net P&amp;L ₹</th>
+          <th>Net Return %</th>
+          <th>Exit Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${recent.map(t => `
+          <tr>
+            <td>${e(t.sym)} <span class="ex">${t.ex}</span></td>
+            <td>${t.signalDate}</td>
+            <td>${t.entryDate}</td>
+            <td>${t.exitDate}</td>
+            <td class="num">₹${fm(t.entry)}</td>
+            <td class="num">₹${fm(t.exit)}</td>
+            <td class="num">${t.qty}</td>
+            <td class="num ${t.netPnl >= 0 ? 'up' : 'dn'}" style="font-weight:600">${fmtCurr(t.netPnl)}</td>
+            <td class="num ${t.ret >= 0 ? 'up' : 'dn'}" style="font-weight:600">${fmtPct(t.ret)}</td>
+            <td><span class="badge" style="background:${t.reason.includes('Target') ? '#064e3b' : t.reason.includes('Stop') ? '#450a0a' : '#1e2d4a'};color:${t.reason.includes('Target') ? '#6ee7b7' : t.reason.includes('Stop') ? '#fca5a5' : '#cbd5e1'}">${t.reason}</span></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
 }
 
 $('bt').onclick=()=>{$('btpanel').classList.toggle('on');if($('btpanel').classList.contains('on'))$('btpanel').scrollIntoView({behavior:'smooth',block:'nearest'})};
