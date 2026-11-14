@@ -370,19 +370,89 @@ def parse_deals_csv(csv_text, deals_dict=None):
 
 def download_nse_deals():
     deals = {}
-    urls = [
-        "https://nsearchives.nseindia.com/content/equities/bulk.csv",
+    csv_urls = [
         "https://archives.nseindia.com/content/equities/bulk.csv",
-        "https://nsearchives.nseindia.com/content/equities/block.csv",
-        "https://archives.nseindia.com/content/equities/block.csv"
+        "https://nsearchives.nseindia.com/content/equities/bulk.csv",
+        "https://archives.nseindia.com/content/equities/block.csv",
+        "https://nsearchives.nseindia.com/content/equities/block.csv"
     ]
-    for url in urls:
-        print(f"[*] Checking NSE Deals: {url}")
-        raw = fetch_url(url, timeout=15)
-        if raw and len(raw) > 100:
-            csv_text = extract_csv_from_data(raw)
-            if csv_text:
-                parse_deals_csv(csv_text, deals)
+    for url in csv_urls:
+        print(f"[*] Checking NSE Deals CSV: {url}")
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept': '*/*',
+            'Referer': 'https://www.nseindia.com/market-data/large-deals',
+            'Accept-Language': 'en-US,en;q=0.9',
+        }
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                raw = resp.read()
+                if raw and len(raw) > 100:
+                    csv_text = extract_csv_from_data(raw)
+                    if csv_text and ('SYMBOL' in csv_text or 'SECURITY' in csv_text):
+                        cnt_before = len(deals)
+                        parse_deals_csv(csv_text, deals)
+                        print(f"[+] Successfully fetched {len(deals) - cnt_before} deals from {url}")
+        except Exception as e:
+            print(f"[WARN] Error fetching {url}: {e}")
+
+    # Fallback to Large Deals JSON API with session cookies
+    if len(deals) < 5:
+        try:
+            print("[*] Trying NSE Large Deals JSON API with browser session...")
+            import http.cookiejar
+            cj = http.cookiejar.CookieJar()
+            opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+            base_headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+            }
+            opener.open(urllib.request.Request("https://www.nseindia.com", headers=base_headers), timeout=10)
+            api_headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'Accept': 'application/json, text/plain, */*',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Referer': 'https://www.nseindia.com/market-data/large-deals',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+            api_url = "https://www.nseindia.com/api/snapshot-capital-market-largedeal"
+            with opener.open(urllib.request.Request(api_url, headers=api_headers), timeout=15) as resp:
+                data = json.loads(resp.read().decode('utf-8', errors='ignore'))
+                for cat in ['BULK_DEALS_DATA', 'BLOCK_DEALS_DATA', 'data']:
+                    items = data.get(cat, [])
+                    for it in items:
+                        sym = (it.get('symbol') or it.get('SYMBOL') or '').strip().upper()
+                        if not sym: continue
+                        client = (it.get('clientName') or it.get('CLIENT_NAME') or '').strip()
+                        bs = (it.get('buySell') or it.get('BUY_SELL') or 'BUY').strip().upper()
+                        try:
+                            qty = float(str(it.get('quantity') or it.get('VOLUME') or 0).replace(',', ''))
+                            px = float(str(it.get('tradePrice') or it.get('PRICE') or 0).replace(',', ''))
+                        except: continue
+                        val = qty * px * (1.0 if (bs.startswith('B') or bs == 'P') else -1.0)
+                        d = deals.setdefault(sym, {'net': 0.0, 'buys': 0.0, 'sells': 0.0, 'trades': [], 'isInst': False})
+                        d['net'] += val
+                        if val > 0: d['buys'] += val
+                        else: d['sells'] += abs(val)
+                        is_inst = any(k in client.upper() for k in [
+                            'MUTUAL FUND', 'TRUST', 'INSURANCE', 'LIFE', 'PENSION', 'FII', 'FOREIGN', 'GOVERNMENT',
+                            'SBI ', 'HDFC ', 'ICICI ', 'NIPPON', 'KOTAK', 'UTI ', 'AXIS ', 'TATA ', 'MIRAE', 'DSP ',
+                            'FRANKLIN', 'SUNDARAM', 'CANARA', 'EDELWEISS', 'INVESCO', 'MOTILAL', 'QUANT ', 'SECURITIES', 'CAPITAL', 'LLP', 'LTD'
+                        ])
+                        if is_inst: d['isInst'] = True
+                        d['trades'].append({
+                            'client': client,
+                            'type': 'BUY' if (bs.startswith('B') or bs == 'P') else 'SELL',
+                            'val': round(abs(val) / 1e7, 2),
+                            'isInst': is_inst
+                        })
+                print(f"[+] Total {len(deals)} unique stocks with deals fetched via API")
+        except Exception as e:
+            print(f"[WARN] Large deals API note: {e}")
+
+    print(f"[+] download_nse_deals returning {len(deals)} stocks with bulk/block deals")
     return deals
 
 # ==================== NSE F&O & PCR FETCHER ====================
@@ -598,6 +668,17 @@ def run_pipeline():
                 with open(hist_path, 'r', encoding='utf-8') as f:
                     day_rec = json.load(f)
                     if (day_rec.get('nse') or day_rec.get('bse')) and not day_rec.get('intraday'):
+                        # If latest available day is missing deals or F&O, actively fetch and update!
+                        if len(saved_days) == 0:
+                            if not day_rec.get('deal') or len(day_rec.get('deal', {})) == 0:
+                                print(f"[*] Latest day {date_iso} in cache had empty deals — fetching now...")
+                                day_rec['deal'] = download_nse_deals()
+                            if not day_rec.get('fut') or len(day_rec.get('fut', {})) == 0:
+                                fut, pcr = download_nse_fno(date_dmy, date_iso)
+                                day_rec['fut'] = fut
+                                day_rec['pcr'] = pcr
+                            with open(hist_path, 'w', encoding='utf-8') as fw:
+                                json.dump(day_rec, fw, separators=(',', ':'))
                         saved_days.append(day_rec)
                         if date_iso == today_iso:
                             today_eod_found = True
