@@ -582,7 +582,7 @@ def run_pipeline():
     print(f"SmartScanner Sync Run: {now_ist.strftime('%Y-%m-%d %H:%M:%S IST')} | Market Active: {market_active}")
     print(f"==================================================")
     
-    dates = get_target_dates(max_lookback=35)
+    dates = get_target_dates(max_lookback=60)
     os.makedirs('data', exist_ok=True)
     os.makedirs('data/history', exist_ok=True)
     
@@ -601,7 +601,7 @@ def run_pipeline():
                         saved_days.append(day_rec)
                         if date_iso == today_iso:
                             today_eod_found = True
-                        if len(saved_days) >= 20:
+                        if len(saved_days) >= 45:
                             break
                         continue
             except Exception:
@@ -644,7 +644,7 @@ def run_pipeline():
             saved_days.append(day_rec)
             if date_iso == today_iso:
                 today_eod_found = True
-            if len(saved_days) >= 20:
+            if len(saved_days) >= 45:
                 break
 
     if not saved_days:
@@ -671,7 +671,7 @@ def run_pipeline():
     latest_day = dict(saved_days[-1])
     prior_days = saved_days[:-1]
     if prior_days:
-        latest_day['history'] = prior_days[-20:]
+        latest_day['history'] = prior_days[-45:]
         print(f"[+] Bundled {len(latest_day['history'])} prior sessions into latest.json")
 
     latest_path = "data/latest.json"

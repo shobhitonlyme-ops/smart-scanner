@@ -566,7 +566,7 @@ function detectConfirmedSwingPivots(candles){
 // ==================== ADVANCED RANGE CONSOLIDATION & PRE-BREAKOUT ENGINE (PHASES 3 TO 15) ====================
 const AR_CFG = {
   lookback: 90,
-  minDuration: 30,
+  minDuration: 15,
   maxWidth: 30.0,
   minRTouches: 2,
   minSTouches: 2,
@@ -617,7 +617,7 @@ function evalAdvancedRange(s, candles, nifty30DRet = 0){
   s.bb20 = calcBollingerBands(closes, 20, 2);
 
   let bbPercentile = 50;
-  if(closes.length >= 35){
+  if(closes.length >= 20){
     const bbWidths = [];
     const windowLen = Math.min(closes.length, 120);
     for(let k = 20; k <= windowLen; k++){
@@ -655,7 +655,7 @@ function evalAdvancedRange(s, candles, nifty30DRet = 0){
   for(let bIdx = rangeSegment.length - 1; bIdx >= Math.max(0, rangeSegment.length - AR_CFG.falseBoWindow); bIdx--){
     const bar = rangeSegment[bIdx];
     const priorHighs = rangeSegment.slice(0, bIdx).map(x => x[0]);
-    if(priorHighs.length >= AR_CFG.minDuration){
+    if(priorHighs.length >= 12){
       const priorMax = Math.max(...priorHighs);
       if(bar[2] > priorMax){
         isBreakoutActive = true;
@@ -698,8 +698,8 @@ function evalAdvancedRange(s, candles, nifty30DRet = 0){
   const sTouches = Math.max(sTouchPivots.length, 1);
 
   // 6 Pre-Breakout Conditions
-  const passC1 = bbPercentile <= 25.0 || (s.curAtr < 0.80 * avgAtr60);
-  const passC2 = avgVol10 < (AR_CFG.volDryRatio * avgVol50);
+  const passC1 = bbPercentile <= 35.0 || (s.curAtr < 0.88 * avgAtr60) || (s.bb20 && s.bb20.width <= 12.0);
+  const passC2 = avgVol10 < (AR_CFG.volDryRatio * avgVol50) || (s.v > 0 && s.rv < 0.95);
 
   let passC3 = false;
   if(lowPivots.length >= 3){
@@ -707,6 +707,10 @@ function evalAdvancedRange(s, candles, nifty30DRet = 0){
     passC3 = (last3[2].price > last3[1].price) && (last3[1].price > last3[0].price);
   } else if(lowPivots.length >= 2){
     passC3 = lowPivots[lowPivots.length - 1].price > lowPivots[lowPivots.length - 2].price;
+  } else if(lows.length >= 15){
+    const minRecent5 = Math.min(...lows.slice(-5));
+    const minPrior10 = Math.min(...lows.slice(-15, -5));
+    passC3 = minRecent5 >= minPrior10;
   }
 
   const distToR = histHigh > 0 ? ((histHigh - curClose) / histHigh * 100) : 99;
@@ -718,11 +722,12 @@ function evalAdvancedRange(s, candles, nifty30DRet = 0){
   const passC5 = s.niftyRelStrength > 0;
 
   let passC6 = false;
-  if(rangeSegment.length >= 30){
+  if(rangeSegment.length >= 15){
     const ranges = rangeSegment.map(x => x[0] - x[1]);
     const avgR5 = ranges.slice(-5).reduce((a, b) => a + b, 0) / 5;
-    const avgR30 = ranges.slice(-30).reduce((a, b) => a + b, 0) / 30;
-    passC6 = avgR30 > 0 && (avgR5 < 0.70 * avgR30);
+    const countN = Math.min(ranges.length, 30);
+    const avgRN = ranges.slice(-countN).reduce((a, b) => a + b, 0) / countN;
+    passC6 = avgRN > 0 && (avgR5 < 0.80 * avgRN);
   }
 
   const squeezeScore = (passC1?1:0) + (passC2?1:0) + (passC3?1:0) + (passC4?1:0) + (passC5?1:0) + (passC6?1:0);
@@ -736,7 +741,7 @@ function evalAdvancedRange(s, candles, nifty30DRet = 0){
   const hasBoVol = s.volRatio >= AR_CFG.boVolMult;
   const hasBoRsi = (s.rsi14 == null || s.rsi14 >= 58);
 
-  const isTodayBreakout = (curClose > histHigh) && hasBoVol && isBullishCandle && hasBoRsi;
+  const isTodayBreakout = (curClose > histHigh) && (s.volRatio >= 1.2 || s.rv >= 1.2) && (curClose >= (curBar[5] || curClose));
   let breakoutAge = null;
   let isRecentBreakout = false;
 
@@ -764,17 +769,19 @@ function evalAdvancedRange(s, candles, nifty30DRet = 0){
   let retestStatus = 'NONE';
   if(isRecentBreakout && !isFalseBreakout){
     const distFromR = Math.abs(curClose - histHigh) / histHigh * 100;
-    if(distFromR <= AR_CFG.retestTol){
+    if(distFromR <= AR_CFG.retestTol * 1.5){
       const lowerWick = Math.min(curClose, curBar[5] || curClose) - curLow;
-      const hasRejectionWick = cRange > 0 && ((lowerWick / cRange) >= 0.40);
+      const hasRejectionWick = cRange > 0 && ((lowerWick / cRange) >= 0.25);
       if(curClose >= histHigh && hasRejectionWick){
         retestStatus = 'SUCCESSFUL';
-      } else if(curClose >= (histHigh * 0.985)){
+      } else if(curClose >= (histHigh * 0.98)){
         retestStatus = 'PROGRESS';
       } else {
         retestStatus = 'FAILED';
       }
     }
+  } else if(!isFalseBreakout && distToR >= -2.5 && distToR <= 2.0 && curClose >= (curBar[5] || curClose)){
+    retestStatus = 'PROGRESS';
   }
 
   // Alert Level
@@ -1500,7 +1507,7 @@ try { WL = new Set(JSON.parse(localStorage.getItem('ss6wl') || localStorage.getI
 let cur = 'swing20';
 
 const TABS = [
-  { id: 'pre_bo', n: '🎯 Pre-Breakout Watchlist', d: 'Stocks coiled inside valid consolidation range (90D/30D) with Volatility & Volume Squeeze (Score ≥3) pressing against overhead resistance.', ok: s => s.ar && s.ar.isValidRange && !s.ar.isConfirmedBreakout && s.ar.squeezeScore >= 3 && (s.ar.alertLevel === 'READY' || s.ar.alertLevel === 'NEAR'), so: 'ar_qscore' },
+  { id: 'pre_bo', n: '🎯 Pre-Breakout Watchlist', d: 'Stocks coiled inside valid consolidation range (90D/30D) with Volatility & Volume Squeeze (Score ≥3) pressing against overhead resistance.', ok: s => s.ar && s.ar.isValidRange && !s.ar.isConfirmedBreakout && (s.ar.squeezeScore >= 2 || (s.ar.distToR >= 0 && s.ar.distToR <= 5.0)), so: 'ar_qscore' },
   { id: 'fresh_bo', n: '💥 Fresh Breakouts', d: 'Confirmed breakouts from preserved historical resistance with volume expansion (≥1.5×) and bullish candle closure (Today or past 1-5 sessions).', ok: s => s.ar && s.ar.isConfirmedBreakout && !s.ar.isFalseBreakout, so: 'ar_qscore' },
   { id: 'retest', n: '🔄 Retest Setups', d: 'Breakout stocks successfully retesting broken resistance within 2% acting as potential support with bullish candle rejection.', ok: s => s.ar && (s.ar.retestStatus === 'PROGRESS' || s.ar.retestStatus === 'SUCCESSFUL'), so: 'ar_qscore' },
   { id: 'swing20', n: '⭐ Swing Top 20', d: 'Curated Daily Top 20 Swing Setups: Clean Breakouts (Volume expansion + Resistance break) aur High-Probability Pullbacks (Above EMA20 + healthy low-vol pullback).', ok: s => (s.swingScore >= 35 || s.isSwingBO || s.isSwingPullback), so: 'sw_score' },
@@ -1552,7 +1559,7 @@ function rows(tab){
     if(!tab.ok(s)) return false;
     if(s.c < mp || s.cr < mt) return false;
     // Finding #2 Fix: Score filter applies to all signal tabs (swing20, patterns, deliv, deals, ol, rbo, btst). Only Heatmap and NR volatility bypass it.
-    if(ms > 0 && tab.id !== 'hm' && tab.id !== 'nr47' && tab.id !== 'nr' && s.sc < ms) return false;
+    if(ms > 0 && tab.id !== 'hm' && tab.id !== 'nr47' && tab.id !== 'nr' && tab.id !== 'pre_bo' && tab.id !== 'fresh_bo' && tab.id !== 'retest' && s.sc < ms) return false;
     if(ex && s.ex !== ex) return false;
     if(idx && !matchIndex(s, idx)) return false;
     if(q && !s.sym.includes(q)) return false;
