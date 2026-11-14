@@ -280,6 +280,182 @@ def parse_bse_bhav(csv_text):
 
     return stocks
 
+
+# ==================== BULK & BLOCK DEALS FETCHER ====================
+def parse_deals_csv(csv_text, deals_dict=None):
+    if not csv_text:
+        return deals_dict or {}
+    if deals_dict is None:
+        deals_dict = {}
+    
+    rows = []
+    r = []
+    f = ''
+    q = False
+    clean_t = csv_text.replace('\ufeff', '')
+    for c in clean_t:
+        if q:
+            if c == '"':
+                q = False
+            else:
+                f += c
+        else:
+            if c == '"':
+                q = True
+            elif c == ',':
+                r.append(f.strip())
+                f = ''
+            elif c == '\n':
+                r.append(f.strip())
+                if any(r):
+                    rows.append(r)
+                r = []
+                f = ''
+            elif c != '\r':
+                f += c
+    if f or r:
+        r.append(f.strip())
+        if any(r):
+            rows.append(r)
+            
+    if len(rows) < 2:
+        return deals_dict
+
+    header = [h.replace('"', '').replace('\n', '').strip().upper() for h in rows[0]]
+    sym_idx = next((i for i, h in enumerate(header) if 'SYMBOL' in h or 'SECURITY' in h), -1)
+    client_idx = next((i for i, h in enumerate(header) if 'CLIENT' in h), -1)
+    bs_idx = next((i for i, h in enumerate(header) if 'BUY/SELL' in h or 'DEAL TYPE' in h), -1)
+    qty_idx = next((i for i, h in enumerate(header) if 'VOLUME' in h or 'QUANTITY' in h), -1)
+    px_idx = next((i for i, h in enumerate(header) if 'PRICE' in h), -1)
+
+    if sym_idx == -1 or qty_idx == -1 or px_idx == -1:
+        return deals_dict
+
+    for row in rows[1:]:
+        if len(row) <= max(sym_idx, qty_idx, px_idx):
+            continue
+        sym = row[sym_idx].strip().upper()
+        if not sym or sym in ['SYMBOL', 'SECURITY']:
+            continue
+        try:
+            qty = float(row[qty_idx].replace(',', '').strip())
+            px = float(row[px_idx].replace(',', '').strip())
+        except:
+            continue
+        bs = row[bs_idx].strip().upper() if bs_idx != -1 and len(row) > bs_idx else 'BUY'
+        client = row[client_idx].strip() if client_idx != -1 and len(row) > client_idx else ''
+        val = qty * px * (1.0 if (bs.startswith('B') or bs == 'P') else -1.0)
+
+        d = deals_dict.setdefault(sym, {'net': 0.0, 'buys': 0.0, 'sells': 0.0, 'trades': [], 'isInst': False})
+        d['net'] += val
+        if val > 0:
+            d['buys'] += val
+        else:
+            d['sells'] += abs(val)
+
+        is_inst = any(k in client.upper() for k in [
+            'MUTUAL FUND', 'TRUST', 'INSURANCE', 'LIFE', 'PENSION', 'FII', 'FOREIGN', 'GOVERNMENT',
+            'SBI ', 'HDFC ', 'ICICI ', 'NIPPON', 'KOTAK', 'UTI ', 'AXIS ', 'TATA ', 'MIRAE', 'DSP ',
+            'FRANKLIN', 'SUNDARAM', 'CANARA', 'EDELWEISS', 'INVESCO', 'MOTILAL', 'QUANT ', 'SECURITIES', 'CAPITAL'
+        ])
+        if is_inst:
+            d['isInst'] = True
+        d['trades'].append({
+            'client': client,
+            'type': 'BUY' if (bs.startswith('B') or bs == 'P') else 'SELL',
+            'val': round(abs(val) / 1e7, 2),
+            'isInst': is_inst
+        })
+    return deals_dict
+
+def download_nse_deals():
+    deals = {}
+    urls = [
+        "https://nsearchives.nseindia.com/content/equities/bulk.csv",
+        "https://archives.nseindia.com/content/equities/bulk.csv",
+        "https://nsearchives.nseindia.com/content/equities/block.csv",
+        "https://archives.nseindia.com/content/equities/block.csv"
+    ]
+    for url in urls:
+        print(f"[*] Checking NSE Deals: {url}")
+        raw = fetch_url(url, timeout=15)
+        if raw and len(raw) > 100:
+            csv_text = extract_csv_from_data(raw)
+            if csv_text:
+                parse_deals_csv(csv_text, deals)
+    return deals
+
+# ==================== NSE F&O & PCR FETCHER ====================
+def download_nse_fno(date_dmy, date_iso):
+    fut = {}
+    pcr = {}
+    try:
+        d_obj = datetime.datetime.strptime(date_iso, '%Y-%m-%d')
+        year = d_obj.strftime('%Y')
+        mon = d_obj.strftime('%b').upper()
+        urls = [
+            f"https://nsearchives.nseindia.com/products/content/fo_bhavdata_{date_dmy}.csv",
+            f"https://archives.nseindia.com/content/historical/DERIVATIVES/{year}/{mon}/fo{date_dmy}bhav.csv.zip",
+            f"https://nsearchives.nseindia.com/content/historical/DERIVATIVES/{year}/{mon}/fo{date_dmy}bhav.csv.zip"
+        ]
+        for url in urls:
+            raw = fetch_url(url, timeout=20)
+            if raw and len(raw) > 500:
+                csv_text = extract_csv_from_data(raw)
+                if csv_text and len(csv_text) > 1000:
+                    print(f"[+] Downloaded F&O Bhavcopy from: {url}")
+                    ce_oi = {}
+                    pe_oi = {}
+                    for line in csv_text.split('\n')[1:]:
+                        parts = [p.strip() for p in line.split(',')]
+                        if len(parts) < 14:
+                            continue
+                        inst = parts[0].upper()
+                        sym = parts[1].upper()
+                        if inst == 'FUTSTK':
+                            try:
+                                exp_date = parts[2]
+                                close_p = float(parts[8])
+                                oi = float(parts[12])
+                                chg_oi = float(parts[13]) if len(parts) > 13 else 0.0
+                                if sym not in fut:
+                                    fut[sym] = {'p': close_p, 'oi': oi, 'doi': chg_oi, 'd': exp_date}
+                            except:
+                                pass
+                        elif inst == 'OPTSTK':
+                            opt_type = parts[4].upper() if len(parts) > 4 else ''
+                            try:
+                                oi = float(parts[12])
+                                if opt_type == 'CE':
+                                    ce_oi[sym] = ce_oi.get(sym, 0.0) + oi
+                                elif opt_type == 'PE':
+                                    pe_oi[sym] = pe_oi.get(sym, 0.0) + oi
+                            except:
+                                pass
+                    for s in pe_oi:
+                        if s in ce_oi and ce_oi[s] > 0:
+                            pcr[s] = round(pe_oi[s] / ce_oi[s], 2)
+                    return fut, pcr
+    except Exception as e:
+        print(f"[WARN] Error fetching F&O: {e}")
+    return fut, pcr
+
+# ==================== CIRCUIT BAND AUTO-DETECTOR ====================
+def auto_detect_circuit_bands(stocks):
+    band = {}
+    for sym, s in stocks.items():
+        c = s.get('c', 0.0)
+        h = s.get('h', 0.0)
+        l = s.get('l', 0.0)
+        p = s.get('p', 0.0)
+        if c > 0 and p > 0 and h > l:
+            chg = (c - p) / p * 100.0
+            if abs(c - h) / c < 0.002 and chg >= 4.5:
+                band[sym] = 'H'
+            elif abs(c - l) / c < 0.002 and chg <= -4.5:
+                band[sym] = 'L'
+    return band
+
 # ==================== LIVE INTRADAY QUOTE FETCHER ====================
 def fetch_live_quotes_batch(symbols, exchange='NSE'):
     """
@@ -381,6 +557,10 @@ def generate_intraday_snapshot(prior_day, now_ist):
         'band': prior_day.get('band', {}),
         'volg': prior_day.get('volg', {}),
         'deal': prior_day.get('deal', {}),
+        'fut': prior_day.get('fut', {}),
+        'pcr': prior_day.get('pcr', {}),
+        'band': prior_day.get('band', {}),
+        'hl': prior_day.get('hl', {}),
         'cas': prior_day.get('cas', {}),
         'mcap': prior_day.get('mcap', {}),
         'fut': prior_day.get('fut', {}),
@@ -437,13 +617,26 @@ def run_pipeline():
         
         if nse_stocks or bse_stocks:
             print(f"[+] Found Final Bhavcopy for {date_iso} -> NSE: {len(nse_stocks)}, BSE: {len(bse_stocks)}")
+            # Auto-Fetch Deals, F&O, and Circuit Bands
+            deals_data = download_nse_deals() if date_iso == today_iso else {}
+            fno_fut, fno_pcr = download_nse_fno(date_dmy, date_iso) if date_iso == today_iso else ({}, {})
+            band_data = auto_detect_circuit_bands(nse_stocks)
+            band_data.update(auto_detect_circuit_bands(bse_stocks))
+
             day_rec = {
                 'date': date_iso,
                 'intraday': False,
                 'nse': nse_stocks,
                 'bse': bse_stocks,
-                'hl': {}, 'band': {}, 'volg': {}, 'deal': {}, 'cas': {},
-                'mcap': {}, 'fut': {}, 'pcr': {}, 'iep': {}
+                'hl': {},
+                'band': band_data,
+                'volg': {},
+                'deal': deals_data,
+                'cas': {},
+                'mcap': {},
+                'fut': fno_fut,
+                'pcr': fno_pcr,
+                'iep': {}
             }
             with open(hist_path, 'w', encoding='utf-8') as f:
                 json.dump(day_rec, f, separators=(',', ':'))
