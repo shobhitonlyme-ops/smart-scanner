@@ -617,9 +617,10 @@ def run_pipeline():
         
         if nse_stocks or bse_stocks:
             print(f"[+] Found Final Bhavcopy for {date_iso} -> NSE: {len(nse_stocks)}, BSE: {len(bse_stocks)}")
-            # Auto-Fetch Deals, F&O, and Circuit Bands
-            deals_data = download_nse_deals() if date_iso == today_iso else {}
-            fno_fut, fno_pcr = download_nse_fno(date_dmy, date_iso) if date_iso == today_iso else ({}, {})
+            # Auto-Fetch Deals, F&O, and Circuit Bands for the latest available trading day
+            is_latest_day = (len(saved_days) == 0)
+            deals_data = download_nse_deals() if is_latest_day else {}
+            fno_fut, fno_pcr = download_nse_fno(date_dmy, date_iso) if is_latest_day else ({}, {})
             band_data = auto_detect_circuit_bands(nse_stocks)
             band_data.update(auto_detect_circuit_bands(bse_stocks))
 

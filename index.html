@@ -77,6 +77,17 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
 .badge-rank{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-weight:700;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;box-shadow:0 1px 3px rgba(0,0,0,0.3);}
 .badge{font-size:11px;padding:2px 8px;border-radius:4px;background:#1e2d4a;color:var(--t);font-weight:600;white-space:nowrap;}
 .num{text-align:right;font-variant-numeric:tabular-nums;}
+.alert-ready{background:#7f1d1d;color:#fca5a5;font-weight:700;border:1px solid #ef4444;padding:2px 8px;border-radius:4px;font-size:11px;display:inline-flex;align-items:center;gap:4px;}
+.alert-near{background:#78350f;color:#fde68a;font-weight:700;border:1px solid #f59e0b;padding:2px 8px;border-radius:4px;font-size:11px;display:inline-flex;align-items:center;gap:4px;}
+.alert-dist{background:#1e293b;color:#94a3b8;font-weight:600;border:1px solid #334155;padding:2px 6px;border-radius:4px;font-size:11px;}
+.badge-sq{background:#064e3b;color:#6ee7b7;border:1px solid #10b981;font-weight:700;padding:2px 6px;border-radius:4px;font-size:11px;}
+.badge-qscore{background:#1e3a8a;color:#93c5fd;font-weight:700;padding:2px 8px;border-radius:4px;font-size:11px;}
+.sq-pill{font-family:monospace;font-size:10px;padding:1px 4px;border-radius:3px;margin:0 1px;font-weight:700;}
+.sq-pass{background:#064e3b;color:#a7f3d0;}
+.sq-fail{background:#1f2937;color:#6b7280;}
+.badge-retest{background:#14532d;color:#86efac;font-weight:700;border:1px solid #22c55e;padding:2px 8px;border-radius:4px;font-size:11px;}
+.badge-falsebo{background:#450a0a;color:#fca5a5;font-weight:700;border:1px solid #dc2626;padding:2px 8px;border-radius:4px;font-size:11px;}
+
 </style><script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 </head><body>
 <header><h1>📊 Smart Scanner v8 <span class="tg" style="background:#059669;color:#ffffff;font-weight:700;font-size:11px">v8.5 LIVE-INTRADAY</span> <span class="mu">— NSE + BSE + F&amp;O + Deals · Technical Audit Build</span></h1><div style="display:flex;align-items:center;gap:12px"><span id="market-regime"></span><span class="mu" id="info">No data loaded</span></div></header>
@@ -92,6 +103,7 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
       <option value="swing">⭐ Swing Top 20 (Breakout + Pullback)</option>
       <option value="ol">🎯 Open=Low Rocket</option>
       <option value="deliv">📦 High Delivery Accumulation (≥60%)</option>
+      <option value="range_bo">🧱 Advanced Range Breakout (Preserved R + Vol)</option>
     </select>
   </label>
   <label class="mu">Capital: ₹<input id="bt_cap" type="number" value="1000000" step="100000" style="width:95px;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:5px;padding:4px"></label>
@@ -488,6 +500,379 @@ function feed(name,text){
   if(!BD){if(k[0].startsWith('NSE Bhav'))BD=dmy(name);else if(k[0].startsWith('BSE Bhav'))BD=o[0]&&/^\d{4}-\d{2}-\d{2}$/.test(o[0].TRADDT)?o[0].TRADDT:dmy(name)}
   return k[0]+': '+o.length+' rows'}return null}
 
+// Simple Moving Average
+function calcSMA(prices, period){
+  if(!prices || prices.length < period) return null;
+  const slice = prices.slice(-period);
+  return slice.reduce((a, b) => a + b, 0) / period;
+}
+
+// Bollinger Bands (period=20, mult=2)
+function calcBollingerBands(prices, period = 20, mult = 2){
+  if(!prices || prices.length < period) return null;
+  const slice = prices.slice(-period);
+  const sma = slice.reduce((a, b) => a + b, 0) / period;
+  const variance = slice.reduce((acc, val) => acc + Math.pow(val - sma, 2), 0) / period;
+  const std = Math.sqrt(variance);
+  const upper = sma + (mult * std);
+  const lower = sma - (mult * std);
+  const width = sma > 0 ? ((upper - lower) / sma) * 100 : 0;
+  return { sma, upper, lower, std, width };
+}
+
+// ATR Series
+function calcATRSeries(candles, period = 14){
+  if(!candles || candles.length < 2) return [];
+  const tr = [];
+  for(let i = 1; i < candles.length; i++){
+    const cur = candles[i];
+    const prev = candles[i - 1];
+    const ch = cur[0], cl = cur[1], pc = prev[2];
+    tr.push(Math.max(ch - cl, Math.abs(ch - pc), Math.abs(cl - pc)));
+  }
+  if(tr.length < period){
+    const avg = tr.length ? (tr.reduce((a, b) => a + b, 0) / tr.length) : 0;
+    return new Array(candles.length).fill(avg);
+  }
+  const atrs = new Array(candles.length).fill(0);
+  let curAtr = tr.slice(0, period).reduce((a, b) => a + b, 0) / period;
+  atrs[period] = curAtr;
+  for(let i = period; i < tr.length; i++){
+    curAtr = ((curAtr * (period - 1)) + tr[i]) / period;
+    atrs[i + 1] = curAtr;
+  }
+  return atrs;
+}
+
+// 5-Bar Confirmed Swing Pivot Detection (Zero Look-Ahead Bias)
+function detectConfirmedSwingPivots(candles){
+  const highPivots = [];
+  const lowPivots = [];
+  const n = candles.length;
+  if(n < 5) return { highPivots, lowPivots };
+  for(let i = 2; i <= n - 3; i++){
+    const h = candles[i][0];
+    if(h > candles[i-1][0] && h > candles[i-2][0] && h > candles[i+1][0] && h > candles[i+2][0]){
+      highPivots.push({ idx: i, price: h });
+    }
+    const l = candles[i][1];
+    if(l < candles[i-1][1] && l < candles[i-2][1] && l < candles[i+1][1] && l < candles[i+2][1]){
+      lowPivots.push({ idx: i, price: l });
+    }
+  }
+  return { highPivots, lowPivots };
+}
+
+// ==================== ADVANCED RANGE CONSOLIDATION & PRE-BREAKOUT ENGINE (PHASES 3 TO 15) ====================
+const AR_CFG = {
+  lookback: 90,
+  minDuration: 30,
+  maxWidth: 30.0,
+  minRTouches: 2,
+  minSTouches: 2,
+  touchTol: 2.0,
+  touchGap: 5,
+  volDryRatio: 0.8,
+  boVolMult: 1.5,
+  retestTol: 2.0,
+  retestWindow: 10,
+  falseBoWindow: 5,
+  alertReady: 1.0,
+  alertNear: 3.0
+};
+try { Object.assign(AR_CFG, JSON.parse(localStorage.getItem('ss_ar_cfg') || '{}')); } catch(e){}
+
+function saveARSettings(){
+  try { localStorage.setItem('ss_ar_cfg', JSON.stringify(AR_CFG)); } catch(e){}
+}
+
+function evalAdvancedRange(s, candles, nifty30DRet = 0){
+  s.ar = null;
+  if(!candles || candles.length < AR_CFG.minDuration) return;
+
+  const n = candles.length;
+  const curBar = candles[n - 1];
+  const curClose = curBar[2];
+  const curHigh = curBar[0];
+  const curLow = curBar[1];
+
+  const lookbackBars = Math.min(n, AR_CFG.lookback);
+  const rangeSegment = candles.slice(-lookbackBars);
+  const closes = rangeSegment.map(x => x[2]);
+  const highs = rangeSegment.map(x => x[0]);
+  const lows = rangeSegment.map(x => x[1]);
+  const volumes = rangeSegment.map(x => x[4] || 0);
+
+  s.sma50 = calcSMA(closes, 50);
+  s.ema200 = calcEMA(closes, 200) || calcSMA(closes, 200);
+
+  if(closes.length >= 55){
+    const sma50_now = calcSMA(closes, 50);
+    const sma50_prev5 = calcSMA(closes.slice(0, -5), 50);
+    s.sma50Slope = sma50_prev5 > 0 ? ((sma50_now - sma50_prev5) / sma50_prev5 * 100) : 0;
+  } else {
+    s.sma50Slope = 0;
+  }
+
+  s.bb20 = calcBollingerBands(closes, 20, 2);
+
+  let bbPercentile = 50;
+  if(closes.length >= 35){
+    const bbWidths = [];
+    const windowLen = Math.min(closes.length, 120);
+    for(let k = 20; k <= windowLen; k++){
+      const bbSub = calcBollingerBands(closes.slice(0, closes.length - (windowLen - k)), 20, 2);
+      if(bbSub) bbWidths.push(bbSub.width);
+    }
+    if(bbWidths.length && s.bb20){
+      const lowerCount = bbWidths.filter(w => w < s.bb20.width).length;
+      bbPercentile = (lowerCount / bbWidths.length) * 100;
+    }
+  }
+  s.bbPercentile = bbPercentile;
+
+  const atrSeries = calcATRSeries(rangeSegment, 14);
+  s.curAtr = atrSeries.length ? atrSeries[atrSeries.length - 1] : (s.atr || (curClose * 0.02));
+  const recentAtrs = atrSeries.slice(-60);
+  const avgAtr60 = recentAtrs.length ? (recentAtrs.reduce((a, b) => a + b, 0) / recentAtrs.length) : s.curAtr;
+
+  const avgVol10 = calcSMA(volumes, 10) || s.v || 1;
+  const avgVol20 = calcSMA(volumes, 20) || avgVol10;
+  const avgVol50 = calcSMA(volumes, 50) || avgVol20;
+  s.volRatio = avgVol20 > 0 ? ((curBar[4] || 0) / avgVol20) : (s.rv || 1.0);
+
+  // Preserve Historical Resistance & Exclude Breakout Candles
+  let isBreakoutActive = false;
+  let boBarIdx = -1;
+  let baseBars = rangeSegment.slice(0, -1);
+  if(baseBars.length < AR_CFG.minDuration - 1){
+    baseBars = rangeSegment;
+  }
+
+  let maxBaseHigh = Math.max(...baseBars.map(x => x[0]));
+  let minBaseLow = Math.min(...baseBars.map(x => x[1]));
+
+  for(let bIdx = rangeSegment.length - 1; bIdx >= Math.max(0, rangeSegment.length - AR_CFG.falseBoWindow); bIdx--){
+    const bar = rangeSegment[bIdx];
+    const priorHighs = rangeSegment.slice(0, bIdx).map(x => x[0]);
+    if(priorHighs.length >= AR_CFG.minDuration){
+      const priorMax = Math.max(...priorHighs);
+      if(bar[2] > priorMax){
+        isBreakoutActive = true;
+        boBarIdx = bIdx;
+        maxBaseHigh = priorMax;
+        minBaseLow = Math.min(...rangeSegment.slice(0, bIdx).map(x => x[1]));
+        break;
+      }
+    }
+  }
+
+  const histHigh = maxBaseHigh;
+  const histLow = minBaseLow;
+  const rangeWidth = histLow > 0 ? ((histHigh - histLow) / histLow * 100) : 100;
+
+  // Detect Swing Pivots & Count Touches with session spacing >= 5
+  const { highPivots, lowPivots } = detectConfirmedSwingPivots(rangeSegment);
+
+  const rTouchPivots = [];
+  const tolVal = histHigh * (AR_CFG.touchTol / 100);
+  for(const p of highPivots){
+    if(p.price >= (histHigh - tolVal) && p.price <= (histHigh + tolVal * 1.5)){
+      if(!rTouchPivots.length || (p.idx - rTouchPivots[rTouchPivots.length - 1].idx) >= AR_CFG.touchGap){
+        rTouchPivots.push(p);
+      }
+    }
+  }
+
+  const sTouchPivots = [];
+  const sTolVal = histLow * (AR_CFG.touchTol / 100);
+  for(const p of lowPivots){
+    if(p.price >= (histLow - sTolVal * 1.5) && p.price <= (histLow + sTolVal)){
+      if(!sTouchPivots.length || (p.idx - sTouchPivots[sTouchPivots.length - 1].idx) >= AR_CFG.touchGap){
+        sTouchPivots.push(p);
+      }
+    }
+  }
+
+  const rTouches = Math.max(rTouchPivots.length, 1);
+  const sTouches = Math.max(sTouchPivots.length, 1);
+
+  // 6 Pre-Breakout Conditions
+  const passC1 = bbPercentile <= 25.0 || (s.curAtr < 0.80 * avgAtr60);
+  const passC2 = avgVol10 < (AR_CFG.volDryRatio * avgVol50);
+
+  let passC3 = false;
+  if(lowPivots.length >= 3){
+    const last3 = lowPivots.slice(-3);
+    passC3 = (last3[2].price > last3[1].price) && (last3[1].price > last3[0].price);
+  } else if(lowPivots.length >= 2){
+    passC3 = lowPivots[lowPivots.length - 1].price > lowPivots[lowPivots.length - 2].price;
+  }
+
+  const distToR = histHigh > 0 ? ((histHigh - curClose) / histHigh * 100) : 99;
+  const passC4 = distToR >= 0.0 && distToR <= 5.0;
+
+  const stockRet30 = closes.length >= 31 ? ((curClose - closes[closes.length - 31]) / closes[closes.length - 31] * 100) : (s.chg || 0);
+  s.stockRet30 = stockRet30;
+  s.niftyRelStrength = stockRet30 - nifty30DRet;
+  const passC5 = s.niftyRelStrength > 0;
+
+  let passC6 = false;
+  if(rangeSegment.length >= 30){
+    const ranges = rangeSegment.map(x => x[0] - x[1]);
+    const avgR5 = ranges.slice(-5).reduce((a, b) => a + b, 0) / 5;
+    const avgR30 = ranges.slice(-30).reduce((a, b) => a + b, 0) / 30;
+    passC6 = avgR30 > 0 && (avgR5 < 0.70 * avgR30);
+  }
+
+  const squeezeScore = (passC1?1:0) + (passC2?1:0) + (passC3?1:0) + (passC4?1:0) + (passC5?1:0) + (passC6?1:0);
+  const squeezeClass = squeezeScore >= 5 ? 'STRONG PRE-BREAKOUT' : (squeezeScore >= 3 ? 'WATCH' : 'LOW PRIORITY');
+
+  // Breakout Confirmation
+  const cRange = curBar[0] - curBar[1];
+  const upperWick = curBar[0] - Math.max(curBar[2], curBar[5] || curBar[2]);
+  const upperWickPct = cRange > 0 ? (upperWick / cRange * 100) : 0;
+  const isBullishCandle = curClose > (curBar[5] || curClose) && (s.cp >= 65) && (upperWickPct <= 28);
+  const hasBoVol = s.volRatio >= AR_CFG.boVolMult;
+  const hasBoRsi = (s.rsi14 == null || s.rsi14 >= 58);
+
+  const isTodayBreakout = (curClose > histHigh) && hasBoVol && isBullishCandle && hasBoRsi;
+  let breakoutAge = null;
+  let isRecentBreakout = false;
+
+  if(isTodayBreakout){
+    breakoutAge = 'TODAY';
+    isRecentBreakout = true;
+  } else if(isBreakoutActive && boBarIdx >= 0){
+    const sessionsAgo = (rangeSegment.length - 1) - boBarIdx;
+    if(sessionsAgo <= 2) breakoutAge = 'LAST 2D';
+    else if(sessionsAgo <= 5) breakoutAge = 'LAST 5D';
+    isRecentBreakout = true;
+  }
+
+  const isGapUpBreakout = isTodayBreakout && (curBar[5] > histHigh);
+
+  // False Breakout Detection
+  let isFalseBreakout = false;
+  let falseBoReason = '';
+  if(isRecentBreakout && curClose < (histHigh * 0.99)){
+    isFalseBreakout = true;
+    falseBoReason = `Closed back below ₹${histHigh.toFixed(2)}`;
+  }
+
+  // Retest Detection
+  let retestStatus = 'NONE';
+  if(isRecentBreakout && !isFalseBreakout){
+    const distFromR = Math.abs(curClose - histHigh) / histHigh * 100;
+    if(distFromR <= AR_CFG.retestTol){
+      const lowerWick = Math.min(curClose, curBar[5] || curClose) - curLow;
+      const hasRejectionWick = cRange > 0 && ((lowerWick / cRange) >= 0.40);
+      if(curClose >= histHigh && hasRejectionWick){
+        retestStatus = 'SUCCESSFUL';
+      } else if(curClose >= (histHigh * 0.985)){
+        retestStatus = 'PROGRESS';
+      } else {
+        retestStatus = 'FAILED';
+      }
+    }
+  }
+
+  // Alert Level
+  let alertLevel = 'DISTANT';
+  if(distToR >= 0 && distToR <= AR_CFG.alertReady){
+    alertLevel = 'READY';
+  } else if(distToR > AR_CFG.alertReady && distToR <= AR_CFG.alertNear){
+    alertLevel = 'NEAR';
+  } else if(distToR < 0){
+    alertLevel = 'BROKEN_OUT';
+  }
+
+  // Stop Loss & Targets
+  let suggestedSL = histLow;
+  if(lowPivots.length){
+    suggestedSL = lowPivots[lowPivots.length - 1].price * 0.995;
+  } else {
+    suggestedSL = histLow * 0.995;
+  }
+  const measuredTarget = histHigh + (histHigh - histLow);
+  const target2 = histHigh + (2 * (histHigh - histLow));
+  const proposedEntry = alertLevel === 'READY' ? histHigh : curClose;
+  const riskAmt = proposedEntry - suggestedSL;
+  const rewardAmt = measuredTarget - proposedEntry;
+  const riskReward = (riskAmt > 0 && rewardAmt > 0) ? (rewardAmt / riskAmt) : 0;
+
+  // Technical Quality Score (0–100)
+  let qScore = 0;
+  if(rangeWidth <= 15.0) qScore += 20;
+  else if(rangeWidth <= 22.0) qScore += 15;
+  else if(rangeWidth <= 30.0) qScore += 10;
+  else qScore += 5;
+
+  if(rTouches >= 3) qScore += 15;
+  else if(rTouches >= 2) qScore += 10;
+  else qScore += 5;
+
+  if(passC2) qScore += 15;
+  else if(avgVol10 < avgVol50) qScore += 10;
+
+  if(passC1) qScore += 10;
+  else if(bbPercentile <= 40) qScore += 6;
+
+  if(passC3) qScore += 10;
+
+  if(s.niftyRelStrength >= 5.0) qScore += 10;
+  else if(passC5) qScore += 7;
+
+  if(s.sma50 && curClose > s.sma50 && s.sma50Slope >= -1.0 && s.sma50Slope <= 4.0){
+    qScore += 10;
+  } else if(s.sma50 && curClose > s.sma50){
+    qScore += 6;
+  }
+
+  if(s.rsi14 != null && s.rsi14 >= 50 && s.rsi14 <= 65){
+    qScore += 10;
+  } else if(s.rsi14 != null && s.rsi14 >= 48 && s.rsi14 <= 70){
+    qScore += 6;
+  }
+
+  qScore = Math.min(100, Math.max(0, qScore));
+  const qualityClass = qScore >= 80 ? 'High Priority' : (qScore >= 65 ? 'Good Candidate' : (qScore >= 50 ? 'Watchlist' : 'Low Priority'));
+
+  s.ar = {
+    histHigh,
+    histLow,
+    rangeWidth,
+    duration: rangeSegment.length,
+    rTouches,
+    sTouches,
+    distToR,
+    squeezeScore,
+    squeezeClass,
+    conditions: {
+      c1_squeeze: passC1,
+      c2_volDry: passC2,
+      c3_higherLows: passC3,
+      c4_proximity: passC4,
+      c5_relStrength: passC5,
+      c6_tightCandles: passC6
+    },
+    qScore,
+    qualityClass,
+    alertLevel,
+    isConfirmedBreakout: isTodayBreakout || isRecentBreakout,
+    breakoutAge,
+    isGapUpBreakout,
+    isFalseBreakout,
+    falseBoReason,
+    retestStatus,
+    suggestedSL,
+    measuredTarget,
+    target2,
+    riskReward,
+    isValidRange: rangeWidth <= AR_CFG.maxWidth && rangeSegment.length >= AR_CFG.minDuration
+  };
+}
+
 // Technical indicator calculations (EMA20 & NEW FEATURE 3 Wilder's RSI14)
 function calcEMA(prices, period){
   if(prices.length < period) return null;
@@ -828,6 +1213,23 @@ function build(){
     }
   }
 
+  // Point-in-Time 30-Day NIFTY 50 Benchmark Return (for Relative Strength)
+  let nifty30DReturn = 0;
+  const n50Returns = [];
+  for(const sym of N50){
+    const a = PXH['NSE:' + sym];
+    if(a && a.length >= 31){
+      const curC = a[a.length - 1][2];
+      const prevC = a[a.length - 31][2];
+      if(prevC > 0) n50Returns.push((curC - prevC) / prevC * 100);
+    }
+  }
+  if(n50Returns.length){
+    n50Returns.sort((x, y) => x - y);
+    nifty30DReturn = n50Returns[Math.floor(n50Returns.length / 2)];
+  }
+  window.NIFTY_30D_RET = nifty30DReturn;
+
   // PASS 2: Indicators with B11 History Guard
   for(const s of U){
     const a = PXH[s.ex + ':' + s.sym] || [];
@@ -867,6 +1269,8 @@ function build(){
     s.emaDist = (s.ema20 && s.ema20 > 0) ? ((s.c - s.ema20) / s.ema20 * 100) : 0;
     // Extension Guard: Do not chase overextended stocks
     s.isExtended = s.chg > 8.0 || s.emaDist > 12.0 || (s.rsi14 != null && s.rsi14 >= 78);
+    // Advanced Range Consolidation, Squeeze, Retest & Breakout Engine
+    evalAdvancedRange(s, a, window.NIFTY_30D_RET || 0);
 
     // BUG 6 Fix: Compute 52W high from PXH history
     const allHighs = a.map(x => x[0]);
@@ -1096,6 +1500,9 @@ try { WL = new Set(JSON.parse(localStorage.getItem('ss6wl') || localStorage.getI
 let cur = 'swing20';
 
 const TABS = [
+  { id: 'pre_bo', n: '🎯 Pre-Breakout Watchlist', d: 'Stocks coiled inside valid consolidation range (90D/30D) with Volatility & Volume Squeeze (Score ≥3) pressing against overhead resistance.', ok: s => s.ar && s.ar.isValidRange && !s.ar.isConfirmedBreakout && s.ar.squeezeScore >= 3 && (s.ar.alertLevel === 'READY' || s.ar.alertLevel === 'NEAR'), so: 'ar_qscore' },
+  { id: 'fresh_bo', n: '💥 Fresh Breakouts', d: 'Confirmed breakouts from preserved historical resistance with volume expansion (≥1.5×) and bullish candle closure (Today or past 1-5 sessions).', ok: s => s.ar && s.ar.isConfirmedBreakout && !s.ar.isFalseBreakout, so: 'ar_qscore' },
+  { id: 'retest', n: '🔄 Retest Setups', d: 'Breakout stocks successfully retesting broken resistance within 2% acting as potential support with bullish candle rejection.', ok: s => s.ar && (s.ar.retestStatus === 'PROGRESS' || s.ar.retestStatus === 'SUCCESSFUL'), so: 'ar_qscore' },
   { id: 'swing20', n: '⭐ Swing Top 20', d: 'Curated Daily Top 20 Swing Setups: Clean Breakouts (Volume expansion + Resistance break) aur High-Probability Pullbacks (Above EMA20 + healthy low-vol pullback).', ok: s => (s.swingScore >= 35 || s.isSwingBO || s.isSwingPullback), so: 'sw_score' },
   { id: 'btst', n: '⚡ BTST (3 PM Rocket)', d: 'Buy Today Sell Tomorrow (3:15 PM Setups): Strong close near day high (≥80%), tiny upper wick (≤22%), volume expansion (1.4×-4.8×), gain +2% to +7.8%, and delivery/F&O backing for next-day gap up.', ok: s => s.isBTST, so: 'btst_score' },
   { id: 'patterns', n: '📐 Chart Patterns', d: 'Classical technical chart patterns: Double Bottom, Bull Flag, Ascending Triangle, Inverse Head & Shoulders, Rectangle Breakout, aur Cup & Handle.', ok: s => s.patterns && s.patterns.length > 0, so: 'sc' },
@@ -1163,7 +1570,7 @@ function rows(tab){
   }
 
   const k=$('so').value==='auto'?tab.so:$('so').value;
-  return d.sort((a,b)=>k==='btst_score'?(b.btstScore||0)-(a.btstScore||0)||(b.cp||0)-(a.cp||0)||(b.rv||0)-(a.rv||0):k==='deliv_cr'?(b.deliv_cr||0)-(a.deliv_cr||0)||(b.deliv_per||0)-(a.deliv_per||0):k==='news_score'?(b.news_score||0)-(a.news_score||0)||(b.dl||0)-(a.dl||0):k==='sw_score'?(b.swingScore||0)-(a.swingScore||0)||b.chg-a.chg:k==='rb'?(b.rb.st==='BO')-(a.rb.st==='BO')||b.rb.vx-a.rb.vx:k==='pw'?PW(b)-PW(a):k==='sc'?b.sc-a.sc||b.chg-a.chg:k==='chg'?b.chg-a.chg:k==='cr'?b.cr-a.cr:b.cp-a.cp);
+  return d.sort((a,b)=>k==='ar_qscore'?(b.ar?b.ar.qScore:0)-(a.ar?a.ar.qScore:0)||(b.ar?b.ar.squeezeScore:0)-(a.ar?a.ar.squeezeScore:0):k==='squeeze_score'?(b.ar?b.ar.squeezeScore:0)-(a.ar?a.ar.squeezeScore:0):k==='btst_score'?(b.btstScore||0)-(a.btstScore||0)||(b.cp||0)-(a.cp||0)||(b.rv||0)-(a.rv||0):k==='deliv_cr'?(b.deliv_cr||0)-(a.deliv_cr||0)||(b.deliv_per||0)-(a.deliv_per||0):k==='news_score'?(b.news_score||0)-(a.news_score||0)||(b.dl||0)-(a.dl||0):k==='sw_score'?(b.swingScore||0)-(a.swingScore||0)||b.chg-a.chg:k==='rb'?(b.rb.st==='BO')-(a.rb.st==='BO')||b.rb.vx-a.rb.vx:k==='pw'?PW(b)-PW(a):k==='sc'?b.sc-a.sc||b.chg-a.chg:k==='chg'?b.chg-a.chg:k==='cr'?b.cr-a.cr:b.cp-a.cp);
 }
 
 // NEW FEATURE 6: Dedicated Columns for NR47 Tab
@@ -1335,6 +1742,9 @@ function render(){
   if(tab.id==='deliv')return delivRows(d);
   if(tab.id==='news')return newsRows(d);
   if(tab.id==='deals')return dealsRows(d);
+  if(tab.id==='pre_bo')return preBoRows(d);
+  if(tab.id==='fresh_bo')return freshBoRows(d);
+  if(tab.id==='retest')return retestRows(d);
   if(tab.id==='swing20')return swingRows(d);
   if(tab.id==='btst')return btstRows(d);
   if(tab.id==='patterns')return patternRows(d);
@@ -1542,6 +1952,193 @@ function dealsRows(d){
       <td>
         <a onclick="openFundamentals('${e(s.sym)}')" style="cursor:pointer;padding:2px 6px;background:var(--card);border:1px solid var(--bd);border-radius:4px;font-size:11px;color:var(--tx)">📊 Fundamentals</a>
       </td>
+      <td>
+        <a class="sym-chart" href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(s.ex==='NSE'?'NSE:'+s.sym:'BSE:'+(s.code||s.sym))}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        ${w}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+
+function renderSqueezePills(c){
+  if(!c) return '–';
+  const sq = c.c1_squeeze ? '<span class="sq-pill sq-pass" title="C1: Volatility Squeeze (BB/ATR contraction)">SQ</span>' : '<span class="sq-pill sq-fail" title="C1: No Squeeze">SQ</span>';
+  const vd = c.c2_volDry ? '<span class="sq-pill sq-pass" title="C2: Volume Dry-Up (10D < 0.8*50D)">VOL</span>' : '<span class="sq-pill sq-fail" title="C2: Normal Volume">VOL</span>';
+  const hl = c.c3_higherLows ? '<span class="sq-pill sq-pass" title="C3: Progressive Higher Lows">HL</span>' : '<span class="sq-pill sq-fail" title="C3: Flat/Lower Lows">HL</span>';
+  const px = c.c4_proximity ? '<span class="sq-pill sq-pass" title="C4: Resistance Proximity (0-5%)">PROX</span>' : '<span class="sq-pill sq-fail" title="C4: Not near R">PROX</span>';
+  const rs = c.c5_relStrength ? '<span class="sq-pill sq-pass" title="C5: Relative Strength vs NIFTY">RS</span>' : '<span class="sq-pill sq-fail" title="C5: Lagging NIFTY">RS</span>';
+  const tc = c.c6_tightCandles ? '<span class="sq-pill sq-pass" title="C6: Tight Candles (5D < 0.7*30D)">TGT</span>' : '<span class="sq-pill sq-fail" title="C6: Wide Candles">TGT</span>';
+  return sq + vd + hl + px + rs + tc;
+}
+
+function preBoRows(d){
+  $('th').innerHTML = `
+    <th>Rank</th>
+    <th>Symbol</th>
+    <th>Close</th>
+    <th>Chg%</th>
+    <th>Range High (R)</th>
+    <th>Range Low (S)</th>
+    <th>Width%</th>
+    <th>Dist to R</th>
+    <th>Alert Level</th>
+    <th>Squeeze (0-6)</th>
+    <th>6 Condition Ticks</th>
+    <th>Quality (100)</th>
+    <th>SL (Swing Low)</th>
+    <th>Target (1R)</th>
+    <th>R:R</th>
+    <th>Action</th>
+  `;
+  const empty = 'Is criteria par abhi koi Pre-Breakout stock nahi mila — Market consolidation me naye setups track honge.';
+  if(!d.length){
+    $('tb').innerHTML = `<tr><td colspan="16" class="mu" style="text-align:center;padding:24px">${empty}</td></tr>`;
+    return;
+  }
+  $('tb').innerHTML = d.map((s, i) => {
+    const r = s.ar || {};
+    const isUp = s.chg >= 0;
+    const cl = isUp ? 'var(--g)' : 'var(--r)';
+    const alertBadge = r.alertLevel === 'READY' ? '<span class="alert-ready">🔴 READY (≤1%)</span>' : (r.alertLevel === 'NEAR' ? '<span class="alert-near">🟡 NEAR (1-3%)</span>' : '<span class="alert-dist">⚪ DISTANT</span>');
+    const sqBadge = `<span class="badge-sq">${r.squeezeScore}/6 ${r.squeezeScore >= 5 ? '⭐' : ''}</span>`;
+    const qBadge = `<span class="badge-qscore">${r.qScore} pts</span>`;
+    const w = `<span class="wl" data-w="${e(s.sym)}" title="Watchlist">${WL.has(s.sym) ? '❌' : '⭐'}</span>`;
+
+    return `<tr>
+      <td><span class="badge-rank">#${i + 1}</span></td>
+      <td>
+        <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
+        <span class="mu" style="font-size:10px">${s.ex}</span>
+      </td>
+      <td class="num"><b>₹${(s.c||0).toFixed(2)}</b></td>
+      <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
+      <td class="num" style="color:#f87171;font-weight:700">₹${(r.histHigh||0).toFixed(2)}</td>
+      <td class="num" style="color:#60a5fa;font-weight:600">₹${(r.histLow||0).toFixed(2)}</td>
+      <td class="num">${(r.rangeWidth||0).toFixed(1)}%</td>
+      <td class="num" style="color:${r.distToR <= 2 ? 'var(--g)' : 'var(--tx)'};font-weight:600">${(r.distToR||0).toFixed(1)}%</td>
+      <td>${alertBadge}</td>
+      <td class="num">${sqBadge}</td>
+      <td>${renderSqueezePills(r.conditions)}</td>
+      <td class="num">${qBadge}</td>
+      <td class="num" style="color:var(--r);font-weight:600">₹${(r.suggestedSL||0).toFixed(2)}</td>
+      <td class="num" style="color:var(--g);font-weight:700">₹${(r.measuredTarget||0).toFixed(2)}</td>
+      <td class="num"><b>${(r.riskReward||0).toFixed(1)}:1</b></td>
+      <td>
+        <a class="sym-chart" href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(s.ex==='NSE'?'NSE:'+s.sym:'BSE:'+(s.code||s.sym))}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        ${w}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function freshBoRows(d){
+  $('th').innerHTML = `
+    <th>Rank</th>
+    <th>Symbol</th>
+    <th>Close</th>
+    <th>Chg%</th>
+    <th>Breakout Status</th>
+    <th>Preserved Resistance</th>
+    <th>20D Vol Ratio</th>
+    <th>RSI14</th>
+    <th>Quality Score</th>
+    <th>Suggested SL</th>
+    <th>Target (Measured Move)</th>
+    <th>R:R</th>
+    <th>Turn ₹Cr</th>
+    <th>Action</th>
+  `;
+  const empty = 'Pichle 1-5 sessions me koi confirmed range breakout nahi mila.';
+  if(!d.length){
+    $('tb').innerHTML = `<tr><td colspan="14" class="mu" style="text-align:center;padding:24px">${empty}</td></tr>`;
+    return;
+  }
+  $('tb').innerHTML = d.map((s, i) => {
+    const r = s.ar || {};
+    const isUp = s.chg >= 0;
+    const cl = isUp ? 'var(--g)' : 'var(--r)';
+    const boTag = r.isGapUpBreakout ? '<span class="badge" style="background:#064e3b;color:#6ee7b7">🚀 Gap-Up BO</span>' : (r.breakoutAge === 'TODAY' ? '<span class="badge" style="background:#15803d;color:#fff">💥 TODAY BO</span>' : `<span class="badge" style="background:#1e3a8a;color:#93c5fd">${r.breakoutAge || 'CONFIRMED'}</span>`);
+    const qBadge = `<span class="badge-qscore">${r.qScore} pts</span>`;
+    const w = `<span class="wl" data-w="${e(s.sym)}" title="Watchlist">${WL.has(s.sym) ? '❌' : '⭐'}</span>`;
+
+    return `<tr>
+      <td><span class="badge-rank">#${i + 1}</span></td>
+      <td>
+        <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
+        <span class="mu" style="font-size:10px">${s.ex}</span>
+      </td>
+      <td class="num"><b>₹${(s.c||0).toFixed(2)}</b></td>
+      <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
+      <td>${boTag}</td>
+      <td class="num" style="color:#f87171;font-weight:700">₹${(r.histHigh||0).toFixed(2)}</td>
+      <td class="num"><b style="color:var(--g)">${(r.volRatio||s.rv||1.5).toFixed(1)}×</b></td>
+      <td class="num">${s.rsi14 ? s.rsi14.toFixed(1) : '–'}</td>
+      <td class="num">${qBadge}</td>
+      <td class="num" style="color:var(--r);font-weight:600">₹${(r.suggestedSL||0).toFixed(2)}</td>
+      <td class="num" style="color:var(--g);font-weight:700">₹${(r.measuredTarget||0).toFixed(2)}</td>
+      <td class="num"><b>${(r.riskReward||0).toFixed(1)}:1</b></td>
+      <td class="num">${s.cr.toFixed(1)}</td>
+      <td>
+        <a class="sym-chart" href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(s.ex==='NSE'?'NSE:'+s.sym:'BSE:'+(s.code||s.sym))}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        ${w}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function retestRows(d){
+  $('th').innerHTML = `
+    <th>Rank</th>
+    <th>Symbol</th>
+    <th>Close</th>
+    <th>Chg%</th>
+    <th>Retest Status</th>
+    <th>Preserved Resistance</th>
+    <th>Retest Proximity</th>
+    <th>Quality Score</th>
+    <th>SL (Swing Low)</th>
+    <th>Target 1</th>
+    <th>R:R</th>
+    <th>Turn ₹Cr</th>
+    <th>Action</th>
+  `;
+  const empty = 'Pichle 10 sessions me break huye levels par abhi koi retest setup active nahi hai.';
+  if(!d.length){
+    $('tb').innerHTML = `<tr><td colspan="13" class="mu" style="text-align:center;padding:24px">${empty}</td></tr>`;
+    return;
+  }
+  $('tb').innerHTML = d.map((s, i) => {
+    const r = s.ar || {};
+    const isUp = s.chg >= 0;
+    const cl = isUp ? 'var(--g)' : 'var(--r)';
+    let retestBadge = '';
+    if(r.retestStatus === 'SUCCESSFUL'){
+      retestBadge = '<span class="badge-retest">✅ RETEST SUCCESSFUL</span>';
+    } else if(r.retestStatus === 'PROGRESS'){
+      retestBadge = '<span class="badge" style="background:#78350f;color:#fde68a;font-weight:700">⏳ RETEST IN PROGRESS</span>';
+    } else {
+      retestBadge = '<span class="badge-falsebo">❌ RETEST FAILED</span>';
+    }
+    const qBadge = `<span class="badge-qscore">${r.qScore} pts</span>`;
+    const w = `<span class="wl" data-w="${e(s.sym)}" title="Watchlist">${WL.has(s.sym) ? '❌' : '⭐'}</span>`;
+
+    return `<tr>
+      <td><span class="badge-rank">#${i + 1}</span></td>
+      <td>
+        <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
+        <span class="mu" style="font-size:10px">${s.ex}</span>
+      </td>
+      <td class="num"><b>₹${(s.c||0).toFixed(2)}</b></td>
+      <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
+      <td>${retestBadge}</td>
+      <td class="num" style="color:#f87171;font-weight:700">₹${(r.histHigh||0).toFixed(2)}</td>
+      <td class="num" style="color:var(--g);font-weight:600">${(r.distToR||0).toFixed(1)}%</td>
+      <td class="num">${qBadge}</td>
+      <td class="num" style="color:var(--r);font-weight:600">₹${(r.suggestedSL||0).toFixed(2)}</td>
+      <td class="num" style="color:var(--g);font-weight:700">₹${(r.measuredTarget||0).toFixed(2)}</td>
+      <td class="num"><b>${(r.riskReward||0).toFixed(1)}:1</b></td>
+      <td class="num">${s.cr.toFixed(1)}</td>
       <td>
         <a class="sym-chart" href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(s.ex==='NSE'?'NSE:'+s.sym:'BSE:'+(s.code||s.sym))}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
         ${w}
@@ -2080,6 +2677,34 @@ window.openFundamentals = function(sym){
       ${s.dl ? `<div style="margin-top:8px;font-size:12px;color:var(--g)">🏛️ <b>Institutional Activity:</b> Bulk/Block deal net inflow: <b>+₹${s.dl.toFixed(2)} Cr</b></div>` : ''}
     </div>
 
+    ${s.ar && s.ar.isValidRange ? `
+    <div style="background:var(--bg);padding:14px;border-radius:8px;border:1px solid #3b82f6;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <h4 style="margin:0;font-size:13px;color:#93c5fd">🧱 Range Consolidation &amp; Breakout Structure</h4>
+        <span class="badge-qscore">${s.ar.qScore} / 100 Quality Pts</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));gap:8px;font-size:11px;margin-bottom:8px">
+        <div><span class="mu">Preserved R:</span> <b style="color:#f87171">₹${s.ar.histHigh.toFixed(2)}</b></div>
+        <div><span class="mu">Preserved S:</span> <b style="color:#60a5fa">₹${s.ar.histLow.toFixed(2)}</b></div>
+        <div><span class="mu">Range Width:</span> <b>${s.ar.rangeWidth.toFixed(1)}%</b></div>
+        <div><span class="mu">Duration:</span> <b>${s.ar.duration} bars</b></div>
+        <div><span class="mu">Touches:</span> <b>${s.ar.rTouches}R · ${s.ar.sTouches}S</b></div>
+        <div><span class="mu">Dist to R:</span> <b style="color:${s.ar.distToR <= 2 ? 'var(--g)' : 'var(--tx)'}">${s.ar.distToR.toFixed(1)}%</b></div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 8px;background:rgba(0,0,0,0.25);border-radius:6px;font-size:11px">
+        <span><b>Squeeze Score:</b> <span class="badge-sq">${s.ar.squeezeScore}/6</span></span>
+        <span><b>Ticks:</b> ${renderSqueezePills(s.ar.conditions)}</span>
+        <span><b>Alert:</b> ${s.ar.alertLevel === 'READY' ? '🔴 READY (≤1%)' : (s.ar.alertLevel === 'NEAR' ? '🟡 NEAR (1-3%)' : '⚪ DISTANT')}</span>
+        ${s.ar.isConfirmedBreakout ? `<span class="badge" style="background:#15803d;color:#fff">💥 ${s.ar.breakoutAge || 'BREAKOUT'}</span>` : ''}
+        ${s.ar.isFalseBreakout ? `<span class="badge-falsebo">⚠️ False BO (${s.ar.falseBoReason})</span>` : ''}
+        ${s.ar.retestStatus ? `<span class="badge-retest">🔄 Retest: ${s.ar.retestStatus}</span>` : ''}
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px">
+        <span>🛡️ <b>Suggested SL:</b> <b style="color:var(--r)">₹${s.ar.suggestedSL.toFixed(2)}</b></span>
+        <span>🎯 <b>Measured Target:</b> <b style="color:var(--g)">₹${s.ar.measuredTarget.toFixed(2)}</b></span>
+        <span>⚖️ <b>R:R:</b> <b>${s.ar.riskReward.toFixed(1)}:1</b></span>
+      </div>
+    </div>` : ''}
     <div style="display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--mu)">
       <span>📍 Stop Loss: <b style="color:var(--r)">₹${(s.sl || (s.c * 0.96)).toFixed(2)}</b></span>
       <span>🎯 Target 1: <b style="color:var(--g)">₹${(s.t1 || (s.c * 1.05)).toFixed(2)}</b></span>
@@ -2335,6 +2960,17 @@ function runBacktest(){
             isSignal = true;
             scoreQuality = delivPer + relVol * 10;
           }
+        } else if(strat === 'range_bo'){
+          // Advanced Range Breakout: 30D consolidation with volume expansion
+          const baseHighs = priorBars.slice(0, -1).map(x => x.h);
+          const baseLows = priorBars.slice(0, -1).map(x => x.l);
+          const rHigh = Math.max(...baseHighs);
+          const rLow = Math.min(...baseLows);
+          const rWidth = rLow > 0 ? ((rHigh - rLow) / rLow * 100) : 100;
+          if(rWidth <= 30.0 && prevBar.c > rHigh && relVol >= 1.5 && cp >= 65 && prevBar.c > prevBar.o){
+            isSignal = true;
+            scoreQuality = 60 + relVol * 10 + (30.0 - rWidth);
+          }
         }
 
         if(isSignal){
@@ -2424,7 +3060,8 @@ function runBacktest(){
     bo20: '🚀 20-Day Breakout + Volume (≥1.5×)',
     swing: '⭐ Swing Top 20 (Breakout + Pullback)',
     ol: '🎯 Open=Low Rocket',
-    deliv: '📦 High Delivery Accumulation (≥60%)'
+    deliv: '📦 High Delivery Accumulation (≥60%)',
+    range_bo: '🧱 Advanced Range Breakout (Preserved R + Vol)'
   };
 
   const fmtPct = (x) => ((x >= 0 ? '+' : '') + (x * 100).toFixed(2) + '%');
