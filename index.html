@@ -288,24 +288,43 @@ function objs(t){const r=csv(t).filter(x=>x.length>1);if(r.length<2)return{h:[],
 const NS=()=>({nse:{},bse:{},hl:{},band:{},volg:{},bsehl:{},bseband:{},bsevolg:{},bsemcap:{},deal:{},cas:{},mcap:{},fut:{},pcr:{},iep:{}});
 let S=NS(),BD=null,DAYS={},DL=[],SEL=null,HD=[],PWN=5,PXH={},RB={lb:30,w:15,vx:2,ext:10,near:3,min:10};
 
-// Fix 1 — dmy() date parsing
+// Fix 1 — dmy() date parsing with support for DD-Mon-YYYY and YYYY-MM-DD
 function dmy(n){
-  // Try ddmmyyyy first (most common in NSE/BSE filenames)
-  let m=n.match(/(\d{2})(\d{2})(20\d{2})(?!\d)/);
-  if(m&&+m[1]<=31&&+m[2]<=12)return m[3]+'-'+m[2]+'-'+m[1];
+  if(!n) return null;
+  // Try YYYY-MM-DD
+  let m = n.match(/(20\d{2})-(\d{2})-(\d{2})/);
+  if(m) return m[0];
+  // Try DD-Mon-YYYY (e.g. Large-deals-BULK-17-Oct-2026.csv or 13-Nov-2026)
+  m = n.match(/(\d{1,2})-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(20\d{2})/i);
+  if(m){
+    const months = {jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
+    const day = m[1].padStart(2, '0');
+    const mon = months[m[2].toLowerCase()];
+    return `${m[3]}-${mon}-${day}`;
+  }
+  // Try ddmmyyyy (most common in NSE/BSE filenames)
+  m = n.match(/(\d{2})(\d{2})(20\d{2})(?!\d)/);
+  if(m && +m[1] <= 31 && +m[2] <= 12) return m[3]+'-'+m[2]+'-'+m[1];
   // Fallback: yymmdd or similar
-  m=n.match(/(?:^|\D)(\d{2})(\d{2})(\d{2})(?!\d)/);
-  return m&&+m[2]<=12?'20'+m[3]+'-'+m[2]+'-'+m[1]:null;
+  m = n.match(/(?:^|\D)(\d{2})(\d{2})(\d{2})(?!\d)/);
+  return (m && +m[2] <= 12) ? '20'+m[3]+'-'+m[2]+'-'+m[1] : null;
 }
 
 const addDeal=(s,v,client='',dealType='')=>{
   if(!s) return;
   const key = String(s).trim().toUpperCase();
-  const d = S.deal[key] || (S.deal[key] = {net:0, n:0, clients:[], isInst:false});
+  const d = S.deal[key] || (S.deal[key] = {net:0, n:0, clients:[], trades:[], isInst:false});
   d.net += v; d.n++;
-  const isInst = /(MUTUAL FUND|MF|INSURANCE|LIFE|PENSION|AIF|GOVERNMENT|INVESTMENT AUTHORITY|MORGAN STANLEY|GOLDMAN|NOMURA|CITIGROUP|JPMORGAN|BNP|SOCIETE|VANGUARD|BLACKROCK|FIDELITY|NORGES|ABU DHABI|SINGAPORE|TEMASEK|KOTAK|ICICI|HDFC|SBI|NIPPON|TATA|AXIS|BANDHAN|DSP|SUNDARAM|MIRAE)/i.test(client);
+  d.trades = d.trades || [];
+  const isInst = /(MUTUAL FUND|MF|INSURANCE|LIFE|PENSION|AIF|GOVERNMENT|INVESTMENT AUTHORITY|MORGAN STANLEY|GOLDMAN|NOMURA|CITIGROUP|JPMORGAN|BNP|SOCIETE|VANGUARD|BLACKROCK|FIDELITY|NORGES|ABU DHABI|SINGAPORE|TEMASEK|KOTAK|ICICI|HDFC|SBI|NIPPON|TATA|AXIS|BANDHAN|DSP|SUNDARAM|MIRAE|ALPHAGREP|HRTI|QE SECURITIES|FINSOL|JUNOMONETA|PLUTUS|VISTAAR|ARIHANT|GRAVITON|MICROCURVES)/i.test(client);
   if(isInst) d.isInst = true;
   if(client && d.clients.length < 3) d.clients.push(`${client} (${v >= 0 ? '+' : ''}₹${(v/1e7).toFixed(1)}Cr)`);
+  d.trades.push({
+    client: client || 'Unknown',
+    type: dealType && (/^B/i.test(dealType) || dealType === 'P') ? 'BUY' : 'SELL',
+    val: Math.abs(Math.round((v / 1e7) * 100) / 100),
+    isInst: isInst
+  });
 };
 
 // Built-in Nifty 50 classification list
@@ -1087,6 +1106,27 @@ function build(){
     }
   });
 
+  // 3. Ensure all stocks with Large Deals are included in scanner universe
+  if(S.deal){
+    for(const dSym in S.deal){
+      if(!m[dSym]){
+        const dObj = S.deal[dSym];
+        m[dSym] = {
+          sym: dSym,
+          name: dSym,
+          ex: 'NSE',
+          o: 0, h: 0, l: 0, c: 0, p: 0,
+          t: Math.abs(dObj.net || 0),
+          v: 0,
+          hi52: 0,
+          deliv_per: 0,
+          deliv_qty: 0,
+          dealObj: dObj
+        };
+      }
+    }
+  }
+
   U = Object.values(m);
   window.U = U;
 
@@ -1558,7 +1598,7 @@ function rows(tab){
   let d=U.filter(s=>{
     if(!tab.ok(s)) return false;
     if(tab.id !== 'deals' && (s.c < mp || s.cr < mt)) return false;
-    if(tab.id === 'deals' && s.c < mp) return false;
+    if(tab.id === 'deals' && mp > 0 && s.c > 0 && s.c < mp) return false;
     // Score filter does NOT kill deals, pre_bo, fresh_bo, retest, hm, nr47
     if(ms > 0 && tab.id !== 'hm' && tab.id !== 'nr47' && tab.id !== 'nr' && tab.id !== 'deals' && tab.id !== 'pre_bo' && tab.id !== 'fresh_bo' && tab.id !== 'retest' && s.sc < ms) return false;
     if(ex && s.ex !== ex) return false;
@@ -2528,8 +2568,8 @@ async function load(files){
     items.sort((a,b)=>!!b.BD-!!a.BD);const ds=new Set();
     for(const it of items){
       if(!Object.values(it.S).some(m=>Object.keys(m).length))continue;
-      const date=it.BD||latest;
-      if(!it.BD&&!DAYS[date]){log.push([it.n+' → '+date+' ka bhavcopy nahi hai, pehle bhavcopy upload karo (skip)',1]);continue}
+      const date=it.BD||latest||SEL||Object.keys(DAYS).sort().pop();
+      if(!date){log.push([it.n+' → date samajh nahi aayi (skip)',1]);continue}
       try{await mergeDay({date,...it.S});ds.add(date)}catch(x){log.push(['⚠ Save fail: '+x.message,1])}
     }
     if(!ds.size){$('err').textContent='❌ Koi bhavcopy (NSE pd / PR zip / BSE BhavCopy) nahi mili.';back();$('loaded').innerHTML=log.map(l=>`<span class="chip wn">${e(l[0])}</span>`).join('');return}
