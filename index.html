@@ -361,12 +361,12 @@ function matchIndex(s, idx){
   if(idx === 'NSML500') return s.capRank > 100 && s.capRank <= 600;
   if(idx === 'NSML100' || idx === 'NSML250') return s.capRank > 250 && s.capRank <= 500;
   if(idx === 'NMICRO') return s.capRank > 500;
-  if(idx === 'SENSEX') return SENSEX.has(s.sym) || (s.ex === 'BSE' && s.capRank <= 30);
-  if(idx === 'BSE100') return s.ex === 'BSE' && s.capRank <= 100;
-  if(idx === 'BSE200') return s.ex === 'BSE' && s.capRank <= 200;
-  if(idx === 'BSE500') return s.ex === 'BSE' && s.capRank <= 500;
-  if(idx === 'BSEMID') return s.ex === 'BSE' && s.capRank > 100 && s.capRank <= 250;
-  if(idx === 'BSESML') return s.ex === 'BSE' && s.capRank > 250;
+  if(idx === 'SENSEX') return SENSEX.has(s.sym) || ((s.ex === 'BSE' || s.hasBSE) && s.capRank <= 30);
+  if(idx === 'BSE100') return (s.ex === 'BSE' || s.hasBSE) && s.capRank <= 100;
+  if(idx === 'BSE200') return (s.ex === 'BSE' || s.hasBSE) && s.capRank <= 200;
+  if(idx === 'BSE500') return (s.ex === 'BSE' || s.hasBSE) && s.capRank <= 500;
+  if(idx === 'BSEMID') return (s.ex === 'BSE' || s.hasBSE) && s.capRank > 100 && s.capRank <= 250;
+  if(idx === 'BSESML') return (s.ex === 'BSE' || s.hasBSE) && s.capRank > 250;
   if(idx.startsWith('SEC_')) return getStockSector(s) === idx;
   return true;
 }
