@@ -122,7 +122,7 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
 <select id="rb_min"><option value="5">Min history 5 din</option><option value="10">10 din</option><option value="15">15 din</option><option value="20">20 din</option><option value="30">30 din</option></select></div>
 <div id="flt">
 <input id="q" placeholder="🔍 Symbol (/)" size="12">
-<select id="ex"><option value="">NSE+BSE</option><option>NSE</option><option>BSE</option></select>
+<select id="ex"><option value="">NSE+BSE</option><option value="NSE">NSE</option><option value="BSE">BSE (All BSE Traded)</option><option value="BSE_ONLY">BSE Only (Pure BSE)</option></select>
 <select id="idx" title="Index / Sector Filter">
 <option value="">Index / Sector: All</option>
 <optgroup label="NSE Market Cap Indices">
@@ -940,7 +940,7 @@ let U=[];
 
 function detectChartPatterns(s){
   s.patterns = [];
-  const a = PXH[s.ex + ':' + s.sym] || [];
+  const a = getHistory(s);
   if(a.length < 2) return;
 
   const n = a.length;
@@ -1098,11 +1098,16 @@ function build(){
   // 2. Add BSE stocks if not in NSE, or merge BSE details (BSOFT fix)
   Object.values(S.bse || {}).forEach(s => {
     if(!m[s.sym]){
-      m[s.sym] = { ...s, hasBSE: true };
+      m[s.sym] = { ...s, hasBSE: true, ex: 'BSE' };
     } else {
       m[s.sym].bseCode = s.code || s.sym;
       m[s.sym].hasBSE = true;
       if(!m[s.sym].deliv_per && s.deliv_per) m[s.sym].deliv_per = s.deliv_per;
+      m[s.sym].bse_c = s.c;
+      m[s.sym].bse_t = s.t;
+      m[s.sym].bse_v = s.v;
+      m[s.sym].bse_p = s.p;
+      m[s.sym].bse_chg = s.p > 0 ? (s.c - s.p) / s.p * 100 : 0;
     }
   });
 
@@ -1279,7 +1284,7 @@ function build(){
 
   // PASS 2: Indicators with B11 History Guard
   for(const s of U){
-    const a = PXH[s.ex + ':' + s.sym] || [];
+    const a = getHistory(s);
     const prior = a.slice(-21, -1);
     
     // B11 Fix: Require minimum 10 bars of history before computing relative volume
@@ -1452,7 +1457,7 @@ function build(){
 function rangeCalc(){
   for(const s of U){
     s.rb=null;
-    const a=PXH[s.ex+':'+s.sym]||[],pr=a.slice(-1-RB.lb,-1);
+    const a=getHistory(s),pr=a.slice(-1-RB.lb,-1);
     if(pr.length<RB.min)continue;
     let hi=0,lo=1e12,sv=0;
     for(const x of pr){
@@ -1476,7 +1481,7 @@ function rangeCalc(){
 function nrCalc(){
   for(const s of U){
     s.nr4=false;s.nr7=false;s.nrType='';
-    const a=PXH[s.ex+':'+s.sym]||[];
+    const a=getHistory(s);
     if(a.length<4)continue;
     // Today's bar is the LAST element in a (current session)
     const todayBar=a[a.length-1];
@@ -1586,6 +1591,33 @@ function scBadge(s){
 const TH0='<th>#</th><th>Symbol</th><th>Close</th><th>Chg%</th><th>Gap%</th><th>Close Pos</th><th>Range%</th><th>Deliv%</th><th>EMA20 Δ%</th><th>RSI14</th><th>Turn ₹Cr (Vol)</th><th>F&amp;O (OI%)</th><th>Score</th><th>Signals</th><th>SL · T1 · T2</th><th></th>';
 
 // FIX 4: NR47 & NR Tab Must Bypass Score Filter
+
+function renderExBadge(s){
+  if(!s) return '';
+  const exVal = $('ex') ? $('ex').value : '';
+  const bseCode = s.bseCode || (s.ex === 'BSE' ? s.code : '');
+  
+  if(exVal === 'BSE' || exVal === 'BSE_ONLY'){
+    return `<span class="ex" style="background:#ea580c;color:#fff;font-weight:700;padding:1px 5px;border-radius:3px;font-size:9px;margin-left:4px;" title="BSE Scrip: ${bseCode || s.sym}">BSE${bseCode ? ' ' + bseCode : ''}</span>`;
+  }
+  if(exVal === 'NSE'){
+    return `<span class="ex" style="background:#2563eb;color:#fff;font-weight:600;padding:1px 5px;border-radius:3px;font-size:9px;margin-left:4px;">NSE</span>`;
+  }
+  // All (NSE+BSE)
+  if(s.hasNSE && s.hasBSE){
+    return `<span class="ex" style="background:#1e293b;border:1px solid #475569;color:#93c5fd;font-weight:600;padding:1px 4px;border-radius:3px;font-size:9px;margin-left:4px;" title="Traded on both NSE and BSE (${bseCode})">NSE·BSE</span>`;
+  }
+  if(s.ex === 'BSE' || (!s.hasNSE && s.hasBSE)){
+    return `<span class="ex" style="background:#ea580c;color:#fff;font-weight:700;padding:1px 5px;border-radius:3px;font-size:9px;margin-left:4px;">BSE${bseCode ? ' ' + bseCode : ''}</span>`;
+  }
+  return `<span class="ex" style="color:var(--text-dim);font-size:10px;margin-left:4px;">NSE</span>`;
+}
+
+function getHistory(s){
+  if(!s) return [];
+  return PXH[s.ex + ':' + s.sym] || (s.code ? PXH[s.ex + ':' + s.code] : null) || (s.hasNSE ? PXH['NSE:' + s.sym] : null) || (s.hasBSE ? PXH['BSE:' + s.sym] : null) || [];
+}
+
 function rows(tab){
   if(tab.id==='wl'){
     const q0=$('q').value.toUpperCase();
@@ -1602,6 +1634,7 @@ function rows(tab){
     // Score filter does NOT kill deals, pre_bo, fresh_bo, retest, hm, nr47
     if(ms > 0 && tab.id !== 'hm' && tab.id !== 'nr47' && tab.id !== 'nr' && tab.id !== 'deals' && tab.id !== 'pre_bo' && tab.id !== 'fresh_bo' && tab.id !== 'retest' && s.sc < ms) return false;
     if(ex === 'BSE' && s.ex !== 'BSE' && !s.hasBSE) return false;
+    if(ex === 'BSE_ONLY' && (s.ex !== 'BSE' || s.hasNSE)) return false;
     if(ex === 'NSE' && s.ex !== 'NSE' && !s.hasNSE) return false;
     if(idx && !matchIndex(s, idx)) return false;
     if(q && !s.sym.includes(q)) return false;
@@ -1628,13 +1661,13 @@ function nr47Rows(d){
   $('tb').innerHTML=d.map((s,i)=>{
     const emaDist=s.ema20&&s.ema20>0?((s.c-s.ema20)/s.ema20*100):null;
     const emaDisp=emaDist!=null?`${emaDist>=0?'+':''}${emaDist.toFixed(1)}%`:'–';
-    const a=PXH[s.ex+':'+s.sym]||[];
+    const a=getHistory(s);
     const prevRanges=a.slice(-8,-1).map(x=>x[0]-x[1]); // prior 7 bars
     const prevMaxRangePct=prevRanges.length&&s.c>0?Math.max(...prevRanges)/s.c*100:0;
     const qty=calcQty(s.c,s.sl);
     const isN50=N50.has(s.sym);
     return `<tr><td class="mu">${i+1}</td>
-    <td><span class="sym">${e(s.sym)}</span><span class="ex">${s.ex}</span>${isN50?'<span class="tg" style="color:var(--b);background:#0d1b33;border:1px solid #1e3a6a;font-size:9px">N50</span>':''}${s.isOL?'<span class="tg" style="background:#0f2e1a;color:#00e676;border:1px solid #1f6637;font-weight:700;font-size:9px">🎯 O=L</span>':''}${s.uc?' 🔒':''}</td>
+    <td><span class="sym">${e(s.sym)}</span>${renderExBadge(s)}${isN50?'<span class="tg" style="color:var(--b);background:#0d1b33;border:1px solid #1e3a6a;font-size:9px">N50</span>':''}${s.isOL?'<span class="tg" style="background:#0f2e1a;color:#00e676;border:1px solid #1f6637;font-weight:700;font-size:9px">🎯 O=L</span>':''}${s.uc?' 🔒':''}</td>
     <td>₹${fm(s.c)}</td>
     <td class="${s.chg>=0?'up':'dn'}">${s.chg>=0?'+':''}${fm(s.chg)}%</td>
     <td><span class="tg" style="background:${s.nr7?'#3b1e54':'#1a2440'};color:${s.nr7?'#d49bff':'var(--t)'};font-weight:700">${s.nrType}</span></td>
@@ -1811,7 +1844,7 @@ function render(){
     const emaDist=s.ema20&&s.ema20>0?((s.c-s.ema20)/s.ema20*100):null;
     const emaDisp=emaDist!=null?`${emaDist>=0?'+':''}${emaDist.toFixed(1)}%`:'–';
     return `<tr><td class="mu">${i+1}</td>
-    <td><span class="sym">${e(s.sym)}</span><span class="ex">${s.ex}</span>${isN50?'<span class="tg" style="color:var(--b);background:#0d1b33;border:1px solid #1e3a6a;font-size:9px">N50</span>':''}${s.isOL?'<span class="tg" style="background:#0f2e1a;color:#00e676;border:1px solid #1f6637;font-weight:700;font-size:9px">🎯 O=L</span>':''}${s.nrType?`<span class="tg" style="background:#3b1e54;color:#d49bff;font-size:9px;font-weight:700">${s.nrType}</span>`:''}${s.uc?' 🔒':''}${s.mc?`<div class="mu" style="font-size:10px">MCap ₹${fm(s.mc,0)} Cr</div>`:''}</td>
+    <td><span class="sym">${e(s.sym)}</span>${renderExBadge(s)}${isN50?'<span class="tg" style="color:var(--b);background:#0d1b33;border:1px solid #1e3a6a;font-size:9px">N50</span>':''}${s.isOL?'<span class="tg" style="background:#0f2e1a;color:#00e676;border:1px solid #1f6637;font-weight:700;font-size:9px">🎯 O=L</span>':''}${s.nrType?`<span class="tg" style="background:#3b1e54;color:#d49bff;font-size:9px;font-weight:700">${s.nrType}</span>`:''}${s.uc?' 🔒':''}${s.mc?`<div class="mu" style="font-size:10px">MCap ₹${fm(s.mc,0)} Cr</div>`:''}</td>
     <td>₹${fm(s.c)}</td>
     <td class="${s.chg>=0?'up':'dn'}">${s.chg>=0?'▲ +':'▼ '}${fm(s.chg)}%</td>
     <td class="${s.gap>0?'up':s.gap<0?'dn':'mu'}">${s.gap>0?'+':''}${fm(s.gap,1)}%</td>
@@ -1882,7 +1915,7 @@ function delivRows(d){
       <td class="mu">${i + 1}</td>
       <td>
         <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
-        <span class="mu" style="font-size:10px">${s.ex}</span>
+        ${renderExBadge(s)}
       </td>
       <td class="num"><b>₹${(s.c||0).toFixed(2)}</b></td>
       <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
@@ -1941,7 +1974,7 @@ function newsRows(d){
       <td class="mu">${i + 1}</td>
       <td>
         <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
-        <span class="mu" style="font-size:10px">${s.ex}</span>
+        ${renderExBadge(s)}
       </td>
       <td class="num"><b>₹${(s.c||0).toFixed(2)}</b></td>
       <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
@@ -2013,7 +2046,7 @@ function dealsRows(d){
       <td class="mu">${i + 1}</td>
       <td>
         <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
-        <span class="mu" style="font-size:10px">${s.ex}</span>
+        ${renderExBadge(s)}
       </td>
       <td class="num"><b>₹${(s.c||0).toFixed(2)}</b></td>
       <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
@@ -2082,7 +2115,7 @@ function preBoRows(d){
       <td><span class="badge-rank">#${i + 1}</span></td>
       <td>
         <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
-        <span class="mu" style="font-size:10px">${s.ex}</span>
+        ${renderExBadge(s)}
       </td>
       <td class="num"><b>₹${(s.c||0).toFixed(2)}</b></td>
       <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
@@ -2139,7 +2172,7 @@ function freshBoRows(d){
       <td><span class="badge-rank">#${i + 1}</span></td>
       <td>
         <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
-        <span class="mu" style="font-size:10px">${s.ex}</span>
+        ${renderExBadge(s)}
       </td>
       <td class="num"><b>₹${(s.c||0).toFixed(2)}</b></td>
       <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
@@ -2200,7 +2233,7 @@ function retestRows(d){
       <td><span class="badge-rank">#${i + 1}</span></td>
       <td>
         <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
-        <span class="mu" style="font-size:10px">${s.ex}</span>
+        ${renderExBadge(s)}
       </td>
       <td class="num"><b>₹${(s.c||0).toFixed(2)}</b></td>
       <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
@@ -2257,7 +2290,7 @@ function btstRows(d){
       <td><span class="badge-rank">#${i + 1}</span></td>
       <td>
         <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
-        <span class="mu" style="font-size:10px">${s.ex}</span>
+        ${renderExBadge(s)}
       </td>
       <td class="num"><b>₹${(s.c||0).toFixed(2)}</b></td>
       <td class="num" style="color:${cl};font-weight:600">+${s.chg.toFixed(2)}%</td>
@@ -2332,7 +2365,7 @@ function swingRows(d){
       <td><span class="badge-rank">#${i + 1}</span></td>
       <td>
         <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
-        <span class="mu" style="font-size:10px">${s.ex}</span>
+        ${renderExBadge(s)}
       </td>
       <td class="num"><b>₹${(s.c||0).toFixed(2)}</b></td>
       <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
@@ -2390,7 +2423,7 @@ function patternRows(d){
       <td class="mu">${i + 1}</td>
       <td>
         <span class="sym" data-s="${e(s.sym)}" title="${e(s.name)}">${e(s.sym)}</span>
-        <span class="mu" style="font-size:10px">${s.ex}</span>
+        ${renderExBadge(s)}
       </td>
       <td class="num"><b>₹${(s.c||0).toFixed(2)}</b></td>
       <td class="num" style="color:${cl};font-weight:600">${isUp ? '+' : ''}${s.chg.toFixed(2)}%</td>
@@ -2419,7 +2452,7 @@ function perfRows(d,wl){
     const r=PW(s),rs=r<-900?'–':(r>=0?'+':'')+fm(r)+'%';
     const isN50=N50.has(s.sym);
     const qty=calcQty(s.c,s.sl);
-    return `<tr><td class="mu">${i+1}</td><td><span class="sym">${e(s.sym)}</span><span class="ex">${s.ex}</span>${isN50?'<span class="tg" style="color:var(--b);background:#0d1b33;border:1px solid #1e3a6a;font-size:9px">N50</span>':''}${s.isOL?'<span class="tg" style="background:#0f2e1a;color:#00e676;border:1px solid #1f6637;font-weight:700;font-size:9px">🎯 O=L</span>':''}${s.uc?' 🔒':''}</td><td>₹${fm(s.c)}</td><td class="${r>=0?'up':'dn'}"><b>${rs}</b></td>`
+    return `<tr><td class="mu">${i+1}</td><td><span class="sym">${e(s.sym)}</span>${renderExBadge(s)}${isN50?'<span class="tg" style="color:var(--b);background:#0d1b33;border:1px solid #1e3a6a;font-size:9px">N50</span>':''}${s.isOL?'<span class="tg" style="background:#0f2e1a;color:#00e676;border:1px solid #1f6637;font-weight:700;font-size:9px">🎯 O=L</span>':''}${s.uc?' 🔒':''}</td><td>₹${fm(s.c)}</td><td class="${r>=0?'up':'dn'}"><b>${rs}</b></td>`
     +`<td class="${s.chg>=0?'up':'dn'}" style="font-weight:600">${s.chg>=0?'+':''}${s.chg.toFixed(2)}%</td>`
     +`<td>${s.hist.filter(v=>v>0).length}/${s.nd}</td><td>${s.st?'🔥'+s.st:'–'}</td><td>₹${fm(s.cr)}</td><td>${scBadge(s)}</td>`
     +(wl?`<td>${s.tags.map(g=>`<span class="tg ${g.includes('⚠️')?'x':''}">${e(g)}</span>`).join('')}</td><td><div><span class="dn">${fm(s.sl)}</span> · <span class="up">${fm(s.t1)}</span> · <span class="up">${fm(s.t2)}</span></div><div class="mu" style="font-size:10px">🎯 Qty: <b>${qty}</b></div></td><td class="wl" data-n="${e(s.sym)}">${NT[s.sym]?e(NT[s.sym]):'<span class="mu">✏️ note</span>'}</td>`:'')
@@ -2458,7 +2491,7 @@ function rbRows(d){
     const r=s.rb;
     const isN50=N50.has(s.sym);
     const qty=calcQty(s.c,s.sl);
-    return `<tr><td class="mu">${i+1}</td><td><span class="sym">${e(s.sym)}</span><span class="ex">${s.ex}</span>${isN50?'<span class="tg" style="color:var(--b);background:#0d1b33;border:1px solid #1e3a6a;font-size:9px">N50</span>':''}${s.isOL?'<span class="tg" style="background:#0f2e1a;color:#00e676;border:1px solid #1f6637;font-weight:700;font-size:9px">🎯 O=L</span>':''}${s.uc?' 🔒':''}</td><td>₹${fm(s.c)}</td><td class="${s.chg>=0?'up':'dn'}">${s.chg>=0?'+':''}${fm(s.chg)}%</td>
+    return `<tr><td class="mu">${i+1}</td><td><span class="sym">${e(s.sym)}</span>${renderExBadge(s)}${isN50?'<span class="tg" style="color:var(--b);background:#0d1b33;border:1px solid #1e3a6a;font-size:9px">N50</span>':''}${s.isOL?'<span class="tg" style="background:#0f2e1a;color:#00e676;border:1px solid #1f6637;font-weight:700;font-size:9px">🎯 O=L</span>':''}${s.uc?' 🔒':''}</td><td>₹${fm(s.c)}</td><td class="${s.chg>=0?'up':'dn'}">${s.chg>=0?'+':''}${fm(s.chg)}%</td>
     <td>${SL[r.st]||r.st}</td><td>₹${fm(r.hi)}</td><td>₹${fm(r.lo)}</td><td>${fm(r.w,1)}%</td><td class="${r.dist>=0?'up':'dn'}">${r.dist>=0?'+':''}${fm(r.dist,1)}%</td><td>${fm(r.vx,1)}×</td><td class="mu">${r.n}</td>
     <td><div>₹${fm(r.hi)} · <span class="dn">${fm(r.sl)}</span> · <span class="up">${fm(r.t1)}</span> · <span class="up">${fm(r.t2)}</span></div><div class="mu" style="font-size:10px">🎯 Qty: <b>${qty}</b></div></td><td>₹${fm(s.cr)}</td>
     <td><a href="#" data-c="${e(s.sym)}">Chart</a> <span class="wl" data-w="${e(s.sym)}">${WL.has(s.sym)?'❌':'⭐'}</span></td></tr>`
