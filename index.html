@@ -1092,13 +1092,13 @@ function build(){
   const m={};
   // 1. Deduplicate: NSE stocks get primary priority
   Object.values(S.nse || {}).forEach(s => {
-    m[s.sym] = { ...s };
+    m[s.sym] = { ...s, hasNSE: true };
   });
   
   // 2. Add BSE stocks if not in NSE, or merge BSE details (BSOFT fix)
   Object.values(S.bse || {}).forEach(s => {
     if(!m[s.sym]){
-      m[s.sym] = { ...s };
+      m[s.sym] = { ...s, hasBSE: true };
     } else {
       m[s.sym].bseCode = s.code || s.sym;
       m[s.sym].hasBSE = true;
@@ -1601,7 +1601,8 @@ function rows(tab){
     if(tab.id === 'deals' && mp > 0 && s.c > 0 && s.c < mp) return false;
     // Score filter does NOT kill deals, pre_bo, fresh_bo, retest, hm, nr47
     if(ms > 0 && tab.id !== 'hm' && tab.id !== 'nr47' && tab.id !== 'nr' && tab.id !== 'deals' && tab.id !== 'pre_bo' && tab.id !== 'fresh_bo' && tab.id !== 'retest' && s.sc < ms) return false;
-    if(ex && s.ex !== ex) return false;
+    if(ex === 'BSE' && s.ex !== 'BSE' && !s.hasBSE) return false;
+    if(ex === 'NSE' && s.ex !== 'NSE' && !s.hasNSE) return false;
     if(idx && !matchIndex(s, idx)) return false;
     if(q && !s.sym.includes(q)) return false;
     if(hu && s.uc) return false;
@@ -1902,7 +1903,7 @@ function delivRows(d){
         <a onclick="openFundamentals('${e(s.sym)}')" style="cursor:pointer;padding:2px 6px;background:var(--card);border:1px solid var(--bd);border-radius:4px;font-size:11px;color:var(--tx)" title="View Ratios & Financials">📊 Fundamentals</a>
       </td>
       <td>
-        <a class="sym-chart" href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(s.ex==='NSE'?'NSE:'+s.sym:'BSE:'+(s.code||s.sym))}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        <a class="sym-chart" href="${getTvUrl(s)}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
         ${w}
       </td>
     </tr>`;
@@ -1953,7 +1954,7 @@ function newsRows(d){
         <a onclick="openFundamentals('${e(s.sym)}')" style="cursor:pointer;padding:2px 6px;background:var(--card);border:1px solid var(--bd);border-radius:4px;font-size:11px;color:var(--tx)">📊 Fundamentals</a>
       </td>
       <td>
-        <a class="sym-chart" href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(s.ex==='NSE'?'NSE:'+s.sym:'BSE:'+(s.code||s.sym))}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        <a class="sym-chart" href="${getTvUrl(s)}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
         ${w}
       </td>
     </tr>`;
@@ -2025,7 +2026,7 @@ function dealsRows(d){
         <a onclick="openFundamentals('${e(s.sym)}')" style="cursor:pointer;padding:2px 6px;background:var(--card);border:1px solid var(--bd);border-radius:4px;font-size:11px;color:var(--tx)">📊 Fundamentals</a>
       </td>
       <td>
-        <a class="sym-chart" href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(s.ex==='NSE'?'NSE:'+s.sym:'BSE:'+(s.code||s.sym))}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        <a class="sym-chart" href="${getTvUrl(s)}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
         ${w}
       </td>
     </tr>`;
@@ -2097,7 +2098,7 @@ function preBoRows(d){
       <td class="num" style="color:var(--g);font-weight:700">₹${(r.measuredTarget||0).toFixed(2)}</td>
       <td class="num"><b>${(r.riskReward||0).toFixed(1)}:1</b></td>
       <td>
-        <a class="sym-chart" href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(s.ex==='NSE'?'NSE:'+s.sym:'BSE:'+(s.code||s.sym))}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        <a class="sym-chart" href="${getTvUrl(s)}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
         ${w}
       </td>
     </tr>`;
@@ -2152,7 +2153,7 @@ function freshBoRows(d){
       <td class="num"><b>${(r.riskReward||0).toFixed(1)}:1</b></td>
       <td class="num">${s.cr.toFixed(1)}</td>
       <td>
-        <a class="sym-chart" href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(s.ex==='NSE'?'NSE:'+s.sym:'BSE:'+(s.code||s.sym))}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        <a class="sym-chart" href="${getTvUrl(s)}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
         ${w}
       </td>
     </tr>`;
@@ -2212,7 +2213,7 @@ function retestRows(d){
       <td class="num"><b>${(r.riskReward||0).toFixed(1)}:1</b></td>
       <td class="num">${s.cr.toFixed(1)}</td>
       <td>
-        <a class="sym-chart" href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(s.ex==='NSE'?'NSE:'+s.sym:'BSE:'+(s.code||s.sym))}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        <a class="sym-chart" href="${getTvUrl(s)}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
         ${w}
       </td>
     </tr>`;
@@ -2276,7 +2277,7 @@ function btstRows(d){
       <td class="num">${s.cr.toFixed(1)}</td>
       <td class="num"><span class="badge" style="background:#064e3b;color:#6ee7b7;font-weight:700">${s.btstScore || s.sc} pts</span></td>
       <td>
-        <a class="sym-chart" href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(s.ex==='NSE'?'NSE:'+s.sym:'BSE:'+(s.code||s.sym))}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        <a class="sym-chart" href="${getTvUrl(s)}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
         ${w}
       </td>
     </tr>`;
@@ -2344,7 +2345,7 @@ function swingRows(d){
       <td class="num">${s.cr.toFixed(1)}</td>
       <td class="num"><span class="badge" style="background:#1e3a8a;color:#93c5fd;font-weight:600">${s.swingScore || s.sc} pts</span></td>
       <td>
-        <a class="sym-chart" href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(s.ex==='NSE'?'NSE:'+s.sym:'BSE:'+(s.code||s.sym))}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        <a class="sym-chart" href="${getTvUrl(s)}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
         ${w}
       </td>
     </tr>`;
@@ -2402,7 +2403,7 @@ function patternRows(d){
       <td class="num">${s.cr.toFixed(1)}</td>
       <td class="num"><span class="badge">${s.sc}</span></td>
       <td>
-        <a class="sym-chart" href="https://in.tradingview.com/chart/?symbol=${encodeURIComponent(s.ex==='NSE'?'NSE:'+s.sym:'BSE:'+(s.code||s.sym))}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
+        <a class="sym-chart" href="${getTvUrl(s)}" target="_blank" style="cursor:pointer;padding:2px 8px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none">Chart ↗</a>
         ${w}
       </td>
     </tr>`;
@@ -2683,13 +2684,29 @@ try{const c=JSON.parse(localStorage.getItem(CK)||localStorage.getItem('ss5chart'
 function saveC(){try{const c={ind:[...document.querySelectorAll('.ind:checked')].map(k=>k.value)};CI.forEach(i=>c[i]=$(i).value);localStorage.setItem(CK,JSON.stringify(c))}catch(x){}}
 CI.forEach(i=>$(i).addEventListener('change',saveC));if($('pat_filter'))$('pat_filter').addEventListener('change',render);document.querySelectorAll('.ind').forEach(k=>k.addEventListener('change',saveC));
 
+// Universal TradingView & Chart URL builder (Zero "Symbol doesn't exist" errors)
+function getTvUrl(s){
+  if(!s) return '#';
+  const sym = s.sym || '';
+  if(s.ex === 'NSE' || s.hasNSE || !s.ex){
+    return 'https://in.tradingview.com/chart/?symbol=NSE%3A' + encodeURIComponent(sym);
+  }
+  if(/^[A-Za-z]/.test(sym)){
+    return 'https://in.tradingview.com/chart/?symbol=BSE%3A' + encodeURIComponent(sym);
+  }
+  const bseCode = s.code || sym;
+  return 'https://www.google.com/finance/quote/' + encodeURIComponent(bseCode) + ':BOM';
+}
+
 function chartUrl(s,emb){
   const p=$('cp').value,nse=s.ex==='NSE',sy=encodeURIComponent(s.sym);
   if(p==='ci')return nse?`https://chartink.com/stocks/${sy}.html`:null;
   if(p==='sc')return nse?`https://www.screener.in/company/${sy}/`:null;
   const bseCode = (s.code && !String(s.code).startsWith('INE')) ? s.code : s.sym;
   if(p==='gf')return `https://www.google.com/finance/quote/${encodeURIComponent(nse?s.sym+':NSE':bseCode+':BOM')}`;
-  const tv=encodeURIComponent(nse?'NSE:'+s.sym:'BSE:'+bseCode),st=encodeURIComponent(JSON.stringify([...document.querySelectorAll('.ind:checked')].map(k=>k.value)));
+  const tvSym = (s.ex === 'NSE' || s.hasNSE) ? ('NSE:' + s.sym) : (/^[A-Za-z]/.test(s.sym) ? ('BSE:' + s.sym) : ('BSE:' + bseCode));
+  const tv = encodeURIComponent(tvSym);
+  const st = encodeURIComponent(JSON.stringify([...document.querySelectorAll('.ind:checked')].map(k=>k.value)));
   return emb?`https://s.tradingview.com/widgetembed/?symbol=${tv}&interval=${$('ci').value}&style=${$('cst').value}&theme=${$('ct').value}&studies=${st}&hidesidetoolbar=0&allow_symbol_change=1&timezone=Asia%2FKolkata`
    :`https://www.tradingview.com/chart/?symbol=${tv}&interval=${$('ci').value}`
 }
@@ -2787,17 +2804,17 @@ window.openFundamentals = function(sym){
   const sy = encodeURIComponent(s.sym);
   const bseCode = (s.code && !String(s.code).startsWith('INE')) ? s.code : s.sym;
   $('f_link_scr').href = s.ex === 'NSE' ? `https://www.screener.in/company/${sy}/` : `https://www.screener.in/company/${bseCode}/`;
-  $('f_link_tv').href = `https://in.tradingview.com/chart/?symbol=${s.ex === 'NSE' ? 'NSE:' + sy : 'BSE:' + bseCode}`;
+  $('f_link_tv').href = getTvUrl(s);
   
   mod.style.display = 'flex';
 };
 
 function openChart(sym){
   const s = (window.U || []).find(z => z.sym === sym);
-  const nse = s ? (s.ex === 'NSE') : true;
+  const isNse = s ? (s.ex === 'NSE' || s.hasNSE) : true;
   const sy = encodeURIComponent(sym);
   const bseCode = (s && s.code && !String(s.code).startsWith('INE')) ? s.code : sym;
-  const tvSym = nse ? ('NSE:' + sym) : ('BSE:' + bseCode);
+  const tvSym = isNse ? ('NSE:' + sym) : (/^[A-Za-z]/.test(sym) ? ('BSE:' + sym) : ('BSE:' + bseCode));
   
   const ciVal = $('ci') ? $('ci').value : 'D';
   const tvWebUrl = `https://in.tradingview.com/chart/?symbol=${encodeURIComponent(tvSym)}&interval=${ciVal}`;
