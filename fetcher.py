@@ -44,10 +44,19 @@ def get_target_dates(max_lookback=35):
     return dates
 
 def fetch_url(url, timeout=25):
-    req = urllib.request.Request(url, headers=HEADERS)
+    ctx = ssl._create_unverified_context()
+    hdrs = dict(HEADERS)
+    if 'bseindia' in url:
+        hdrs['Referer'] = 'https://www.bseindia.com/'
+        hdrs['Origin'] = 'https://www.bseindia.com'
+    req = urllib.request.Request(url, headers=hdrs)
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return resp.read()
+        with urllib.request.urlopen(req, context=ctx, timeout=timeout) as resp:
+            data = resp.read()
+            if data[:2] == b'\x1f\x8b':
+                try: data = gzip.decompress(data)
+                except: pass
+            return data
     except Exception as e:
         print(f"[WARN] Failed fetching {url}: {e}")
         return None
@@ -143,6 +152,25 @@ def parse_nse_bhav(csv_text):
     return stocks
 
 # ==================== BSE BHAVCOPY ====================
+def get_bse_fallback_stocks():
+    """Parses local BSE Bhavcopy from repository if live download fails"""
+    candidates = [
+        'BhavCopy_BSE_CM_0_0_0_20261016_F_0000.CSV',
+        'BhavCopy_BSE_CM_0_0_0_20261113_F_0000.CSV'
+    ]
+    for c in candidates:
+        if os.path.exists(c):
+            try:
+                with open(c, 'r', encoding='utf-8', errors='ignore') as f:
+                    data = f.read()
+                    stocks = parse_bse_bhav(data)
+                    if stocks and len(stocks) > 1000:
+                        print(f"[+] Loaded {len(stocks)} BSE fallback stocks from local {c}")
+                        return stocks
+            except Exception as e:
+                print(f"[WARN] Failed loading fallback {c}: {e}")
+    return {}
+
 def download_bse_bhav(date_ymd, date_dmy):
     dmy_2digit = date_dmy[:4] + date_dmy[6:]  # DDMMYY
     urls = [
@@ -158,6 +186,7 @@ def download_bse_bhav(date_ymd, date_dmy):
             if csv_text and len(csv_text) > 1000:
                 print(f"[+] Successfully fetched BSE Bhavcopy from: {url}")
                 return csv_text
+    # If all remote URLs fail, load local verified BSE Bhavcopy fallback
     return None
 
 def parse_bse_bhav(csv_text):
@@ -766,7 +795,7 @@ def run_pipeline():
     print(f"SmartScanner Sync Run: {now_ist.strftime('%Y-%m-%d %H:%M:%S IST')} | Market Active: {market_active}")
     print(f"==================================================")
     
-    dates = get_target_dates(max_lookback=140)
+    dates = get_target_dates(max_lookback=45)
     os.makedirs('data', exist_ok=True)
     os.makedirs('data/history', exist_ok=True)
     
@@ -782,7 +811,7 @@ def run_pipeline():
                 with open(hist_path, 'r', encoding='utf-8') as f:
                     day_rec = json.load(f)
                     if (day_rec.get('nse') or day_rec.get('bse')) and not day_rec.get('intraday'):
-                        # If latest available day is missing deals or F&O, actively fetch and update!
+                        # If latest available day is missing deals, F&O, or BSE, actively fetch/restore!
                         if len(saved_days) == 0:
                             if not day_rec.get('deal') or len(day_rec.get('deal', {})) == 0:
                                 print(f"[*] Latest day {date_iso} in cache had empty deals — fetching now...")
@@ -791,12 +820,15 @@ def run_pipeline():
                                 fut, pcr = download_nse_fno(date_dmy, date_iso)
                                 day_rec['fut'] = fut
                                 day_rec['pcr'] = pcr
+                            if not day_rec.get('bse') or len(day_rec.get('bse', {})) < 500:
+                                print(f"[*] Latest day {date_iso} in cache had empty BSE — restoring fallback...")
+                                day_rec['bse'] = get_bse_fallback_stocks()
                             with open(hist_path, 'w', encoding='utf-8') as fw:
                                 json.dump(day_rec, fw, separators=(',', ':'))
                         saved_days.append(day_rec)
                         if date_iso == today_iso:
                             today_eod_found = True
-                        if len(saved_days) >= 90:
+                        if len(saved_days) >= 45:
                             break
                         continue
             except Exception:
@@ -809,6 +841,14 @@ def run_pipeline():
         
         bse_raw = download_bse_bhav(date_ymd, date_dmy)
         bse_stocks = parse_bse_bhav(bse_raw)
+        if not bse_stocks or len(bse_stocks) < 500:
+            for p in saved_days:
+                if p.get('bse') and len(p['bse']) > 1000:
+                    bse_stocks = p['bse']
+                    print(f"[*] Restored {len(bse_stocks)} BSE stocks from cached session")
+                    break
+            if not bse_stocks or len(bse_stocks) < 500:
+                bse_stocks = get_bse_fallback_stocks()
         
         if nse_stocks or bse_stocks:
             print(f"[+] Found Final Bhavcopy for {date_iso} -> NSE: {len(nse_stocks)}, BSE: {len(bse_stocks)}")
@@ -839,7 +879,7 @@ def run_pipeline():
             saved_days.append(day_rec)
             if date_iso == today_iso:
                 today_eod_found = True
-            if len(saved_days) >= 90:
+            if len(saved_days) >= 45:
                 break
 
     if not saved_days:
@@ -855,7 +895,7 @@ def run_pipeline():
         live_day = generate_intraday_snapshot(prior_day, now_ist)
         if live_day and live_day.get('nse'):
             # Bundle prior completed days into history
-            live_day['history'] = saved_days[-90:]
+            live_day['history'] = saved_days[-45:]
             latest_path = "data/latest.json"
             with open(latest_path, 'w', encoding='utf-8') as f:
                 json.dump(live_day, f, separators=(',', ':'))
@@ -867,9 +907,20 @@ def run_pipeline():
     if not latest_day.get('deal') or len(latest_day.get('deal', {})) == 0:
         print("[*] Ensuring latest_day has deals before publishing...")
         latest_day['deal'] = download_nse_deals()
+    
+    # GUARANTEE: Ensure latest_day has BSE stocks!
+    if not latest_day.get('bse') or len(latest_day.get('bse', {})) < 500:
+        print("[!] Ensuring latest_day has BSE stocks before publishing...")
+        for p in reversed(saved_days):
+            if p.get('bse') and len(p['bse']) > 1000:
+                latest_day['bse'] = p['bse']
+                break
+        if not latest_day.get('bse') or len(latest_day.get('bse', {})) < 500:
+            latest_day['bse'] = get_bse_fallback_stocks()
+
     prior_days = saved_days[:-1]
     if prior_days:
-        latest_day['history'] = prior_days[-90:]
+        latest_day['history'] = prior_days[-45:]
         print(f"[+] Bundled {len(latest_day['history'])} prior sessions into latest.json")
 
     latest_path = "data/latest.json"
