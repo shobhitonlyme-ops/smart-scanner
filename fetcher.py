@@ -766,7 +766,7 @@ def run_pipeline():
     print(f"SmartScanner Sync Run: {now_ist.strftime('%Y-%m-%d %H:%M:%S IST')} | Market Active: {market_active}")
     print(f"==================================================")
     
-    dates = get_target_dates(max_lookback=60)
+    dates = get_target_dates(max_lookback=140)
     os.makedirs('data', exist_ok=True)
     os.makedirs('data/history', exist_ok=True)
     
@@ -796,7 +796,7 @@ def run_pipeline():
                         saved_days.append(day_rec)
                         if date_iso == today_iso:
                             today_eod_found = True
-                        if len(saved_days) >= 45:
+                        if len(saved_days) >= 90:
                             break
                         continue
             except Exception:
@@ -839,7 +839,7 @@ def run_pipeline():
             saved_days.append(day_rec)
             if date_iso == today_iso:
                 today_eod_found = True
-            if len(saved_days) >= 45:
+            if len(saved_days) >= 90:
                 break
 
     if not saved_days:
@@ -855,7 +855,7 @@ def run_pipeline():
         live_day = generate_intraday_snapshot(prior_day, now_ist)
         if live_day and live_day.get('nse'):
             # Bundle prior completed days into history
-            live_day['history'] = saved_days[-20:]
+            live_day['history'] = saved_days[-90:]
             latest_path = "data/latest.json"
             with open(latest_path, 'w', encoding='utf-8') as f:
                 json.dump(live_day, f, separators=(',', ':'))
@@ -869,7 +869,7 @@ def run_pipeline():
         latest_day['deal'] = download_nse_deals()
     prior_days = saved_days[:-1]
     if prior_days:
-        latest_day['history'] = prior_days[-45:]
+        latest_day['history'] = prior_days[-90:]
         print(f"[+] Bundled {len(latest_day['history'])} prior sessions into latest.json")
 
     latest_path = "data/latest.json"
