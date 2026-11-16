@@ -1,0 +1,142 @@
+[
+  {
+    "company": "Power Finance Corporation Limited",
+    "action": "Interim Dividend - Rs 4.10 Per Share",
+    "type": "dividend",
+    "logo": "POW",
+    "exDate": "17-Nov-2026"
+  },
+  {
+    "company": "EAAA India Alternatives Limited",
+    "action": "Interim Dividend - Rs 7 Per Share",
+    "type": "dividend",
+    "logo": "EAA",
+    "exDate": "17-Nov-2026"
+  },
+  {
+    "company": "Government of India",
+    "action": "Interest Payment",
+    "type": "dividend",
+    "logo": "GOV",
+    "exDate": "17-Nov-2026"
+  },
+  {
+    "company": "Nile Limited",
+    "action": "Interim Dividend - Rs 3 Per Share",
+    "type": "dividend",
+    "logo": "NIL",
+    "exDate": "17-Nov-2026"
+  },
+  {
+    "company": "POWERGRID Infrastructure Investment Trust",
+    "action": "Distribution - Rs 3 Per Unit Consist Of Rs 1.69 Per Unit As Interest/ Re 0.62 Per Unit As Dividend/ Re 0.68 Per Unit As Repayment Of Spv Debt/ Re 0.01 Per Unit As Treasury Income",
+    "type": "dividend",
+    "logo": "POW",
+    "exDate": "17-Nov-2026"
+  },
+  {
+    "company": "Oriental InfraTrust",
+    "action": "Distribution - Rs 3.4596 Per Unit Consists Of Rs 1.8659 Per Unit As Interest/ Rs 1.2797 Per Unit As Dividend/ Re 0.3140 Per Unit As Return Of Capital",
+    "type": "dividend",
+    "logo": "ORI",
+    "exDate": "17-Nov-2026"
+  },
+  {
+    "company": "MRF Limited",
+    "action": "Interim Dividend - Rs 3 Per Share",
+    "type": "dividend",
+    "logo": "MRF",
+    "exDate": "17-Nov-2026"
+  },
+  {
+    "company": "Page Industries Limited",
+    "action": "Interim Dividend - Rs  150 Per Share",
+    "type": "dividend",
+    "logo": "PAG",
+    "exDate": "18-Nov-2026"
+  },
+  {
+    "company": "Capital Infra Trust",
+    "action": "Distribution - Rs 2.30 Per Unit Consist Of Rs 1.20 Per Unit As Interest/ Re 0.70 Per Unit As Dividend/ Re 0.40 Per Unit As Repayment Of Capital",
+    "type": "dividend",
+    "logo": "CAP",
+    "exDate": "18-Nov-2026"
+  },
+  {
+    "company": "Vertis Infrastructure Trust",
+    "action": "Distribution - Rs 3.25 Per Unit Consist Of Rs 1.9609 Per Unit As Interest /Re 0.5156 Per Unit As Return Of Capital/ Re 0.7735 Per Unit As Dividend",
+    "type": "dividend",
+    "logo": "VER",
+    "exDate": "18-Nov-2026"
+  },
+  {
+    "company": "Dr Agarwals Eye Hospital Limited",
+    "action": "Merger",
+    "type": "dividend",
+    "logo": "DR ",
+    "exDate": "18-Nov-2026"
+  },
+  {
+    "company": "AK Capital Services Limited",
+    "action": "Interim Dividend - Rs 18 Per Share",
+    "type": "dividend",
+    "logo": "AK ",
+    "exDate": "18-Nov-2026"
+  },
+  {
+    "company": "Praxis Home Retail Limited",
+    "action": "Rights 5:9",
+    "type": "rights",
+    "logo": "PRA",
+    "exDate": "18-Nov-2026"
+  },
+  {
+    "company": "Global Education Limited",
+    "action": "Buy Back",
+    "type": "dividend",
+    "logo": "GLO",
+    "exDate": "18-Nov-2026"
+  },
+  {
+    "company": "Jullundur Motor Agency (Delhi) Limited",
+    "action": "Buy Back",
+    "type": "dividend",
+    "logo": "JUL",
+    "exDate": "18-Nov-2026"
+  },
+  {
+    "company": "TD Power Systems Limited",
+    "action": "Interim Dividend - Re 0.65 Per Share",
+    "type": "dividend",
+    "logo": "TD ",
+    "exDate": "18-Nov-2026"
+  },
+  {
+    "company": "Manappuram Finance Limited",
+    "action": "Interim Dividend - Re 1 Per Share",
+    "type": "dividend",
+    "logo": "MAN",
+    "exDate": "18-Nov-2026"
+  },
+  {
+    "company": "Natco Pharma Limited",
+    "action": "Interim Dividend - Rs 1.25 Per Share",
+    "type": "dividend",
+    "logo": "NAT",
+    "exDate": "19-Nov-2026"
+  },
+  {
+    "company": "Ingersoll Rand (India) Limited",
+    "action": "Interim Dividend - Rs 20 Per Share",
+    "type": "dividend",
+    "logo": "ING",
+    "exDate": "19-Nov-2026"
+  },
+  {
+    "company": "Oil India Limited",
+    "action": "Interim Dividend - Rs 7 Per Share",
+    "type": "dividend",
+    "logo": "OIL",
+    "exDate": "20-Nov-2026"
+  }
+]
