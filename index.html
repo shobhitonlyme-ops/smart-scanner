@@ -410,6 +410,26 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
   <div id="hm-grid"></div>
 </div>
 <div class="w"><table><thead><tr id="th"><th>#</th><th>Symbol</th><th>Close</th><th>Chg%</th><th>Gap%</th><th>Close Pos</th><th>Range%</th><th>Deliv%</th><th>EMA20 Δ%</th><th>RSI14</th><th>Turn ₹Cr (Vol)</th><th>F&amp;O (OI%)</th><th>Score</th><th>Signals</th><th>SL · T1 · T2</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>
+<div id="app-news" class="app-page" style="display:none">
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">📰</div>
+      <div>
+        <p class="title">NSE &amp; BSE Stock News Pulse</p>
+        <p class="subtitle" id="nw_subtitleText">Loading sources…</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="clock" id="nw_clock">--:--:-- IST</div>
+      <div class="status-pill status-fetch" id="nw_statusPill" aria-live="polite" aria-atomic="true">
+        <span class="status-dot"></span><span id="nw_statusText">Fetching</span>
+      </div>
+    </div>
+  </div>
+
 <script>/* JSZip 3.10.1 bundled for offline ZIP import */
 /*!
 
@@ -3448,6 +3468,12 @@ $('wa').addEventListener('keydown',x=>{if(x.key==='Enter')addWL()});
 /* ══ NSE & BSE STOCK NEWS PULSE MODULE ══ */
 (function(){
 
+function _nw_on(id, evt, handler){
+  const el = document.getElementById(id);
+  if(el) el.addEventListener(evt, handler);
+}
+
+
 /* ══ COMPANIES ══ */
 const COMPANIES=[
 ["RELIANCE","Reliance Industries"],["TCS","Tata Consultancy Services"],["HDFCBANK","HDFC Bank"],
@@ -4072,14 +4098,14 @@ document.querySelectorAll('.tab').forEach(tab=>{
   });
 });
 
-document.getElementById('nw_upCorpBtn').addEventListener('click',()=>{
+_nw_on('nw_upCorpBtn', 'click', ()=>{
   upMode='corp';
   document.getElementById('nw_upCorpBtn').classList.add('active');
   document.getElementById('nw_upEventsBtn').classList.remove('active');
   document.getElementById('nw_upSubFilter').style.display='flex';
   renderCorpActions();
 });
-document.getElementById('nw_upEventsBtn').addEventListener('click',()=>{
+_nw_on('nw_upEventsBtn', 'click', ()=>{
   upMode='events';
   document.getElementById('nw_upEventsBtn').classList.add('active');
   document.getElementById('nw_upCorpBtn').classList.remove('active');
@@ -4087,18 +4113,18 @@ document.getElementById('nw_upEventsBtn').addEventListener('click',()=>{
   renderCorpActions();
 });
 
-document.getElementById('nw_searchBox').addEventListener('input',renderTable);
-document.getElementById('nw_refreshBtn').addEventListener('click',loadAll);
-document.getElementById('nw_annRefreshBtn').addEventListener('click',fetchLiveAnnouncements);
-document.getElementById('nw_upRefreshBtn').addEventListener('click',fetchLiveCorpActions);
-document.getElementById('nw_resRefreshBtn').addEventListener('click',fetchLiveResults);
-document.getElementById('nw_statStocksCard').addEventListener('click',()=>{
+_nw_on('nw_searchBox', 'input', renderTable);
+_nw_on('nw_refreshBtn', 'click', loadAll);
+_nw_on('nw_annRefreshBtn', 'click', fetchLiveAnnouncements);
+_nw_on('nw_upRefreshBtn', 'click', fetchLiveCorpActions);
+_nw_on('nw_resRefreshBtn', 'click', fetchLiveResults);
+_nw_on('nw_statStocksCard', 'click', ()=>{
   const s=document.getElementById('nw_trendStrip');
   s.scrollIntoView({behavior:'smooth',block:'center'});
   s.style.outline='2px solid var(--blue)';s.style.borderRadius='10px';
   setTimeout(()=>{s.style.outline='none';},1200);
 });
-document.getElementById('nw_autoRefreshSwitch').addEventListener('click',function(){
+_nw_on('nw_autoRefreshSwitch', 'click', function(){
   autoRefresh=!autoRefresh;this.classList.toggle('on',autoRefresh);
   if(autoRefresh)autoTimer=setInterval(loadAll,90000);else clearInterval(autoTimer);
 });
@@ -4140,25 +4166,7 @@ fetchLiveResults();
   </div>
 </div>
 
-<div id="app-news" class="app-page" style="display:none">
-<div class="wrap">
 
-  <!-- HEADER -->
-  <div class="header">
-    <div class="header-left">
-      <div class="logo">📰</div>
-      <div>
-        <p class="title">NSE &amp; BSE Stock News Pulse</p>
-        <p class="subtitle" id="nw_subtitleText">Loading sources…</p>
-      </div>
-    </div>
-    <div class="header-right">
-      <div class="clock" id="nw_clock">--:--:-- IST</div>
-      <div class="status-pill status-fetch" id="nw_statusPill" aria-live="polite" aria-atomic="true">
-        <span class="status-dot"></span><span id="nw_statusText">Fetching</span>
-      </div>
-    </div>
-  </div>
 
   <!-- MAIN NAV -->
   <div class="main-nav">
