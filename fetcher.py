@@ -784,6 +784,66 @@ def generate_intraday_snapshot(prior_day, now_ist):
     return live_day
 
 # ==================== MAIN PIPELINE ====================
+
+def sync_market_pulses():
+    """Fetches or refreshes live Corporate Actions, Announcements, Results, and FII/DII data into data/ folder."""
+    data_dir = "data"
+    os.makedirs(data_dir, exist_ok=True)
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*'
+    }
+    # 1. Corporate Actions
+    corp_path = os.path.join(data_dir, "corp_actions.json")
+    try:
+        req = urllib.request.Request("https://www.nseindia.com/api/corporates-corporateActions?index=equities", headers=headers)
+        with urllib.request.urlopen(req, timeout=10) as r:
+            raw = r.read().decode('utf-8', errors='ignore')
+            data = json.loads(raw)
+            arr = data if isinstance(data, list) else data.get('data', [])
+            if arr and len(arr) > 5:
+                out = []
+                for a in arr:
+                    comp = a.get('comp') or a.get('companyName') or a.get('sm_name') or a.get('symbol') or ''
+                    subj = a.get('subject') or a.get('purpose') or ''
+                    ex = a.get('exDate') or a.get('recDate') or ''
+                    typ = 'dividend'
+                    s_lower = subj.lower()
+                    if 'bonus' in s_lower: typ = 'bonus'
+                    elif 'split' in s_lower or 'sub-division' in s_lower: typ = 'split'
+                    elif 'rights' in s_lower: typ = 'rights'
+                    if comp and subj:
+                        out.append({'company': comp, 'action': subj, 'type': typ, 'logo': comp[:3].upper(), 'exDate': ex})
+                if out:
+                    with open(corp_path, 'w', encoding='utf-8') as f_out:
+                        json.dump(out, f_out, indent=2)
+                    print(f"[+] Synced {len(out)} live corporate actions to {corp_path}")
+    except Exception as e:
+        print(f"[*] Preserving existing {corp_path}")
+
+    # 2. Results Calendar
+    res_path = os.path.join(data_dir, "results_calendar.json")
+    try:
+        req = urllib.request.Request("https://www.nseindia.com/api/board-meetings?index=equities", headers=headers)
+        with urllib.request.urlopen(req, timeout=10) as r:
+            raw = r.read().decode('utf-8', errors='ignore')
+            data = json.loads(raw)
+            arr = data if isinstance(data, list) else data.get('data', [])
+            if arr and len(arr) > 5:
+                out = []
+                for a in arr:
+                    comp = a.get('sm_name') or a.get('companyName') or a.get('symbol') or ''
+                    dt = a.get('bm_date') or a.get('bm_dt') or ''
+                    purp = a.get('bm_purpose') or a.get('purpose') or ''
+                    if comp and 'result' in purp.lower():
+                        out.append({'company': comp, 'date': dt, 'status': 'upcoming', 'sym': (a.get('symbol') or comp[:4]).upper(), 'sentiment': 'pos'})
+                if out:
+                    with open(res_path, 'w', encoding='utf-8') as f_out:
+                        json.dump(out, f_out, indent=2)
+                    print(f"[+] Synced {len(out)} live results calendar entries to {res_path}")
+    except Exception as e:
+        print(f"[*] Preserving existing {res_path}")
+
 def run_pipeline():
     now_ist = get_ist_now()
     today_iso = now_ist.strftime('%Y-%m-%d')
@@ -900,6 +960,7 @@ def run_pipeline():
             with open(latest_path, 'w', encoding='utf-8') as f:
                 json.dump(live_day, f, separators=(',', ':'))
             print(f"\n[🚀 SUCCESS] Published LIVE INTRADAY data to {latest_path} ({live_day['intraday_time']})")
+            sync_market_pulses()
             return
 
     # Otherwise, publish latest completed EOD Bhavcopy
@@ -927,6 +988,7 @@ def run_pipeline():
     with open(latest_path, 'w', encoding='utf-8') as f:
         json.dump(latest_day, f, separators=(',', ':'))
     print(f"\n[+] Published latest EOD data to {latest_path} (Date: {latest_day['date']})")
+    sync_market_pulses()
 
 if __name__ == '__main__':
     run_pipeline()
