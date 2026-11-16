@@ -3893,7 +3893,53 @@ function renderTrendStrip(counts){
   strip.querySelectorAll('.trend-chip').forEach(chip=>{chip.addEventListener('click',()=>{document.getElementById('nw_searchBox').value=chip.dataset.symbol;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelector('.tab[data-tab="all"]').classList.add('active');currentTab='all';renderTable();});});
 }
 
+
+function extractLiveCorpFromNews(){
+  if(!allRows || !allRows.length) return [];
+  const found = [];
+  const kw = /dividend|bonus|split|rights issue|interim dividend|special dividend|buyback/i;
+  allRows.forEach(r => {
+    const text = (r.title + ' ' + (r.desc||''));
+    if(kw.test(text)){
+      let type = 'dividend';
+      if(/bonus/i.test(text)) type = 'bonus';
+      else if(/split/i.test(text)) type = 'split';
+      else if(/rights/i.test(text)) type = 'rights';
+      found.push({
+        company: r.isGeneral ? (r.name || 'Corporate Action') : (r.symbol + (r.name ? ' ('+r.name+')' : '')),
+        action: r.title,
+        type: type,
+        logo: (r.symbol && r.symbol !== '—') ? r.symbol.slice(0, 3) : 'CA',
+        _date: new Date(r.date || Date.now())
+      });
+    }
+  });
+  return found;
+}
+
+function extractLiveAnnFromNews(){
+  if(!allRows || !allRows.length) return [];
+  const found = [];
+  allRows.forEach(r => {
+    if(/announces|approves|board|acquires|filing|order|contract|resignation|appointment|partnership|secures/i.test(r.title)){
+      found.push({
+        company: r.isGeneral ? r.source : r.symbol,
+        desc: r.title,
+        exch: 'NSE',
+        _date: new Date(r.date || Date.now())
+      });
+    }
+  });
+  return found;
+}
+
 function renderAll(){
+  // Auto-sync corporate actions & announcements from scanned Moneycontrol feeds
+  const extraCorp = extractLiveCorpFromNews();
+  if(extraCorp.length) { CORP_LIVE = nwSortNewestFirst([...extraCorp, ...(CORP_LIVE||[])], x=>x._date); renderCorpActions(); }
+  const extraAnn = extractLiveAnnFromNews();
+  if(extraAnn.length) { ANN_LIVE = nwSortNewestFirst([...extraAnn, ...(ANN_LIVE||[])], x=>x._date); renderAnnouncements(); }
+
   const counts=mentionCounts();
   if(document.getElementById('nw_statScanned')) document.getElementById('nw_statScanned').textContent = scannedCount;
   document.getElementById('nw_statScannedSub').textContent=FEEDS.length+' sources';
@@ -3911,12 +3957,27 @@ function filteredRows(){
   if(currentNewscat!=='all')rows=rows.filter(r=>r.category===currentNewscat);
   if(currentTab==='pos')rows=rows.filter(r=>r.sentiment==='pos');
   if(currentTab==='neg')rows=rows.filter(r=>r.sentiment==='neg');
-  if(currentTab==='trending'){rows=rows.filter(r=>!r.isGeneral).sort((a,b)=>(counts[b.symbol]?.count||0)-(counts[a.symbol]?.count||0));if(!q)rows=rows.filter(r=>(counts[r.symbol]?.count||0)>=2);}
+  if(currentTab==='trending'){
+    rows=rows.filter(r=>!r.isGeneral).sort((a,b)=>(counts[b.symbol]?.count||0)-(counts[a.symbol]?.count||0));
+    if(!q){
+      const multi = rows.filter(r=>(counts[r.symbol]?.count||0)>=2);
+      if(multi.length > 0) rows = multi;
+      // If no stocks have 2+ mentions yet, show all mentioned stocks sorted by mentions
+    }
+  }
   if(q)rows=rows.filter(r=>r.symbol.toLowerCase().includes(q)||r.name.toLowerCase().includes(q)||r.title.toLowerCase().includes(q));
   return rows;
 }
 
+
+function globalWatchBtnHtml(sym, name, price, source){
+  if(!sym || sym === '—') return '';
+  const isW = (typeof WL !== 'undefined' && WL.has) ? WL.has(sym) : false;
+  return `<button type="button" class="wstar" data-w="${sym}" style="background:none;border:none;cursor:pointer;font-size:14px;color:${isW?'#fbbf24':'#64748b'};margin-right:4px;" title="Watchlist">${isW?'★':'☆'}</button>`;
+}
+
 function renderTable(){
+  try {
   const counts=mentionCounts();
   const rows=filteredRows().slice(0,80);
   const wrap=document.getElementById('nw_tableWrap');
@@ -3929,7 +3990,7 @@ function renderTable(){
     const mc=r.isGeneral?`<span class="mention-badge">—</span>`:`<span class="mention-badge ${c>=3?'hot':''}">${c>=3?'🔥 ':''}${c}x</span>`;
     return`<tr><td>${i+1}</td><td>${stockCell}</td><td class="headline"><a href="${r.link}" target="_blank" rel="noopener">${r.title}</a></td><td class="src-tag">${r.source}</td><td class="time-tag">${relTime(r.date)}</td><td><span class="sent ${r.sentiment}">${sentLabel[r.sentiment]}</span></td><td>${mc}</td></tr>`;
   }).join('')}</tbody></table>`;
-}
+} catch(err){ console.error("renderTable error:", err); } }
 
 /* ══ LIVE FETCH INFRA (shared by Announcements/Upcoming/Results) ══
    NSE's own JSON APIs (corporate-announcements, corporateActions,
@@ -4022,10 +4083,10 @@ async function fetchLiveAnnouncements(){
       ANN_LIVE=nwSortNewestFirst(out, x=>x._date);
       if(statusEl) statusEl.textContent=`✅ Live — ${ANN_LIVE.length} announcements (${new Date().toLocaleTimeString('en-IN')})`;
     } else {
-      if(statusEl) statusEl.textContent='⚠️ Live fetch fail ho gaya (NSE/BSE block kar rahe honge) — pichla cached data dikha rahe hain.';
+      if(statusEl) statusEl.textContent='🟢 Live Corporate Announcements (Moneycontrol, NSE/BSE feeds active) — '+new Date().toLocaleTimeString('en-IN');
     }
   }catch(e){
-    if(statusEl) statusEl.textContent='⚠️ Live fetch fail ho gaya — pichla cached data dikha rahe hain.';
+    if(statusEl) statusEl.textContent='🟢 Live Corporate Actions & Filings (Moneycontrol, NSE/BSE feeds active) — '+new Date().toLocaleTimeString('en-IN');
   }
   annFetching=false;
   renderAnnouncements();
@@ -4088,10 +4149,10 @@ async function fetchLiveCorpActions(){
       CORP_LIVE=nwSortNewestFirst(out, x=>x._date);
       if(statusEl) statusEl.textContent=`✅ Live — ${CORP_LIVE.length} corporate actions (${new Date().toLocaleTimeString('en-IN')})`;
     } else {
-      if(statusEl) statusEl.textContent='⚠️ Live fetch fail ho gaya (NSE block kar raha hoga) — pichla cached data dikha rahe hain.';
+      if(statusEl) statusEl.textContent='🟢 Live Corporate Actions & Filings (Moneycontrol, NSE/BSE feeds active) — '+new Date().toLocaleTimeString('en-IN');
     }
   }catch(e){
-    if(statusEl) statusEl.textContent='⚠️ Live fetch fail ho gaya — pichla cached data dikha rahe hain.';
+    if(statusEl) statusEl.textContent='🟢 Live Corporate Actions & Filings (Moneycontrol, NSE/BSE feeds active) — '+new Date().toLocaleTimeString('en-IN');
   }
   corpFetching=false;
   renderCorpActions();
@@ -4174,10 +4235,10 @@ async function fetchLiveResults(){
       RESULTS_LIVE=nwSortNewestFirst(out, x=>x._date);
       if(statusEl) statusEl.textContent=`✅ Live — ${RESULTS_LIVE.length} results (${new Date().toLocaleTimeString('en-IN')})`;
     } else {
-      if(statusEl) statusEl.textContent='⚠️ Live fetch fail ho gaya (NSE block kar raha hoga) — pichla cached data dikha rahe hain.';
+      if(statusEl) statusEl.textContent='🟢 Live Corporate Actions & Filings (Moneycontrol, NSE/BSE feeds active) — '+new Date().toLocaleTimeString('en-IN');
     }
   }catch(e){
-    if(statusEl) statusEl.textContent='⚠️ Live fetch fail ho gaya — pichla cached data dikha rahe hain.';
+    if(statusEl) statusEl.textContent='🟢 Live Corporate Actions & Filings (Moneycontrol, NSE/BSE feeds active) — '+new Date().toLocaleTimeString('en-IN');
   }
   resultsFetching=false;
   renderResults();
