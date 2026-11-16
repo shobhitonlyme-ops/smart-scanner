@@ -413,6 +413,8 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
 <div id="app-news" class="app-page" style="display:none">
 <div class="wrap">
 
+<div class="wrap">
+
   <!-- HEADER -->
   <div class="header">
     <div class="header-left">
@@ -429,6 +431,171 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
       </div>
     </div>
   </div>
+
+  <!-- MAIN NAV -->
+  <div class="main-nav">
+    <button class="main-nav-tab" data-section="news">News</button>
+    <button class="main-nav-tab active" data-section="announcements">Announcements</button>
+    <button class="main-nav-tab" data-section="upcoming">Upcoming</button>
+    <button class="main-nav-tab" data-section="results">Results</button>
+    <button class="main-nav-tab" data-section="fiidii">FII/DII</button>
+  </div>
+
+  <!-- ═══ NEWS ═══ -->
+  <div class="section-panel" id="nw_section-news">
+    <div class="sub-filter-bar">
+      <button class="sub-pill active" data-newscat="all">All</button>
+      <button class="sub-pill" data-newscat="company">Company</button>
+      <button class="sub-pill" data-newscat="market">Market</button>
+      <button class="sub-pill" data-newscat="economy">Economy</button>
+      <button class="sub-pill" data-newscat="ipo">IPO</button>
+    </div>
+    <div class="date-bar">
+      <div class="date-label">📅 <span id="nw_newsDateLabel"></span></div>
+    </div>
+    <div class="feed-status-row" id="nw_feedStatusRow"></div>
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">📡 Headlines Scanned (24h)</div>
+        <div class="stat-value" id="nw_statScanned">0</div>
+        <div class="stat-sub" id="nw_statScannedSub">—</div>
+      </div>
+      <div class="stat-card" id="nw_statStocksCard" style="cursor:pointer;">
+        <div class="stat-label">🏷️ Stocks Mentioned</div>
+        <div class="stat-value" id="nw_statStocks">0</div>
+        <div class="stat-sub">unique companies — click ↓</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">🟢 Positive News</div>
+        <div class="stat-value green" id="nw_statPos">0</div>
+        <div class="stat-sub">bullish tone</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">🔴 Negative News</div>
+        <div class="stat-value red" id="nw_statNeg">0</div>
+        <div class="stat-sub">bearish tone</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">🕒 Last Updated</div>
+        <div class="stat-value" id="nw_statUpdated" style="font-size:18px;">—</div>
+        <div class="stat-sub">auto-refresh below</div>
+      </div>
+    </div>
+    <div class="tabs">
+      <div class="tab active" data-tab="trending">🔥 Trending</div>
+      <div class="tab" data-tab="pos">🟢 Positive</div>
+      <div class="tab" data-tab="neg">🔴 Negative</div>
+      <div class="tab" data-tab="all">📰 All Headlines</div>
+    </div>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--green)"></span> Positive — bullish</span>
+      <span><span class="dot" style="background:var(--red)"></span> Negative — bearish</span>
+      <span><span class="dot" style="background:var(--muted)"></span> Neutral</span>
+      <span>🔥 Hot — 3+ mentions today</span>
+    </div>
+    <p style="font-size:12.5px;color:var(--muted);margin:0 0 8px;display:none;" id="nw_trendStripLabel">Stocks mentioned today:</p>
+    <div class="trend-strip" id="nw_trendStrip"></div>
+    <div class="controls">
+      <input class="search-box" id="nw_searchBox" aria-label="Search stocks or headlines" placeholder="Stock ya company naam dhundo... (e.g. RELIANCE, TCS)" />
+      <div class="toggle-wrap">
+        <div class="switch" id="nw_autoRefreshSwitch"><div class="knob"></div></div>
+        <span>Auto-refresh (90s)</span>
+      </div>
+      <button class="refresh-btn" type="button" id="nw_refreshBtn" aria-label="Refresh news feed">↻ Refresh</button>
+    </div>
+    <div class="table-wrap" id="nw_tableWrap">
+      <div class="empty-state"><div class="big">⏳</div><div class="msg">News feeds load ho rahi hain...</div></div>
+    </div>
+    <p class="footnote">Sources: Google News, Moneycontrol, Economic Times, LiveMint, Business Standard (free public RSS). Last 24h only. Not investment advice.</p>
+  </div>
+
+  <!-- ═══ ANNOUNCEMENTS ═══ -->
+  <div class="section-panel active" id="nw_section-announcements">
+    <div class="date-bar">
+      <div class="date-label">📅 <span id="nw_annDateLabel"></span></div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button id="nw_annRefreshBtn" class="exch-btn" type="button" style="display:flex;align-items:center;gap:5px;">🔄 Refresh</button>
+        <div class="exchange-toggle">
+          <button class="exch-btn active" data-exch="NSE">NSE</button>
+          <button class="exch-btn" data-exch="BSE">BSE</button>
+        </div>
+      </div>
+    </div>
+    <div class="status" id="nw_annLiveStatus" style="padding:0 0 8px;font-size:.72rem;color:var(--muted);"></div>
+    <div class="table-wrap" id="nw_annList">
+      <div class="empty-state"><div class="big">⏳</div><div class="msg">Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- ═══ UPCOMING ═══ -->
+  <div class="section-panel" id="nw_section-upcoming">
+    <div style="display:flex;gap:6px;margin-bottom:16px;">
+      <button class="exch-btn active" id="nw_upCorpBtn">Corp. Actions</button>
+      <button class="exch-btn" id="nw_upEventsBtn">Events</button>
+    </div>
+    <div class="sub-filter-bar" id="nw_upSubFilter">
+      <button class="sub-pill active" data-upcat="all">All</button>
+      <button class="sub-pill" data-upcat="bonus">Bonus</button>
+      <button class="sub-pill" data-upcat="dividend">Dividend</button>
+      <button class="sub-pill" data-upcat="rights">Rights</button>
+      <button class="sub-pill" data-upcat="split">Split/Conso</button>
+    </div>
+    <div class="date-bar">
+      <div class="date-label">📅 <span id="nw_upDateLabel"></span></div>
+      <button id="nw_upRefreshBtn" class="exch-btn" type="button" style="display:flex;align-items:center;gap:5px;">🔄 Refresh</button>
+    </div>
+    <div class="status" id="nw_upLiveStatus" style="padding:0 0 8px;font-size:.72rem;color:var(--muted);"></div>
+    <div class="table-wrap" id="nw_corpList">
+      <div class="empty-state"><div class="big">⏳</div><div class="msg">Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- ═══ RESULTS ═══ -->
+  <div class="section-panel" id="nw_section-results">
+    <div class="date-bar">
+      <div class="date-label">📅 <span id="nw_resDateLabel"></span></div>
+      <button id="nw_resRefreshBtn" class="exch-btn" type="button" style="display:flex;align-items:center;gap:5px;">🔄 Refresh</button>
+    </div>
+    <div class="status" id="nw_resLiveStatus" style="padding:0 0 8px;font-size:.72rem;color:var(--muted);"></div>
+    <div class="table-wrap" id="nw_resultsList">
+      <div class="empty-state"><div class="big">⏳</div><div class="msg">Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- ═══ FII/DII ═══ -->
+  <div class="section-panel" id="nw_section-fiidii">
+    <div class="date-bar">
+      <div class="date-label">📅 <span id="nw_fiiDateLabel"></span></div>
+    </div>
+    <div class="fiidii-grid">
+      <div class="fiidii-card">
+        <div class="fiidii-title">🌍 FII / FPI Activity</div>
+        <div class="fiidii-value buy" id="nw_fiiBuy">—</div>
+        <div class="fiidii-sub">Buy Value (₹ Crore)</div>
+        <div class="fiidii-value sell" id="nw_fiiSell">—</div>
+        <div class="fiidii-sub">Sell Value (₹ Crore)</div>
+        <div style="font-size:13px;color:var(--muted);">Net: <span id="nw_fiiNet" style="font-weight:700;color:#fff;">—</span></div>
+      </div>
+      <div class="fiidii-card">
+        <div class="fiidii-title">🏦 DII Activity</div>
+        <div class="fiidii-value buy" id="nw_diiBuy">—</div>
+        <div class="fiidii-sub">Buy Value (₹ Crore)</div>
+        <div class="fiidii-value sell" id="nw_diiSell">—</div>
+        <div class="fiidii-sub">Sell Value (₹ Crore)</div>
+        <div style="font-size:13px;color:var(--muted);">Net: <span id="nw_diiNet" style="font-weight:700;color:#fff;">—</span></div>
+      </div>
+    </div>
+    <div class="table-wrap" id="nw_fiiTableWrap">
+      <div class="empty-state"><div class="big">⏳</div><div class="msg">Loading FII/DII data...</div></div>
+    </div>
+    <p class="footnote">FII/DII data NSE provisional figures pe based hai. Figures ₹ Crore mein hain. Live data ke liye NSE/BSE website check karein.</p>
+  </div>
+
+</div>
+
+
+</div>
+</div>
 
 <script>/* JSZip 3.10.1 bundled for offline ZIP import */
 /*!
@@ -3709,7 +3876,7 @@ async function loadAll(){
   else{
     setStatus('live');
     document.getElementById('nw_subtitleText').textContent=FEEDS.length+' sources × '+COMPANIES.length+' companies tracked';
-    document.getElementById('nw_statUpdated').textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    if(document.getElementById('nw_statUpdated')) document.getElementById('nw_statUpdated').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
     renderAll();
   }
 }
@@ -3728,11 +3895,11 @@ function renderTrendStrip(counts){
 
 function renderAll(){
   const counts=mentionCounts();
-  document.getElementById('nw_statScanned').textContent=scannedCount;
+  if(document.getElementById('nw_statScanned')) document.getElementById('nw_statScanned').textContent = scannedCount;
   document.getElementById('nw_statScannedSub').textContent=FEEDS.length+' sources';
-  document.getElementById('nw_statStocks').textContent=Object.keys(counts).length;
-  document.getElementById('nw_statPos').textContent=allRows.filter(r=>r.sentiment==='pos').length;
-  document.getElementById('nw_statNeg').textContent=allRows.filter(r=>r.sentiment==='neg').length;
+  if(document.getElementById('nw_statStocks')) document.getElementById('nw_statStocks').textContent = Object.keys(counts).length;
+  if(document.getElementById('nw_statPos')) document.getElementById('nw_statPos').textContent = allRows.filter(r=>r.sentiment==='pos').length;
+  if(document.getElementById('nw_statNeg')) document.getElementById('nw_statNeg').textContent = allRows.filter(r=>r.sentiment==='neg').length;
   renderTrendStrip(counts);
   renderTable();
 }
@@ -3753,6 +3920,7 @@ function renderTable(){
   const counts=mentionCounts();
   const rows=filteredRows().slice(0,80);
   const wrap=document.getElementById('nw_tableWrap');
+  if(!wrap) return;
   if(rows.length===0){wrap.innerHTML=`<div class="empty-state"><div class="big">🔎</div><div class="msg">Is filter ke liye koi headline nahi mili.</div></div>`;return;}
   const sentLabel={pos:'🟢 Positive',neg:'🔴 Negative',neu:'⚪ Neutral'};
   wrap.innerHTML=`<table><thead><tr><th>#</th><th>STOCK</th><th>HEADLINE</th><th>SOURCE</th><th>TIME</th><th>SENTIMENT</th><th>MENTIONS</th></tr></thead><tbody>${rows.map((r,i)=>{
@@ -3865,6 +4033,7 @@ async function fetchLiveAnnouncements(){
 
 function renderAnnouncements(){
   const list=document.getElementById('nw_annList');
+  if(!list) return;
   const source = ANN_LIVE && ANN_LIVE.length ? ANN_LIVE : ANN_FALLBACK;
   const filtered=source.filter(a=>a.exch===currentExch);
   if(!filtered.length){list.innerHTML=`<div class="empty-state"><div class="big">📋</div><div class="msg">${currentExch} ke liye koi announcement nahi mili.</div></div>`;return;}
@@ -3930,6 +4099,7 @@ async function fetchLiveCorpActions(){
 
 function renderCorpActions(){
   const list=document.getElementById('nw_corpList');
+  if(!list) return;
   if(upMode==='events'){
     list.innerHTML=`
       <div class="corp-item" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="font-size:14px;font-weight:700;color:#fff;">📅 Q1 FY2026-27 Results Season</div><div style="font-size:12.5px;color:var(--muted);">Major companies will announce Q1 results in July-August 2026</div></div>
@@ -4016,6 +4186,7 @@ async function fetchLiveResults(){
 const RESULT_SENT_LABEL={pos:'🟢 Positive',neg:'🔴 Negative',na:'⚪ N/A'};
 function renderResults(){
   const list=document.getElementById('nw_resultsList');
+  if(!list) return;
   const source = RESULTS_LIVE && RESULTS_LIVE.length ? RESULTS_LIVE : RESULTS_FALLBACK;
   list.innerHTML=source.map(r=>`<div class="result-item"><div class="corp-logo" style="font-size:9px;">${r.sym}</div><div class="result-content"><div class="result-name">${r.company}</div><div class="result-date">Results Date: ${r.date}</div></div><span class="sent ${r.sentiment}" style="margin-right:6px;">${RESULT_SENT_LABEL[r.sentiment]||RESULT_SENT_LABEL.na}</span><span class="result-badge ${r.status==='today'?'today':'upcoming'}">${r.status==='today'?'Today':(r.status==='declared'?'Declared':'Upcoming')}</span></div>`).join('');
 }
@@ -4045,7 +4216,7 @@ function renderFiiDii(){
 /* ══ NAV WIRING ══ */
 function activateSection(id){
   document.querySelectorAll('.section-panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('nw_section-'+id).classList.add('active');
+  const sec=document.getElementById('nw_section-'+id); if(sec) sec.classList.add('active');
   document.querySelectorAll('.main-nav-tab').forEach(t=>t.classList.remove('active'));
   document.querySelector(`.main-nav-tab[data-section="${id}"]`).classList.add('active');
 }
@@ -4129,7 +4300,7 @@ _nw_on('nw_autoRefreshSwitch', 'click', function(){
   if(autoRefresh)autoTimer=setInterval(loadAll,90000);else clearInterval(autoTimer);
 });
 
-function tickClock(){document.getElementById('nw_clock').textContent=new Date().toLocaleTimeString('en-IN',{hour12:false})+' IST';}
+function tickClock(){const clk=document.getElementById('nw_clock'); if(clk) clk.textContent=new Date().toLocaleTimeString('en-IN',{hour12:false})+' IST';}
 setInterval(tickClock,1000);tickClock();
 
 /* ══ INIT ══ */
@@ -4168,166 +4339,4 @@ fetchLiveResults();
 
 
 
-  <!-- MAIN NAV -->
-  <div class="main-nav">
-    <button class="main-nav-tab" data-section="news">News</button>
-    <button class="main-nav-tab active" data-section="announcements">Announcements</button>
-    <button class="main-nav-tab" data-section="upcoming">Upcoming</button>
-    <button class="main-nav-tab" data-section="results">Results</button>
-    <button class="main-nav-tab" data-section="fiidii">FII/DII</button>
-  </div>
-
-  <!-- ═══ NEWS ═══ -->
-  <div class="section-panel" id="nw_section-news">
-    <div class="sub-filter-bar">
-      <button class="sub-pill active" data-newscat="all">All</button>
-      <button class="sub-pill" data-newscat="company">Company</button>
-      <button class="sub-pill" data-newscat="market">Market</button>
-      <button class="sub-pill" data-newscat="economy">Economy</button>
-      <button class="sub-pill" data-newscat="ipo">IPO</button>
-    </div>
-    <div class="date-bar">
-      <div class="date-label">📅 <span id="nw_newsDateLabel"></span></div>
-    </div>
-    <div class="feed-status-row" id="nw_feedStatusRow"></div>
-    <div class="stats">
-      <div class="stat-card">
-        <div class="stat-label">📡 Headlines Scanned (24h)</div>
-        <div class="stat-value" id="nw_statScanned">0</div>
-        <div class="stat-sub" id="nw_statScannedSub">—</div>
-      </div>
-      <div class="stat-card" id="nw_statStocksCard" style="cursor:pointer;">
-        <div class="stat-label">🏷️ Stocks Mentioned</div>
-        <div class="stat-value" id="nw_statStocks">0</div>
-        <div class="stat-sub">unique companies — click ↓</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">🟢 Positive News</div>
-        <div class="stat-value green" id="nw_statPos">0</div>
-        <div class="stat-sub">bullish tone</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">🔴 Negative News</div>
-        <div class="stat-value red" id="nw_statNeg">0</div>
-        <div class="stat-sub">bearish tone</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">🕒 Last Updated</div>
-        <div class="stat-value" id="nw_statUpdated" style="font-size:18px;">—</div>
-        <div class="stat-sub">auto-refresh below</div>
-      </div>
-    </div>
-    <div class="tabs">
-      <div class="tab active" data-tab="trending">🔥 Trending</div>
-      <div class="tab" data-tab="pos">🟢 Positive</div>
-      <div class="tab" data-tab="neg">🔴 Negative</div>
-      <div class="tab" data-tab="all">📰 All Headlines</div>
-    </div>
-    <div class="legend">
-      <span><span class="dot" style="background:var(--green)"></span> Positive — bullish</span>
-      <span><span class="dot" style="background:var(--red)"></span> Negative — bearish</span>
-      <span><span class="dot" style="background:var(--muted)"></span> Neutral</span>
-      <span>🔥 Hot — 3+ mentions today</span>
-    </div>
-    <p style="font-size:12.5px;color:var(--muted);margin:0 0 8px;display:none;" id="nw_trendStripLabel">Stocks mentioned today:</p>
-    <div class="trend-strip" id="nw_trendStrip"></div>
-    <div class="controls">
-      <input class="search-box" id="nw_searchBox" aria-label="Search stocks or headlines" placeholder="Stock ya company naam dhundo... (e.g. RELIANCE, TCS)" />
-      <div class="toggle-wrap">
-        <div class="switch" id="nw_autoRefreshSwitch"><div class="knob"></div></div>
-        <span>Auto-refresh (90s)</span>
-      </div>
-      <button class="refresh-btn" type="button" id="nw_refreshBtn" aria-label="Refresh news feed">↻ Refresh</button>
-    </div>
-    <div class="table-wrap" id="nw_tableWrap">
-      <div class="empty-state"><div class="big">⏳</div><div class="msg">News feeds load ho rahi hain...</div></div>
-    </div>
-    <p class="footnote">Sources: Google News, Moneycontrol, Economic Times, LiveMint, Business Standard (free public RSS). Last 24h only. Not investment advice.</p>
-  </div>
-
-  <!-- ═══ ANNOUNCEMENTS ═══ -->
-  <div class="section-panel active" id="nw_section-announcements">
-    <div class="date-bar">
-      <div class="date-label">📅 <span id="nw_annDateLabel"></span></div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <button id="nw_annRefreshBtn" class="exch-btn" type="button" style="display:flex;align-items:center;gap:5px;">🔄 Refresh</button>
-        <div class="exchange-toggle">
-          <button class="exch-btn active" data-exch="NSE">NSE</button>
-          <button class="exch-btn" data-exch="BSE">BSE</button>
-        </div>
-      </div>
-    </div>
-    <div class="status" id="nw_annLiveStatus" style="padding:0 0 8px;font-size:.72rem;color:var(--muted);"></div>
-    <div class="table-wrap" id="nw_annList">
-      <div class="empty-state"><div class="big">⏳</div><div class="msg">Loading...</div></div>
-    </div>
-  </div>
-
-  <!-- ═══ UPCOMING ═══ -->
-  <div class="section-panel" id="nw_section-upcoming">
-    <div style="display:flex;gap:6px;margin-bottom:16px;">
-      <button class="exch-btn active" id="nw_upCorpBtn">Corp. Actions</button>
-      <button class="exch-btn" id="nw_upEventsBtn">Events</button>
-    </div>
-    <div class="sub-filter-bar" id="nw_upSubFilter">
-      <button class="sub-pill active" data-upcat="all">All</button>
-      <button class="sub-pill" data-upcat="bonus">Bonus</button>
-      <button class="sub-pill" data-upcat="dividend">Dividend</button>
-      <button class="sub-pill" data-upcat="rights">Rights</button>
-      <button class="sub-pill" data-upcat="split">Split/Conso</button>
-    </div>
-    <div class="date-bar">
-      <div class="date-label">📅 <span id="nw_upDateLabel"></span></div>
-      <button id="nw_upRefreshBtn" class="exch-btn" type="button" style="display:flex;align-items:center;gap:5px;">🔄 Refresh</button>
-    </div>
-    <div class="status" id="nw_upLiveStatus" style="padding:0 0 8px;font-size:.72rem;color:var(--muted);"></div>
-    <div class="table-wrap" id="nw_corpList">
-      <div class="empty-state"><div class="big">⏳</div><div class="msg">Loading...</div></div>
-    </div>
-  </div>
-
-  <!-- ═══ RESULTS ═══ -->
-  <div class="section-panel" id="nw_section-results">
-    <div class="date-bar">
-      <div class="date-label">📅 <span id="nw_resDateLabel"></span></div>
-      <button id="nw_resRefreshBtn" class="exch-btn" type="button" style="display:flex;align-items:center;gap:5px;">🔄 Refresh</button>
-    </div>
-    <div class="status" id="nw_resLiveStatus" style="padding:0 0 8px;font-size:.72rem;color:var(--muted);"></div>
-    <div class="table-wrap" id="nw_resultsList">
-      <div class="empty-state"><div class="big">⏳</div><div class="msg">Loading...</div></div>
-    </div>
-  </div>
-
-  <!-- ═══ FII/DII ═══ -->
-  <div class="section-panel" id="nw_section-fiidii">
-    <div class="date-bar">
-      <div class="date-label">📅 <span id="nw_fiiDateLabel"></span></div>
-    </div>
-    <div class="fiidii-grid">
-      <div class="fiidii-card">
-        <div class="fiidii-title">🌍 FII / FPI Activity</div>
-        <div class="fiidii-value buy" id="nw_fiiBuy">—</div>
-        <div class="fiidii-sub">Buy Value (₹ Crore)</div>
-        <div class="fiidii-value sell" id="nw_fiiSell">—</div>
-        <div class="fiidii-sub">Sell Value (₹ Crore)</div>
-        <div style="font-size:13px;color:var(--muted);">Net: <span id="nw_fiiNet" style="font-weight:700;color:#fff;">—</span></div>
-      </div>
-      <div class="fiidii-card">
-        <div class="fiidii-title">🏦 DII Activity</div>
-        <div class="fiidii-value buy" id="nw_diiBuy">—</div>
-        <div class="fiidii-sub">Buy Value (₹ Crore)</div>
-        <div class="fiidii-value sell" id="nw_diiSell">—</div>
-        <div class="fiidii-sub">Sell Value (₹ Crore)</div>
-        <div style="font-size:13px;color:var(--muted);">Net: <span id="nw_diiNet" style="font-weight:700;color:#fff;">—</span></div>
-      </div>
-    </div>
-    <div class="table-wrap" id="nw_fiiTableWrap">
-      <div class="empty-state"><div class="big">⏳</div><div class="msg">Loading FII/DII data...</div></div>
-    </div>
-    <p class="footnote">FII/DII data NSE provisional figures pe based hai. Figures ₹ Crore mein hain. Live data ke liye NSE/BSE website check karein.</p>
-  </div>
-
-</div>
-
-</div>
-</body></html>
+  </body></html>
