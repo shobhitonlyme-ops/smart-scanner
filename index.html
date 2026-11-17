@@ -4103,62 +4103,51 @@ function getDynamicAnnouncements(){
 }
 
 function getDynamicCorpActions(){
-  const now = new Date();
-  const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
-  const dToday = new Date(y, m, d);
-  const addDays = (n) => new Date(y, m, d + n);
-  const fmtD = (dt) => dt.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
-
   return [
-    // ── DIVIDENDS (32 Events Matching Groww) ──
-    {company:'Shipping Corporation of India Ltd.',action:'Interim Dividend – ₹4.00 per share',type:'dividend',logo:'SCI',annDate:'04 Nov 2026',exDate:'16 Nov 2026',recDate:'16 Nov 2026',divType:'Interim',amount:'₹4.00',_date:new Date('2026-11-16')},
-    {company:'Australian Premium Solar (India) Ltd.',action:'Interim Dividend – ₹0.15 per share',type:'dividend',logo:'APS',annDate:'02 Nov 2026',exDate:'16 Nov 2026',recDate:'16 Nov 2026',divType:'Interim',amount:'₹0.15',_date:new Date('2026-11-16')},
-    {company:'Indag Rubber Ltd.',action:'Interim Dividend – ₹0.90 per share',type:'dividend',logo:'IND',annDate:'04 Nov 2026',exDate:'16 Nov 2026',recDate:'16 Nov 2026',divType:'Interim',amount:'₹0.90',_date:new Date('2026-11-16')},
-    {company:'ASM Technologies Ltd.',action:'Interim Dividend – ₹6.00 per share',type:'dividend',logo:'ASM',annDate:'05 Nov 2026',exDate:'16 Nov 2026',recDate:'16 Nov 2026',divType:'Interim',amount:'₹6.00',_date:new Date('2026-11-16')},
-    {company:'Cochin Shipyard Ltd.',action:'Interim Dividend – ₹3.00 per share',type:'dividend',logo:'CSL',annDate:'06 Nov 2026',exDate:'16 Nov 2026',recDate:'16 Nov 2026',divType:'Interim',amount:'₹3.00',_date:new Date('2026-11-16')},
-    {company:'Power Finance Corporation Ltd. (PFC)',action:'Interim Dividend – ₹3.50 per share',type:'dividend',logo:'PFC',annDate:'07 Nov 2026',exDate:'18 Nov 2026',recDate:'18 Nov 2026',divType:'Interim',amount:'₹3.50',_date:new Date('2026-11-18')},
-    {company:'Oil India Ltd.',action:'Interim Dividend – ₹3.00 per share',type:'dividend',logo:'OIL',annDate:'07 Nov 2026',exDate:'18 Nov 2026',recDate:'18 Nov 2026',divType:'Interim',amount:'₹3.00',_date:new Date('2026-11-18')},
-    {company:'Info Edge (India) Ltd. (Naukri)',action:'Interim Dividend – ₹12.00 per share',type:'dividend',logo:'INF',annDate:'07 Nov 2026',exDate:'18 Nov 2026',recDate:'18 Nov 2026',divType:'Interim',amount:'₹12.00',_date:new Date('2026-11-18')},
-    {company:'MRF Ltd.',action:'Interim Dividend – ₹3.00 per share',type:'dividend',logo:'MRF',annDate:'08 Nov 2026',exDate:'19 Nov 2026',recDate:'19 Nov 2026',divType:'Interim',amount:'₹3.00',_date:new Date('2026-11-19')},
-    {company:'Coal India Ltd.',action:'Interim Dividend – ₹5.25 per share',type:'dividend',logo:'COA',annDate:'08 Nov 2026',exDate:'19 Nov 2026',recDate:'19 Nov 2026',divType:'Interim',amount:'₹5.25',_date:new Date('2026-11-19')},
-    {company:'Bayer CropScience Ltd.',action:'Interim Dividend – ₹90.00 per share',type:'dividend',logo:'BAY',annDate:'10 Nov 2026',exDate:'20 Nov 2026',recDate:'20 Nov 2026',divType:'Interim',amount:'₹90.00',_date:new Date('2026-11-20')},
-    {company:'Torrent Pharmaceuticals Ltd.',action:'Interim Dividend – ₹28.00 per share',type:'dividend',logo:'TOR',annDate:'10 Nov 2026',exDate:'20 Nov 2026',recDate:'20 Nov 2026',divType:'Interim',amount:'₹28.00',_date:new Date('2026-11-20')},
-    {company:'Manappuram Finance Ltd.',action:'Interim Dividend – ₹1.00 per share',type:'dividend',logo:'MAN',annDate:'10 Nov 2026',exDate:'20 Nov 2026',recDate:'20 Nov 2026',divType:'Interim',amount:'₹1.00',_date:new Date('2026-11-20')},
-    {company:'Tide Water Oil Co. (India) Ltd.',action:'Interim Dividend – ₹20.00 per share',type:'dividend',logo:'TWO',annDate:'11 Nov 2026',exDate:'21 Nov 2026',recDate:'21 Nov 2026',divType:'Interim',amount:'₹20.00',_date:new Date('2026-11-21')},
-    {company:'Granules India Ltd.',action:'Interim Dividend – ₹1.50 per share',type:'dividend',logo:'GRA',annDate:'11 Nov 2026',exDate:'21 Nov 2026',recDate:'21 Nov 2026',divType:'Interim',amount:'₹1.50',_date:new Date('2026-11-21')},
-    {company:'Page Industries Ltd.',action:'Interim Dividend – ₹250.00 per share',type:'dividend',logo:'PAG',annDate:'11 Nov 2026',exDate:'21 Nov 2026',recDate:'21 Nov 2026',divType:'Interim',amount:'₹250.00',_date:new Date('2026-11-21')},
-    {company:'Mazagon Dock Shipbuilders Ltd.',action:'Interim Dividend – ₹12.11 per share',type:'dividend',logo:'MAZ',annDate:'11 Nov 2026',exDate:'21 Nov 2026',recDate:'21 Nov 2026',divType:'Interim',amount:'₹12.11',_date:new Date('2026-11-21')},
-    {company:'Sundaram Finance Ltd.',action:'Interim Dividend – ₹14.00 per share',type:'dividend',logo:'SUN',annDate:'12 Nov 2026',exDate:'22 Nov 2026',recDate:'22 Nov 2026',divType:'Interim',amount:'₹14.00',_date:new Date('2026-11-22')},
-    {company:'Ashok Leyland Ltd.',action:'Interim Dividend – ₹2.00 per share',type:'dividend',logo:'ALL',annDate:'12 Nov 2026',exDate:'22 Nov 2026',recDate:'22 Nov 2026',divType:'Interim',amount:'₹2.00',_date:new Date('2026-11-22')},
-    {company:'Great Eastern Shipping Co. Ltd.',action:'Interim Dividend – ₹7.20 per share',type:'dividend',logo:'GES',annDate:'14 Nov 2026',exDate:'25 Nov 2026',recDate:'25 Nov 2026',divType:'Interim',amount:'₹7.20',_date:new Date('2026-11-25')},
-    {company:'Power Grid Corporation of India Ltd.',action:'Interim Dividend – ₹4.50 per share',type:'dividend',logo:'PGC',annDate:'14 Nov 2026',exDate:'25 Nov 2026',recDate:'25 Nov 2026',divType:'Interim',amount:'₹4.50',_date:new Date('2026-11-25')},
-    {company:'NMDC Ltd.',action:'Interim Dividend – ₹2.30 per share',type:'dividend',logo:'NMD',annDate:'15 Nov 2026',exDate:'26 Nov 2026',recDate:'26 Nov 2026',divType:'Interim',amount:'₹2.30',_date:new Date('2026-11-26')},
-    {company:'National Aluminium Co. Ltd. (NALCO)',action:'Interim Dividend – ₹4.00 per share',type:'dividend',logo:'NAL',annDate:'15 Nov 2026',exDate:'27 Nov 2026',recDate:'27 Nov 2026',divType:'Interim',amount:'₹4.00',_date:new Date('2026-11-27')},
-    {company:'Rashtriya Chemicals & Fertilizers Ltd. (RCF)',action:'Interim Dividend – ₹1.24 per share',type:'dividend',logo:'RCF',annDate:'15 Nov 2026',exDate:'27 Nov 2026',recDate:'27 Nov 2026',divType:'Interim',amount:'₹1.24',_date:new Date('2026-11-27')},
-    {company:'Gujarat State Fertilizers & Chemicals (GSFC)',action:'Interim Dividend – ₹4.00 per share',type:'dividend',logo:'GSF',annDate:'16 Nov 2026',exDate:'28 Nov 2026',recDate:'28 Nov 2026',divType:'Interim',amount:'₹4.00',_date:new Date('2026-11-28')},
-    {company:'Balkrishna Industries Ltd.',action:'Interim Dividend – ₹4.00 per share',type:'dividend',logo:'BIL',annDate:'16 Nov 2026',exDate:'28 Nov 2026',recDate:'28 Nov 2026',divType:'Interim',amount:'₹4.00',_date:new Date('2026-11-28')},
-    {company:'Gujarat Mineral Development Corp (GMDC)',action:'Interim Dividend – ₹9.55 per share',type:'dividend',logo:'GMD',annDate:'16 Nov 2026',exDate:'28 Nov 2026',recDate:'28 Nov 2026',divType:'Interim',amount:'₹9.55',_date:new Date('2026-11-28')},
-    {company:'SJVN Ltd.',action:'Interim Dividend – ₹1.15 per share',type:'dividend',logo:'SJV',annDate:'16 Nov 2026',exDate:'29 Nov 2026',recDate:'29 Nov 2026',divType:'Interim',amount:'₹1.15',_date:new Date('2026-11-29')},
-    {company:'Bharat Dynamics Ltd. (BDL)',action:'Interim Dividend – ₹5.15 per share',type:'dividend',logo:'BDL',annDate:'16 Nov 2026',exDate:'29 Nov 2026',recDate:'29 Nov 2026',divType:'Interim',amount:'₹5.15',_date:new Date('2026-11-29')},
-    {company:'Container Corporation of India (CONCOR)',action:'Interim Dividend – ₹3.25 per share',type:'dividend',logo:'CON',annDate:'16 Nov 2026',exDate:'29 Nov 2026',recDate:'29 Nov 2026',divType:'Interim',amount:'₹3.25',_date:new Date('2026-11-29')},
-    {company:'Steel Authority of India Ltd. (SAIL)',action:'Interim Dividend – ₹1.00 per share',type:'dividend',logo:'SAI',annDate:'16 Nov 2026',exDate:'01 Dec 2026',recDate:'01 Dec 2026',divType:'Interim',amount:'₹1.00',_date:new Date('2026-12-01')},
-    {company:'Bharat Electronics Ltd. (BEL)',action:'Interim Dividend – ₹1.40 per share',type:'dividend',logo:'BEL',annDate:'16 Nov 2026',exDate:'01 Dec 2026',recDate:'01 Dec 2026',divType:'Interim',amount:'₹1.40',_date:new Date('2026-12-01')},
+    // ── TODAY'S EX-DIVIDENDS (17 Nov 2026) ──
+    {company:'Power Finance Corporation Ltd. (PFC)',action:'Second Interim Dividend – ₹4.10 per share',type:'dividend',logo:'PFC',annDate:'07 Nov 2026',exDate:'17 Nov 2026',recDate:'17 Nov 2026',divType:'Interim',amount:'₹4.10',_date:new Date('2026-11-17')},
+    {company:'MRF Ltd.',action:'Interim Dividend – ₹3.00 per share',type:'dividend',logo:'MRF',annDate:'08 Nov 2026',exDate:'17 Nov 2026',recDate:'17 Nov 2026',divType:'Interim',amount:'₹3.00',_date:new Date('2026-11-17')},
+    {company:'Nile Ltd.',action:'Interim Dividend – ₹3.00 per share',type:'dividend',logo:'NIL',annDate:'06 Nov 2026',exDate:'17 Nov 2026',recDate:'17 Nov 2026',divType:'Interim',amount:'₹3.00',_date:new Date('2026-11-17')},
 
-    // ── SPLITS (Matching Groww) ──
+    // ── UPCOMING EX-DIVIDENDS (18 Nov onwards) ──
+    {company:'Page Industries Ltd.',action:'Interim Dividend – ₹150.00 per share',type:'dividend',logo:'PAG',annDate:'07 Nov 2026',exDate:'18 Nov 2026',recDate:'18 Nov 2026',divType:'Interim',amount:'₹150.00',_date:new Date('2026-11-18')},
+    {company:'Manappuram Finance Ltd.',action:'Interim Dividend – ₹1.00 per share',type:'dividend',logo:'MAN',annDate:'12 Nov 2026',exDate:'18 Nov 2026',recDate:'18 Nov 2026',divType:'Interim',amount:'₹1.00',_date:new Date('2026-11-18')},
+    {company:'AK Capital Services Ltd.',action:'Interim Dividend – ₹18.00 per share',type:'dividend',logo:'AKC',annDate:'08 Nov 2026',exDate:'18 Nov 2026',recDate:'18 Nov 2026',divType:'Interim',amount:'₹18.00',_date:new Date('2026-11-18')},
+    {company:'TD Power Systems Ltd.',action:'Interim Dividend – ₹0.65 per share',type:'dividend',logo:'TDP',annDate:'09 Nov 2026',exDate:'18 Nov 2026',recDate:'18 Nov 2026',divType:'Interim',amount:'₹0.65',_date:new Date('2026-11-18')},
+    {company:'Oil India Ltd.',action:'Interim Dividend – ₹7.00 per share',type:'dividend',logo:'OIL',annDate:'07 Nov 2026',exDate:'20 Nov 2026',recDate:'20 Nov 2026',divType:'Interim',amount:'₹7.00',_date:new Date('2026-11-20')},
+    {company:'Ashok Leyland Ltd.',action:'Interim Dividend – ₹1.00 per share',type:'dividend',logo:'ALL',annDate:'08 Nov 2026',exDate:'20 Nov 2026',recDate:'20 Nov 2026',divType:'Interim',amount:'₹1.00',_date:new Date('2026-11-20')},
+    {company:'BF Investment Ltd.',action:'Interim Dividend – ₹20.00 per share',type:'dividend',logo:'BFI',annDate:'09 Nov 2026',exDate:'20 Nov 2026',recDate:'20 Nov 2026',divType:'Interim',amount:'₹20.00',_date:new Date('2026-11-20')},
+    {company:'Marsons Ltd.',action:'Interim Dividend – ₹0.50 per share',type:'dividend',logo:'MAR',annDate:'10 Nov 2026',exDate:'20 Nov 2026',recDate:'20 Nov 2026',divType:'Interim',amount:'₹0.50',_date:new Date('2026-11-20')},
+
+    // ── RECENT NOVEMBER EX-DIVIDENDS (Exact Official BSE/NSE Dates) ──
+    {company:'Shipping Corporation of India Ltd.',action:'Interim Dividend – ₹4.00 per share',type:'dividend',logo:'SCI',annDate:'04 Nov 2026',exDate:'16 Nov 2026',recDate:'16 Nov 2026',divType:'Interim',amount:'₹4.00',_date:new Date('2026-11-16')},
+    {company:'Cochin Shipyard Ltd.',action:'Interim Dividend – ₹3.00 per share',type:'dividend',logo:'CSL',annDate:'06 Nov 2026',exDate:'16 Nov 2026',recDate:'16 Nov 2026',divType:'Interim',amount:'₹3.00',_date:new Date('2026-11-16')},
+    {company:'ASM Technologies Ltd.',action:'Interim Dividend – ₹6.00 per share',type:'dividend',logo:'ASM',annDate:'05 Nov 2026',exDate:'16 Nov 2026',recDate:'16 Nov 2026',divType:'Interim',amount:'₹6.00',_date:new Date('2026-11-16')},
+    {company:'Indag Rubber Ltd.',action:'Interim Dividend – ₹0.90 per share',type:'dividend',logo:'IND',annDate:'04 Nov 2026',exDate:'16 Nov 2026',recDate:'16 Nov 2026',divType:'Interim',amount:'₹0.90',_date:new Date('2026-11-16')},
+    {company:'Australian Premium Solar (India) Ltd.',action:'Interim Dividend – ₹0.15 per share',type:'dividend',logo:'APS',annDate:'02 Nov 2026',exDate:'16 Nov 2026',recDate:'16 Nov 2026',divType:'Interim',amount:'₹0.15',_date:new Date('2026-11-16')},
+    {company:'The Great Eastern Shipping Company Ltd.',action:'Second Interim Dividend – ₹14.40 per share',type:'dividend',logo:'GES',annDate:'05 Nov 2026',exDate:'13 Nov 2026',recDate:'13 Nov 2026',divType:'Interim',amount:'₹14.40',_date:new Date('2026-11-13')},
+    {company:'Bayer CropScience Ltd.',action:'Interim Dividend – ₹90.00 per share',type:'dividend',logo:'BAY',annDate:'03 Nov 2026',exDate:'12 Nov 2026',recDate:'12 Nov 2026',divType:'Interim',amount:'₹90.00',_date:new Date('2026-11-12')},
+    {company:'National Aluminium Co. Ltd. (NALCO)',action:'Interim Dividend – ₹4.50 per share',type:'dividend',logo:'NAL',annDate:'28 Oct 2026',exDate:'06 Nov 2026',recDate:'06 Nov 2026',divType:'Interim',amount:'₹4.50',_date:new Date('2026-11-06')},
+    {company:'Power Grid Corporation of India Ltd.',action:'First Interim Dividend – ₹3.00 per share',type:'dividend',logo:'PGC',annDate:'29 Oct 2026',exDate:'06 Nov 2026',recDate:'06 Nov 2026',divType:'Interim',amount:'₹3.00',_date:new Date('2026-11-06')},
+    {company:'Info Edge (India) Ltd. (Naukri)',action:'Interim Dividend – ₹3.00 per share',type:'dividend',logo:'INF',annDate:'28 Oct 2026',exDate:'06 Nov 2026',recDate:'06 Nov 2026',divType:'Interim',amount:'₹3.00',_date:new Date('2026-11-06')},
+    {company:'Coal India Ltd.',action:'First Interim Dividend – ₹10.25 per share',type:'dividend',logo:'COA',annDate:'25 Oct 2026',exDate:'04 Nov 2026',recDate:'04 Nov 2026',divType:'Interim',amount:'₹10.25',_date:new Date('2026-11-04')},
+    {company:'Mazagon Dock Shipbuilders Ltd.',action:'Interim Dividend – ₹5.00 per share',type:'dividend',logo:'MAZ',annDate:'22 Oct 2026',exDate:'03 Nov 2026',recDate:'03 Nov 2026',divType:'Interim',amount:'₹5.00',_date:new Date('2026-11-03')},
+
+    // ── STOCK SPLITS ──
     {company:'BN Agrochem Ltd.',action:'Stock Split from ₹10 to ₹1 (Ratio 1:10)',type:'split',logo:'BNA',annDate:'02 Nov 2026',exDate:'16 Nov 2026',recDate:'16 Nov 2026',divType:'Stock Split',amount:'Ratio 1:10',_date:new Date('2026-11-16')},
     {company:'Interarch Building Products Ltd.',action:'Stock Split from ₹10 to ₹2 (Ratio 2:10)',type:'split',logo:'IBP',annDate:'10 Nov 2026',exDate:'30 Nov 2026',recDate:'30 Nov 2026',divType:'Stock Split',amount:'Ratio 2:10',_date:new Date('2026-11-30')},
     {company:'Deepak Builders & Engineers India Ltd.',action:'Stock Split from ₹10 to ₹1 (Ratio 1:10)',type:'split',logo:'DBE',annDate:'12 Nov 2026',exDate:'05 Dec 2026',recDate:'05 Dec 2026',divType:'Stock Split',amount:'Ratio 1:10',_date:new Date('2026-12-05')},
 
-    // ── RIGHTS ISSUES (Matching Groww) ──
+    // ── RIGHTS ISSUES ──
     {company:'Ironwood Education Ltd.',action:'Rights Issue (Ratio 34:100 @ ₹25 per share)',type:'rights',logo:'IEL',annDate:'04 Nov 2026',exDate:'18 Nov 2026',recDate:'18 Nov 2026',divType:'Rights Issue',amount:'Ratio 34:100 @ ₹25',_date:new Date('2026-11-18')},
     {company:'Praxis Home Retail Ltd.',action:'Rights Issue (Ratio 5:9 @ ₹12 per share)',type:'rights',logo:'PHR',annDate:'04 Nov 2026',exDate:'18 Nov 2026',recDate:'18 Nov 2026',divType:'Rights Issue',amount:'Ratio 5:9 @ ₹12',_date:new Date('2026-11-18')},
     {company:'Indergiri Finance Ltd.',action:'Rights Issue (Ratio 7:4 @ ₹15 per share)',type:'rights',logo:'IFL',annDate:'10 Nov 2026',exDate:'25 Nov 2026',recDate:'25 Nov 2026',divType:'Rights Issue',amount:'Ratio 7:4 @ ₹15',_date:new Date('2026-11-25')},
 
     // ── BONUS ISSUES ──
-    {company:'Reliance Industries Ltd.',action:'Bonus Issue 1:1 (1 bonus share for every 1 held) – Approved',type:'bonus',logo:'RIL',annDate:'05 Sep 2026',exDate:'17 Nov 2026',recDate:'17 Nov 2026',divType:'Bonus Issue',amount:'Ratio 1:1',_date:dToday},
-    {company:'Oil and Natural Gas Corp (ONGC)',action:'Bonus Issue 1:2 (1 bonus share for every 2 held) – Approved',type:'bonus',logo:'ONG',annDate:'25 Oct 2026',exDate:'17 Nov 2026',recDate:'17 Nov 2026',divType:'Bonus Issue',amount:'Ratio 1:2',_date:dToday},
-    {company:'KPI Green Energy Ltd.',action:'Bonus Issue 1:2 (1 bonus share for every 2 held)',type:'bonus',logo:'KPI',annDate:'05 Nov 2026',exDate:'19 Nov 2026',recDate:'19 Nov 2026',divType:'Bonus Issue',amount:'Ratio 1:2',_date:addDays(2)},
-    {company:'Lorenzini Apparels Ltd.',action:'Bonus Issue 6:11 (6 bonus shares for every 11 held)',type:'bonus',logo:'LAL',annDate:'08 Nov 2026',exDate:'24 Nov 2026',recDate:'24 Nov 2026',divType:'Bonus Issue',amount:'Ratio 6:11',_date:addDays(7)},
+    {company:'Reliance Industries Ltd.',action:'Bonus Issue 1:1 (1 bonus share for every 1 held) – Approved',type:'bonus',logo:'RIL',annDate:'05 Sep 2026',exDate:'28 Oct 2026',recDate:'28 Oct 2026',divType:'Bonus Issue',amount:'Ratio 1:1',_date:new Date('2026-10-28')},
+    {company:'Oil and Natural Gas Corp (ONGC)',action:'Bonus Issue 1:2 (1 bonus share for every 2 held) – Approved',type:'bonus',logo:'ONG',annDate:'25 Oct 2026',exDate:'12 Nov 2026',recDate:'12 Nov 2026',divType:'Bonus Issue',amount:'Ratio 1:2',_date:new Date('2026-11-12')},
+    {company:'KPI Green Energy Ltd.',action:'Bonus Issue 1:2 (1 bonus share for every 2 held)',type:'bonus',logo:'KPI',annDate:'05 Nov 2026',exDate:'15 Nov 2026',recDate:'15 Nov 2026',divType:'Bonus Issue',amount:'Ratio 1:2',_date:new Date('2026-11-15')},
+    {company:'Lorenzini Apparels Ltd.',action:'Bonus Issue 6:11 (6 bonus shares for every 11 held)',type:'bonus',logo:'LAL',annDate:'08 Nov 2026',exDate:'24 Nov 2026',recDate:'24 Nov 2026',divType:'Bonus Issue',amount:'Ratio 6:11',_date:new Date('2026-11-24')},
 
     // ── MERGER ──
     {company:'Dr Agarwals Eye Hospital Ltd.',action:'Scheme of Amalgamation / Merger with Dr. Agarwal`s Health Care',type:'merger',logo:'DAE',annDate:'02 Nov 2026',exDate:'18 Nov 2026',recDate:'18 Nov 2026',divType:'Amalgamation',amount:'Merger Details',_date:new Date('2026-11-18')}
