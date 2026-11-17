@@ -1,54 +1,5 @@
 [
   {
-    "company": "Power Finance Corporation Limited",
-    "action": "Interim Dividend - Rs 4.10 Per Share",
-    "type": "dividend",
-    "logo": "POW",
-    "exDate": "17-Nov-2026"
-  },
-  {
-    "company": "EAAA India Alternatives Limited",
-    "action": "Interim Dividend - Rs 7 Per Share",
-    "type": "dividend",
-    "logo": "EAA",
-    "exDate": "17-Nov-2026"
-  },
-  {
-    "company": "Government of India",
-    "action": "Interest Payment",
-    "type": "dividend",
-    "logo": "GOV",
-    "exDate": "17-Nov-2026"
-  },
-  {
-    "company": "Nile Limited",
-    "action": "Interim Dividend - Rs 3 Per Share",
-    "type": "dividend",
-    "logo": "NIL",
-    "exDate": "17-Nov-2026"
-  },
-  {
-    "company": "POWERGRID Infrastructure Investment Trust",
-    "action": "Distribution - Rs 3 Per Unit Consist Of Rs 1.69 Per Unit As Interest/ Re 0.62 Per Unit As Dividend/ Re 0.68 Per Unit As Repayment Of Spv Debt/ Re 0.01 Per Unit As Treasury Income",
-    "type": "dividend",
-    "logo": "POW",
-    "exDate": "17-Nov-2026"
-  },
-  {
-    "company": "Oriental InfraTrust",
-    "action": "Distribution - Rs 3.4596 Per Unit Consists Of Rs 1.8659 Per Unit As Interest/ Rs 1.2797 Per Unit As Dividend/ Re 0.3140 Per Unit As Return Of Capital",
-    "type": "dividend",
-    "logo": "ORI",
-    "exDate": "17-Nov-2026"
-  },
-  {
-    "company": "MRF Limited",
-    "action": "Interim Dividend - Rs 3 Per Share",
-    "type": "dividend",
-    "logo": "MRF",
-    "exDate": "17-Nov-2026"
-  },
-  {
     "company": "Page Industries Limited",
     "action": "Interim Dividend - Rs  150 Per Share",
     "type": "dividend",
@@ -70,10 +21,10 @@
     "exDate": "18-Nov-2026"
   },
   {
-    "company": "Dr Agarwals Eye Hospital Limited",
-    "action": "Merger",
+    "company": "ARCL Organics Limited",
+    "action": "Interim Dividend - Re 1 Per Share",
     "type": "dividend",
-    "logo": "DR ",
+    "logo": "ARC",
     "exDate": "18-Nov-2026"
   },
   {
@@ -137,6 +88,55 @@
     "action": "Interim Dividend - Rs 7 Per Share",
     "type": "dividend",
     "logo": "OIL",
+    "exDate": "20-Nov-2026"
+  },
+  {
+    "company": "Skyways Air Services Limited",
+    "action": "Interim Dividend - Re 0.40 Per Share",
+    "type": "dividend",
+    "logo": "SKY",
+    "exDate": "20-Nov-2026"
+  },
+  {
+    "company": "Medi Assist Healthcare Services Limited",
+    "action": "Buy Back",
+    "type": "dividend",
+    "logo": "MED",
+    "exDate": "20-Nov-2026"
+  },
+  {
+    "company": "Venus Pipes & Tubes Limited",
+    "action": "Interim Dividend - Re 0.50 Per Share",
+    "type": "dividend",
+    "logo": "VEN",
+    "exDate": "20-Nov-2026"
+  },
+  {
+    "company": "Polyplex Corporation Limited",
+    "action": "Interim Dividend - Rs 12 Per Share",
+    "type": "dividend",
+    "logo": "POL",
+    "exDate": "20-Nov-2026"
+  },
+  {
+    "company": "Ashok Leyland Limited",
+    "action": "Interim Dividend - Re 1 Per Share",
+    "type": "dividend",
+    "logo": "ASH",
+    "exDate": "20-Nov-2026"
+  },
+  {
+    "company": "Talbros Automotive Components Limited",
+    "action": "Interim Dividend - Re 0.30 Per Share",
+    "type": "dividend",
+    "logo": "TAL",
+    "exDate": "20-Nov-2026"
+  },
+  {
+    "company": "Jamna Auto Industries Limited",
+    "action": "Interim Dividend - Re 1 Per Share",
+    "type": "dividend",
+    "logo": "JAM",
     "exDate": "20-Nov-2026"
   }
 ]
