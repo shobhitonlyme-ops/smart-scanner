@@ -4027,8 +4027,19 @@ function nwParseNSEDate(s){
   if(mon==null) return null;
   return new Date(+m[3], mon, +m[1]);
 }
-function nwFmtDate(d){ return d ? d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—'; }
-function nwIsToday(d){ if(!d) return false; const t=new Date(); return d.getFullYear()===t.getFullYear()&&d.getMonth()===t.getMonth()&&d.getDate()===t.getDate(); }
+function nwFmtDate(d){
+  if(!d) return '—';
+  const dt = (d instanceof Date) ? d : new Date(d);
+  if(isNaN(dt.getTime())) return String(d);
+  return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+function nwIsToday(d){
+  if(!d) return false;
+  const dt = (d instanceof Date) ? d : new Date(d);
+  if(isNaN(dt.getTime())) return false;
+  const t = new Date();
+  return dt.getFullYear()===t.getFullYear() && dt.getMonth()===t.getMonth() && dt.getDate()===t.getDate();
+}
 // Sorts newest-first so today's items lead, older ones trail — applied to all three live feeds.
 function nwSortNewestFirst(arr, dateGetter){ return [...arr].sort((a,b)=>{ const da=dateGetter(a), db=dateGetter(b); if(!da&&!db) return 0; if(!da) return 1; if(!db) return -1; return db-da; }); }
 
@@ -4066,7 +4077,7 @@ function mergeAnnouncements(primary, fallback){
 /* Helper to format dates intelligently: Today with exact time, otherwise DD MMM YYYY */
 function nwFmtAnnDate(d){
   if(!d) return '—';
-  const dt = new Date(d);
+  const dt = (d instanceof Date) ? d : new Date(d);
   if(isNaN(dt.getTime())) return '—';
   if(nwIsToday(dt)){
     const timeStr = dt.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', hour12:true});
@@ -4194,6 +4205,68 @@ function nwParseCorpDetails(a){
   }
 
   return { annDate, exDate, recDate, divType, amount };
+}
+
+const ANN_FALLBACK = getDynamicAnnouncements();
+const CORP_FALLBACK = getDynamicCorpActions();
+const RESULTS_FALLBACK = getDynamicResults();
+const FII_DATA = getDynamicFiiDii();
+
+let ANN_LIVE=null;
+let annFetching=false;
+
+async function fetchLiveAnnouncements(){
+  const statusEl=document.getElementById('nw_annLiveStatus');
+  if(annFetching) return;
+  annFetching=true;
+  if(statusEl) statusEl.textContent='🔄 Announcements sync ho rahe hain...';
+  try{
+    // 1. Try local/cloud repo data/announcements.json
+    try {
+      const res = await fetch('data/announcements.json?v=' + Date.now(), { cache: 'no-store' });
+      if(res.ok){
+        const cloudData = await res.json();
+        if(Array.isArray(cloudData) && cloudData.length){
+          ANN_LIVE = cloudData;
+        }
+      }
+    }catch(_){}
+
+    const nseUrl='https://www.nseindia.com/api/corporate-announcements?index=equities';
+    const bseUrl='https://api.bseindia.com/BseIndiaAPI/api/AnnGetData/w?strCat=-1&strPrevDate=&strScrip=&strSearch=&strToDate=&strType=C';
+    const [nseData, bseData] = await Promise.all([nwFetchJSON(nseUrl), nwFetchJSON(bseUrl)]);
+    const out=[];
+    const nseArr = Array.isArray(nseData) ? nseData : (nseData?.data||[]);
+    nseArr.forEach(a=>{
+      const company=a.sm_name||a.companyName||a.symbol||'';
+      const desc=a.desc||a.subject||a.attchmntText||'';
+      const d=nwParseNSEDate(a.an_dt||a.bcastDate||a.date);
+      if(company&&desc) out.push({company,desc,exch:'NSE',_date:d});
+    });
+    const bseArr = Array.isArray(bseData) ? bseData : (bseData?.Table||[]);
+    bseArr.forEach(a=>{
+      const company=a.NEWSSUB||a.SLONGNAME||a.SCRIP_NAME||'';
+      const desc=a.HEADLINE||a.NEWSSUB||a.MORE||'';
+      const d=nwParseNSEDate(a.NEWS_DT||a.DissemDT||a.News_submission_dt);
+      if(company&&desc) out.push({company,desc,exch:'BSE',_date:d});
+    });
+    if(out.length){
+      ANN_LIVE=mergeAnnouncements(out, ANN_LIVE || getDynamicAnnouncements());
+    }
+  }catch(e){}
+  annFetching=false;
+  const total = mergeAnnouncements(ANN_LIVE, getDynamicAnnouncements()).length;
+  if(statusEl) statusEl.textContent=`🟢 Live Corporate Announcements Active — ${total} announcements (${new Date().toLocaleTimeString('en-IN')})`;
+  renderAnnouncements();
+}
+
+function renderAnnouncements(){
+  const list=document.getElementById('nw_annList');
+  if(!list) return;
+  const source = mergeAnnouncements(ANN_LIVE, getDynamicAnnouncements()).sort((a,b)=>(new Date(b._date||0)) - (new Date(a._date||0)));
+  const filtered=source.filter(a=>a.exch===currentExch);
+  if(!filtered.length){list.innerHTML=`<div class="empty-state"><div class="big">📋</div><div class="msg">${currentExch} ke liye koi announcement nahi mili.</div></div>`;return;}
+  list.innerHTML=filtered.map(a=>`<div class="ann-item"><div class="ann-pdf-icon">PDF</div><div class="ann-content"><div class="ann-company">${a.company} <span style="color:var(--muted);font-weight:400;font-size:.78rem;">— ${nwFmtAnnDate(a._date)}</span></div><div class="ann-desc">${a.desc}</div></div></div>`).join('');
 }
 
 let CORP_LIVE=null;
@@ -4483,7 +4556,8 @@ function activateSection(id){
   document.querySelectorAll('.section-panel').forEach(p=>p.classList.remove('active'));
   const sec=document.getElementById('nw_section-'+id); if(sec) sec.classList.add('active');
   document.querySelectorAll('.main-nav-tab').forEach(t=>t.classList.remove('active'));
-  document.querySelector(`.main-nav-tab[data-section="${id}"]`).classList.add('active');
+  const tab=document.querySelector(`.main-nav-tab[data-section="${id}"]`);
+  if(tab) tab.classList.add('active');
 }
 
 document.querySelectorAll('.main-nav-tab').forEach(tab=>{
