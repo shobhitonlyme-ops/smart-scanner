@@ -1,0 +1,163 @@
+[
+  {
+    "company": "Bharat Global Developers Ltd.",
+    "date": "17 Nov 2026",
+    "status": "today",
+    "sym": "BGDL",
+    "sentiment": "pos"
+  },
+  {
+    "company": "Trans India House Impex Ltd.",
+    "date": "17 Nov 2026",
+    "status": "today",
+    "sym": "TIHI",
+    "sentiment": "na"
+  },
+  {
+    "company": "JD Cables Ltd.",
+    "date": "17 Nov 2026",
+    "status": "today",
+    "sym": "JDCL",
+    "sentiment": "pos"
+  },
+  {
+    "company": "Libas Consumer Products Ltd.",
+    "date": "17 Nov 2026",
+    "status": "upcoming",
+    "sym": "LCPL",
+    "sentiment": "na"
+  },
+  {
+    "company": "Richa Info Systems Ltd.",
+    "date": "17 Nov 2026",
+    "status": "upcoming",
+    "sym": "RISL",
+    "sentiment": "pos"
+  },
+  {
+    "company": "Arigato Universe Ltd.",
+    "date": "17 Nov 2026",
+    "status": "upcoming",
+    "sym": "ARIG",
+    "sentiment": "na"
+  },
+  {
+    "company": "Prabhat Technologies (India) Ltd.",
+    "date": "17 Nov 2026",
+    "status": "upcoming",
+    "sym": "PRAB",
+    "sentiment": "na"
+  },
+  {
+    "company": "Core4 Engineers Ltd.",
+    "date": "17 Nov 2026",
+    "status": "upcoming",
+    "sym": "CORE",
+    "sentiment": "pos"
+  },
+  {
+    "company": "Focus Business Solution Ltd.",
+    "date": "18 Nov 2026",
+    "status": "upcoming",
+    "sym": "FBSL",
+    "sentiment": "na"
+  },
+  {
+    "company": "Sharika Enterprises Ltd.",
+    "date": "18 Nov 2026",
+    "status": "upcoming",
+    "sym": "SHAR",
+    "sentiment": "pos"
+  },
+  {
+    "company": "Vibrant Global Capital Ltd.",
+    "date": "18 Nov 2026",
+    "status": "upcoming",
+    "sym": "VGCL",
+    "sentiment": "na"
+  },
+  {
+    "company": "Asian Petroproducts & Exports Ltd.",
+    "date": "19 Nov 2026",
+    "status": "upcoming",
+    "sym": "APEL",
+    "sentiment": "na"
+  },
+  {
+    "company": "Standard Capital Markets Ltd.",
+    "date": "19 Nov 2026",
+    "status": "upcoming",
+    "sym": "SCML",
+    "sentiment": "pos"
+  },
+  {
+    "company": "Ashoka Buildcon Ltd.",
+    "date": "20 Nov 2026",
+    "status": "upcoming",
+    "sym": "ASHO",
+    "sentiment": "pos"
+  },
+  {
+    "company": "Banswara Syntex Ltd.",
+    "date": "21 Nov 2026",
+    "status": "upcoming",
+    "sym": "BSL",
+    "sentiment": "na"
+  },
+  {
+    "company": "IRCTC \u2013 Indian Railway Catering",
+    "date": "22 Nov 2026",
+    "status": "upcoming",
+    "sym": "IRCT",
+    "sentiment": "pos"
+  },
+  {
+    "company": "Tata Steel Ltd.",
+    "date": "24 Nov 2026",
+    "status": "upcoming",
+    "sym": "TATA",
+    "sentiment": "pos"
+  },
+  {
+    "company": "State Bank of India (SBI)",
+    "date": "25 Nov 2026",
+    "status": "upcoming",
+    "sym": "SBIN",
+    "sentiment": "pos"
+  },
+  {
+    "company": "Larsen & Toubro Ltd. (L&T)",
+    "date": "26 Nov 2026",
+    "status": "upcoming",
+    "sym": "LT",
+    "sentiment": "pos"
+  },
+  {
+    "company": "ITC Ltd.",
+    "date": "27 Nov 2026",
+    "status": "upcoming",
+    "sym": "ITC",
+    "sentiment": "pos"
+  },
+  {
+    "company": "Bharti Airtel Ltd.",
+    "date": "28 Nov 2026",
+    "status": "upcoming",
+    "sym": "AIRT",
+    "sentiment": "pos"
+  },
+  {
+    "company": "Hindalco Industries Ltd.",
+    "date": "29 Nov 2026",
+    "status": "upcoming",
+    "sym": "HIND",
+    "sentiment": "na"
+  },
+  {
+    "company": "Sun Pharmaceutical Industries Ltd.",
+    "date": "01 Dec 2026",
+    "status": "upcoming",
+    "sym": "SUNP",
+    "sentiment": "pos"
+  }
+]

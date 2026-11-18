@@ -1,0 +1,386 @@
+[
+  {
+    "sym": "COCHINSHIP",
+    "name": "Cochin Shipyard Ltd.",
+    "patLatest": 783.3,
+    "patPrev": 234.8,
+    "growth": 233.6,
+    "sector": "Defence & Shipbuilding"
+  },
+  {
+    "sym": "MAZDOCK",
+    "name": "Mazagon Dock Shipbuilders Ltd.",
+    "patLatest": 1937.0,
+    "patPrev": 614.0,
+    "growth": 215.5,
+    "sector": "Defence & Shipbuilding"
+  },
+  {
+    "sym": "BSE",
+    "name": "BSE Ltd.",
+    "patLatest": 772.3,
+    "patPrev": 205.6,
+    "growth": 275.6,
+    "sector": "Capital Markets"
+  },
+  {
+    "sym": "HUDCO",
+    "name": "Housing & Urban Development Corp Ltd.",
+    "patLatest": 2116.7,
+    "patPrev": 680.0,
+    "growth": 211.3,
+    "sector": "Finance - Housing"
+  },
+  {
+    "sym": "MOTILALOFS",
+    "name": "Motilal Oswal Financial Services",
+    "patLatest": 2445.6,
+    "patPrev": 580.4,
+    "growth": 321.4,
+    "sector": "Broking & Financial Services"
+  },
+  {
+    "sym": "IREDA",
+    "name": "Indian Renewable Energy Dev Agency",
+    "patLatest": 1252.2,
+    "patPrev": 365.0,
+    "growth": 243.1,
+    "sector": "Renewable Financing"
+  },
+  {
+    "sym": "KALYANKJIL",
+    "name": "Kalyan Jewellers India Ltd.",
+    "patLatest": 598.5,
+    "patPrev": 180.2,
+    "growth": 232.1,
+    "sector": "Gems & Jewellery"
+  },
+  {
+    "sym": "MCX",
+    "name": "Multi Commodity Exchange of India Ltd.",
+    "patLatest": 406.8,
+    "patPrev": 82.5,
+    "growth": 393.1,
+    "sector": "Capital Markets"
+  },
+  {
+    "sym": "ANANDRATHI",
+    "name": "Anand Rathi Wealth Ltd.",
+    "patLatest": 226.4,
+    "patPrev": 71.0,
+    "growth": 218.9,
+    "sector": "Wealth Management"
+  },
+  {
+    "sym": "NBCC",
+    "name": "NBCC (India) Ltd.",
+    "patLatest": 414.3,
+    "patPrev": 115.0,
+    "growth": 260.3,
+    "sector": "Construction & Real Estate"
+  },
+  {
+    "sym": "RAILTEL",
+    "name": "RailTel Corporation of India Ltd.",
+    "patLatest": 246.2,
+    "patPrev": 78.0,
+    "growth": 215.6,
+    "sector": "Telecom Infrastructure"
+  },
+  {
+    "sym": "TRENT",
+    "name": "Trent Ltd.",
+    "patLatest": 1477.5,
+    "patPrev": 394.0,
+    "growth": 275.0,
+    "sector": "Retail"
+  },
+  {
+    "sym": "ZOMATO",
+    "name": "Zomato Ltd.",
+    "patLatest": 351.0,
+    "patPrev": 98.0,
+    "growth": 258.2,
+    "sector": "E-Commerce & Food Delivery"
+  },
+  {
+    "sym": "OIL",
+    "name": "Oil India Ltd.",
+    "patLatest": 5551.8,
+    "patPrev": 1780.0,
+    "growth": 211.9,
+    "sector": "Oil & Gas Exploration"
+  },
+  {
+    "sym": "SWANENERGY",
+    "name": "Swan Energy Ltd.",
+    "patLatest": 594.0,
+    "patPrev": 128.0,
+    "growth": 364.1,
+    "sector": "Textiles & Energy"
+  },
+  {
+    "sym": "HBLPOWER",
+    "name": "HBL Power Systems Ltd.",
+    "patLatest": 281.4,
+    "patPrev": 84.0,
+    "growth": 235.0,
+    "sector": "Batteries & Defense"
+  },
+  {
+    "sym": "TEJASNET",
+    "name": "Tejas Networks Ltd.",
+    "patLatest": 275.0,
+    "patPrev": 85.0,
+    "growth": 223.5,
+    "sector": "Telecom Equipment"
+  },
+  {
+    "sym": "KEC",
+    "name": "KEC International Ltd.",
+    "patLatest": 347.0,
+    "patPrev": 98.0,
+    "growth": 254.1,
+    "sector": "Power Transmission EPC"
+  },
+  {
+    "sym": "ELECON",
+    "name": "Elecon Engineering Company Ltd.",
+    "patLatest": 356.0,
+    "patPrev": 112.0,
+    "growth": 217.9,
+    "sector": "Industrial Machinery"
+  },
+  {
+    "sym": "GRAVITA",
+    "name": "Gravita India Ltd.",
+    "patLatest": 242.0,
+    "patPrev": 77.0,
+    "growth": 214.3,
+    "sector": "Recycling & Metals"
+  },
+  {
+    "sym": "GENUSPOWER",
+    "name": "Genus Power Infrastructures Ltd.",
+    "patLatest": 138.0,
+    "patPrev": 32.5,
+    "growth": 324.6,
+    "sector": "Smart Meters & Power"
+  },
+  {
+    "sym": "FORCEIND",
+    "name": "Force Motors Ltd.",
+    "patLatest": 397.0,
+    "patPrev": 96.0,
+    "growth": 313.5,
+    "sector": "Automobiles"
+  },
+  {
+    "sym": "MARKSANS",
+    "name": "Marksans Pharma Ltd.",
+    "patLatest": 315.0,
+    "patPrev": 95.0,
+    "growth": 231.6,
+    "sector": "Pharmaceuticals"
+  },
+  {
+    "sym": "WAAREEENER",
+    "name": "Waaree Energies Ltd.",
+    "patLatest": 1274.0,
+    "patPrev": 390.0,
+    "growth": 226.7,
+    "sector": "Solar Energy"
+  },
+  {
+    "sym": "APARINDS",
+    "name": "Apar Industries Ltd.",
+    "patLatest": 826.0,
+    "patPrev": 258.0,
+    "growth": 220.2,
+    "sector": "Conductors & Cables"
+  },
+  {
+    "sym": "VOLTAS",
+    "name": "Voltas Ltd.",
+    "patLatest": 512.0,
+    "patPrev": 136.0,
+    "growth": 276.5,
+    "sector": "Consumer Electronics"
+  },
+  {
+    "sym": "DIXON",
+    "name": "Dixon Technologies (India) Ltd.",
+    "patLatest": 412.0,
+    "patPrev": 110.0,
+    "growth": 274.5,
+    "sector": "EMS & Electronics"
+  },
+  {
+    "sym": "KAYNES",
+    "name": "Kaynes Technology India Ltd.",
+    "patLatest": 141.0,
+    "patPrev": 42.0,
+    "growth": 235.7,
+    "sector": "IoT & EMS"
+  },
+  {
+    "sym": "DOMS",
+    "name": "DOMS Industries Ltd.",
+    "patLatest": 154.0,
+    "patPrev": 48.0,
+    "growth": 220.8,
+    "sector": "Stationery & Consumer"
+  },
+  {
+    "sym": "JYOTICNC",
+    "name": "Jyoti CNC Automation Ltd.",
+    "patLatest": 152.0,
+    "patPrev": 35.0,
+    "growth": 334.3,
+    "sector": "CNC Machinery"
+  },
+  {
+    "sym": "INDOSTAR",
+    "name": "IndoStar Capital Finance Ltd.",
+    "patLatest": 114.0,
+    "patPrev": 32.0,
+    "growth": 256.3,
+    "sector": "NBFC"
+  },
+  {
+    "sym": "PTC",
+    "name": "PTC India Financial Services Ltd.",
+    "patLatest": 178.0,
+    "patPrev": 54.0,
+    "growth": 229.6,
+    "sector": "Power Financing"
+  },
+  {
+    "sym": "LLOYDSENGG",
+    "name": "Lloyds Engineering Works Ltd.",
+    "patLatest": 80.0,
+    "patPrev": 19.5,
+    "growth": 310.3,
+    "sector": "Engineering & Capital Goods"
+  },
+  {
+    "sym": "GEPIL",
+    "name": "GE Power India Ltd.",
+    "patLatest": 92.0,
+    "patPrev": 28.0,
+    "growth": 228.6,
+    "sector": "Power Equipment"
+  },
+  {
+    "sym": "PATELENG",
+    "name": "Patel Engineering Ltd.",
+    "patLatest": 235.0,
+    "patPrev": 70.0,
+    "growth": 235.7,
+    "sector": "Civil Construction & Hydro"
+  },
+  {
+    "sym": "HCC",
+    "name": "Hindustan Construction Co. Ltd.",
+    "patLatest": 262.0,
+    "patPrev": 72.0,
+    "growth": 263.9,
+    "sector": "Infrastructure"
+  },
+  {
+    "sym": "GEOJITFSL",
+    "name": "Geojit Financial Services Ltd.",
+    "patLatest": 151.0,
+    "patPrev": 41.0,
+    "growth": 268.3,
+    "sector": "Financial Broking"
+  },
+  {
+    "sym": "CHOICEIN",
+    "name": "Choice International Ltd.",
+    "patLatest": 134.0,
+    "patPrev": 36.0,
+    "growth": 272.2,
+    "sector": "Financial Services"
+  },
+  {
+    "sym": "MANINDS",
+    "name": "Man Industries (India) Ltd.",
+    "patLatest": 102.0,
+    "patPrev": 26.0,
+    "growth": 292.3,
+    "sector": "Steel Pipes"
+  },
+  {
+    "sym": "GMRINFRA",
+    "name": "GMR Airports Infrastructure Ltd.",
+    "patLatest": 310.0,
+    "patPrev": 75.0,
+    "growth": 313.3,
+    "sector": "Airports & Infra"
+  },
+  {
+    "sym": "PREMIERENE",
+    "name": "Premier Energies Ltd.",
+    "patLatest": 231.0,
+    "patPrev": 65.0,
+    "growth": 255.4,
+    "sector": "Solar Cell Manufacturing"
+  },
+  {
+    "sym": "SUZLON",
+    "name": "Suzlon Energy Ltd.",
+    "patLatest": 660.0,
+    "patPrev": 210.0,
+    "growth": 214.3,
+    "sector": "Wind Energy"
+  },
+  {
+    "sym": "CENTUM",
+    "name": "Centum Electronics Ltd.",
+    "patLatest": 46.0,
+    "patPrev": 12.0,
+    "growth": 283.3,
+    "sector": "Defence & Aerospace EMS"
+  },
+  {
+    "sym": "TIMETECHNO",
+    "name": "Time Technoplast Ltd.",
+    "patLatest": 315.0,
+    "patPrev": 98.0,
+    "growth": 221.4,
+    "sector": "Polymer Products & Composite Cylinders"
+  },
+  {
+    "sym": "NEWGEN",
+    "name": "Newgen Software Technologies Ltd.",
+    "patLatest": 252.0,
+    "patPrev": 74.0,
+    "growth": 240.5,
+    "sector": "Enterprise Software / IT"
+  },
+  {
+    "sym": "KPITTECH",
+    "name": "KPIT Technologies Ltd.",
+    "patLatest": 595.0,
+    "patPrev": 192.0,
+    "growth": 209.9,
+    "sector": "Automotive Software / IT"
+  },
+  {
+    "sym": "CYIENTDLM",
+    "name": "Cyient DLM Ltd.",
+    "patLatest": 61.0,
+    "patPrev": 18.0,
+    "growth": 238.9,
+    "sector": "Electronic Manufacturing"
+  },
+  {
+    "sym": "KIRLOSENG",
+    "name": "Kirloskar Oil Engines Ltd.",
+    "patLatest": 450.0,
+    "patPrev": 140.0,
+    "growth": 221.4,
+    "sector": "Engines & Gensets"
+  }
+]
