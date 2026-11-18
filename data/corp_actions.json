@@ -1,75 +1,5 @@
 [
   {
-    "company": "Page Industries Limited",
-    "action": "Interim Dividend - Rs  150 Per Share",
-    "type": "dividend",
-    "logo": "PAG",
-    "exDate": "18-Nov-2026"
-  },
-  {
-    "company": "AK Capital Services Limited",
-    "action": "Interim Dividend - Rs 18 Per Share",
-    "type": "dividend",
-    "logo": "AK ",
-    "exDate": "18-Nov-2026"
-  },
-  {
-    "company": "Vertis Infrastructure Trust",
-    "action": "Distribution - Rs 3.25 Per Unit Consist Of Rs 1.9609 Per Unit As Interest /Re 0.5156 Per Unit As Return Of Capital/ Re 0.7735 Per Unit As Dividend",
-    "type": "dividend",
-    "logo": "VER",
-    "exDate": "18-Nov-2026"
-  },
-  {
-    "company": "Capital Infra Trust",
-    "action": "Distribution - Rs 2.30 Per Unit Consist Of Rs 1.20 Per Unit As Interest/ Re 0.70 Per Unit As Dividend/ Re 0.40 Per Unit As Repayment Of Capital",
-    "type": "dividend",
-    "logo": "CAP",
-    "exDate": "18-Nov-2026"
-  },
-  {
-    "company": "ARCL Organics Limited",
-    "action": "Interim Dividend - Re 1 Per Share",
-    "type": "dividend",
-    "logo": "ARC",
-    "exDate": "18-Nov-2026"
-  },
-  {
-    "company": "Praxis Home Retail Limited",
-    "action": "Rights 5:9",
-    "type": "rights",
-    "logo": "PRA",
-    "exDate": "18-Nov-2026"
-  },
-  {
-    "company": "Global Education Limited",
-    "action": "Buy Back",
-    "type": "dividend",
-    "logo": "GLO",
-    "exDate": "18-Nov-2026"
-  },
-  {
-    "company": "Jullundur Motor Agency (Delhi) Limited",
-    "action": "Buy Back",
-    "type": "dividend",
-    "logo": "JUL",
-    "exDate": "18-Nov-2026"
-  },
-  {
-    "company": "TD Power Systems Limited",
-    "action": "Interim Dividend - Re 0.65 Per Share",
-    "type": "dividend",
-    "logo": "TD ",
-    "exDate": "18-Nov-2026"
-  },
-  {
-    "company": "Manappuram Finance Limited",
-    "action": "Interim Dividend - Re 1 Per Share",
-    "type": "dividend",
-    "logo": "MAN",
-    "exDate": "18-Nov-2026"
-  },
-  {
     "company": "Natco Pharma Limited",
     "action": "Interim Dividend - Rs 1.25 Per Share",
     "type": "dividend",
@@ -98,10 +28,31 @@
     "exDate": "20-Nov-2026"
   },
   {
+    "company": "SML Mahindra Limited",
+    "action": "Rights 2:7 @ Premium Rs 3496/-",
+    "type": "rights",
+    "logo": "SML",
+    "exDate": "20-Nov-2026"
+  },
+  {
+    "company": "Alufluoride Limited",
+    "action": "Interim Dividend - Rs 2.50 Per Share",
+    "type": "dividend",
+    "logo": "ALU",
+    "exDate": "20-Nov-2026"
+  },
+  {
     "company": "Skyways Air Services Limited",
     "action": "Interim Dividend - Re 0.40 Per Share",
     "type": "dividend",
     "logo": "SKY",
+    "exDate": "20-Nov-2026"
+  },
+  {
+    "company": "Medi Assist Healthcare Services Limited",
+    "action": "Buy Back",
+    "type": "dividend",
+    "logo": "MED",
     "exDate": "20-Nov-2026"
   },
   {
@@ -138,5 +89,33 @@
     "type": "dividend",
     "logo": "JAM",
     "exDate": "20-Nov-2026"
+  },
+  {
+    "company": "BF Investment Limited",
+    "action": "Interim Dividend - Rs 20 Per Share",
+    "type": "dividend",
+    "logo": "BF ",
+    "exDate": "20-Nov-2026"
+  },
+  {
+    "company": "Pashupati Cotspin Limited",
+    "action": "Interim Dividend - Re 0.02 Per Share",
+    "type": "dividend",
+    "logo": "PAS",
+    "exDate": "23-Nov-2026"
+  },
+  {
+    "company": "Zee Entertainment Enterprises Limited",
+    "action": "Buy Back",
+    "type": "dividend",
+    "logo": "ZEE",
+    "exDate": "25-Nov-2026"
+  },
+  {
+    "company": "VARVEE GLOBAL LIMITED",
+    "action": "Face Value Split (Sub-Division) - From Rs 5/- Per Share To Rs 2/- Per Share",
+    "type": "split",
+    "logo": "VAR",
+    "exDate": "27-Nov-2026"
   }
 ]
