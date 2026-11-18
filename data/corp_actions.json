@@ -7,10 +7,10 @@
     "exDate": "18-Nov-2026"
   },
   {
-    "company": "Capital Infra Trust",
-    "action": "Distribution - Rs 2.30 Per Unit Consist Of Rs 1.20 Per Unit As Interest/ Re 0.70 Per Unit As Dividend/ Re 0.40 Per Unit As Repayment Of Capital",
+    "company": "AK Capital Services Limited",
+    "action": "Interim Dividend - Rs 18 Per Share",
     "type": "dividend",
-    "logo": "CAP",
+    "logo": "AK ",
     "exDate": "18-Nov-2026"
   },
   {
@@ -21,17 +21,17 @@
     "exDate": "18-Nov-2026"
   },
   {
+    "company": "Capital Infra Trust",
+    "action": "Distribution - Rs 2.30 Per Unit Consist Of Rs 1.20 Per Unit As Interest/ Re 0.70 Per Unit As Dividend/ Re 0.40 Per Unit As Repayment Of Capital",
+    "type": "dividend",
+    "logo": "CAP",
+    "exDate": "18-Nov-2026"
+  },
+  {
     "company": "ARCL Organics Limited",
     "action": "Interim Dividend - Re 1 Per Share",
     "type": "dividend",
     "logo": "ARC",
-    "exDate": "18-Nov-2026"
-  },
-  {
-    "company": "AK Capital Services Limited",
-    "action": "Interim Dividend - Rs 18 Per Share",
-    "type": "dividend",
-    "logo": "AK ",
     "exDate": "18-Nov-2026"
   },
   {
@@ -98,10 +98,10 @@
     "exDate": "20-Nov-2026"
   },
   {
-    "company": "Medi Assist Healthcare Services Limited",
-    "action": "Buy Back",
+    "company": "Skyways Air Services Limited",
+    "action": "Interim Dividend - Re 0.40 Per Share",
     "type": "dividend",
-    "logo": "MED",
+    "logo": "SKY",
     "exDate": "20-Nov-2026"
   },
   {
