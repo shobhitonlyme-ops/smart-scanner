@@ -1,376 +1,142 @@
 [
   {
-    "company": "Power Finance Corporation Ltd. (PFC)",
-    "action": "Second Interim Dividend \u2013 \u20b94.10 per share",
-    "type": "dividend",
-    "logo": "PFC",
-    "annDate": "07 Nov 2026",
-    "exDate": "17 Nov 2026",
-    "recDate": "17 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b94.10"
-  },
-  {
-    "company": "MRF Ltd.",
-    "action": "Interim Dividend \u2013 \u20b93.00 per share",
-    "type": "dividend",
-    "logo": "MRF",
-    "annDate": "08 Nov 2026",
-    "exDate": "17 Nov 2026",
-    "recDate": "17 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b93.00"
-  },
-  {
-    "company": "Nile Ltd.",
-    "action": "Interim Dividend \u2013 \u20b93.00 per share",
-    "type": "dividend",
-    "logo": "NIL",
-    "annDate": "06 Nov 2026",
-    "exDate": "17 Nov 2026",
-    "recDate": "17 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b93.00"
-  },
-  {
-    "company": "Page Industries Ltd.",
-    "action": "Interim Dividend \u2013 \u20b9150.00 per share",
+    "company": "Page Industries Limited",
+    "action": "Interim Dividend - Rs  150 Per Share",
     "type": "dividend",
     "logo": "PAG",
-    "annDate": "07 Nov 2026",
-    "exDate": "18 Nov 2026",
-    "recDate": "18 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b9150.00"
+    "exDate": "18-Nov-2026"
   },
   {
-    "company": "Manappuram Finance Ltd.",
-    "action": "Interim Dividend \u2013 \u20b91.00 per share",
+    "company": "Capital Infra Trust",
+    "action": "Distribution - Rs 2.30 Per Unit Consist Of Rs 1.20 Per Unit As Interest/ Re 0.70 Per Unit As Dividend/ Re 0.40 Per Unit As Repayment Of Capital",
+    "type": "dividend",
+    "logo": "CAP",
+    "exDate": "18-Nov-2026"
+  },
+  {
+    "company": "Vertis Infrastructure Trust",
+    "action": "Distribution - Rs 3.25 Per Unit Consist Of Rs 1.9609 Per Unit As Interest /Re 0.5156 Per Unit As Return Of Capital/ Re 0.7735 Per Unit As Dividend",
+    "type": "dividend",
+    "logo": "VER",
+    "exDate": "18-Nov-2026"
+  },
+  {
+    "company": "ARCL Organics Limited",
+    "action": "Interim Dividend - Re 1 Per Share",
+    "type": "dividend",
+    "logo": "ARC",
+    "exDate": "18-Nov-2026"
+  },
+  {
+    "company": "AK Capital Services Limited",
+    "action": "Interim Dividend - Rs 18 Per Share",
+    "type": "dividend",
+    "logo": "AK ",
+    "exDate": "18-Nov-2026"
+  },
+  {
+    "company": "Praxis Home Retail Limited",
+    "action": "Rights 5:9",
+    "type": "rights",
+    "logo": "PRA",
+    "exDate": "18-Nov-2026"
+  },
+  {
+    "company": "Global Education Limited",
+    "action": "Buy Back",
+    "type": "dividend",
+    "logo": "GLO",
+    "exDate": "18-Nov-2026"
+  },
+  {
+    "company": "Jullundur Motor Agency (Delhi) Limited",
+    "action": "Buy Back",
+    "type": "dividend",
+    "logo": "JUL",
+    "exDate": "18-Nov-2026"
+  },
+  {
+    "company": "TD Power Systems Limited",
+    "action": "Interim Dividend - Re 0.65 Per Share",
+    "type": "dividend",
+    "logo": "TD ",
+    "exDate": "18-Nov-2026"
+  },
+  {
+    "company": "Manappuram Finance Limited",
+    "action": "Interim Dividend - Re 1 Per Share",
     "type": "dividend",
     "logo": "MAN",
-    "annDate": "12 Nov 2026",
-    "exDate": "18 Nov 2026",
-    "recDate": "18 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b91.00"
+    "exDate": "18-Nov-2026"
   },
   {
-    "company": "AK Capital Services Ltd.",
-    "action": "Interim Dividend \u2013 \u20b918.00 per share",
+    "company": "Natco Pharma Limited",
+    "action": "Interim Dividend - Rs 1.25 Per Share",
     "type": "dividend",
-    "logo": "AKC",
-    "annDate": "08 Nov 2026",
-    "exDate": "18 Nov 2026",
-    "recDate": "18 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b918.00"
+    "logo": "NAT",
+    "exDate": "19-Nov-2026"
   },
   {
-    "company": "TD Power Systems Ltd.",
-    "action": "Interim Dividend \u2013 \u20b90.65 per share",
+    "company": "Vibrant Global Capital Limited",
+    "action": "Interim Dividend - Re 1 Per Share",
     "type": "dividend",
-    "logo": "TDP",
-    "annDate": "09 Nov 2026",
-    "exDate": "18 Nov 2026",
-    "recDate": "18 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b90.65"
+    "logo": "VIB",
+    "exDate": "19-Nov-2026"
   },
   {
-    "company": "Oil India Ltd.",
-    "action": "Interim Dividend \u2013 \u20b97.00 per share",
+    "company": "Ingersoll Rand (India) Limited",
+    "action": "Interim Dividend - Rs 20 Per Share",
+    "type": "dividend",
+    "logo": "ING",
+    "exDate": "19-Nov-2026"
+  },
+  {
+    "company": "Oil India Limited",
+    "action": "Interim Dividend - Rs 7 Per Share",
     "type": "dividend",
     "logo": "OIL",
-    "annDate": "07 Nov 2026",
-    "exDate": "20 Nov 2026",
-    "recDate": "20 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b97.00"
+    "exDate": "20-Nov-2026"
   },
   {
-    "company": "Ashok Leyland Ltd.",
-    "action": "Interim Dividend \u2013 \u20b91.00 per share",
+    "company": "Medi Assist Healthcare Services Limited",
+    "action": "Buy Back",
     "type": "dividend",
-    "logo": "ALL",
-    "annDate": "08 Nov 2026",
-    "exDate": "20 Nov 2026",
-    "recDate": "20 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b91.00"
+    "logo": "MED",
+    "exDate": "20-Nov-2026"
   },
   {
-    "company": "BF Investment Ltd.",
-    "action": "Interim Dividend \u2013 \u20b920.00 per share",
+    "company": "Venus Pipes & Tubes Limited",
+    "action": "Interim Dividend - Re 0.50 Per Share",
     "type": "dividend",
-    "logo": "BFI",
-    "annDate": "09 Nov 2026",
-    "exDate": "20 Nov 2026",
-    "recDate": "20 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b920.00"
+    "logo": "VEN",
+    "exDate": "20-Nov-2026"
   },
   {
-    "company": "Marsons Ltd.",
-    "action": "Interim Dividend \u2013 \u20b90.50 per share",
+    "company": "Polyplex Corporation Limited",
+    "action": "Interim Dividend - Rs 12 Per Share",
     "type": "dividend",
-    "logo": "MAR",
-    "annDate": "10 Nov 2026",
-    "exDate": "20 Nov 2026",
-    "recDate": "20 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b90.50"
+    "logo": "POL",
+    "exDate": "20-Nov-2026"
   },
   {
-    "company": "Shipping Corporation of India Ltd.",
-    "action": "Interim Dividend \u2013 \u20b94.00 per share",
+    "company": "Ashok Leyland Limited",
+    "action": "Interim Dividend - Re 1 Per Share",
     "type": "dividend",
-    "logo": "SCI",
-    "annDate": "04 Nov 2026",
-    "exDate": "16 Nov 2026",
-    "recDate": "16 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b94.00"
+    "logo": "ASH",
+    "exDate": "20-Nov-2026"
   },
   {
-    "company": "Cochin Shipyard Ltd.",
-    "action": "Interim Dividend \u2013 \u20b93.00 per share",
+    "company": "Talbros Automotive Components Limited",
+    "action": "Interim Dividend - Re 0.30 Per Share",
     "type": "dividend",
-    "logo": "CSL",
-    "annDate": "06 Nov 2026",
-    "exDate": "16 Nov 2026",
-    "recDate": "16 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b93.00"
+    "logo": "TAL",
+    "exDate": "20-Nov-2026"
   },
   {
-    "company": "ASM Technologies Ltd.",
-    "action": "Interim Dividend \u2013 \u20b96.00 per share",
+    "company": "Jamna Auto Industries Limited",
+    "action": "Interim Dividend - Re 1 Per Share",
     "type": "dividend",
-    "logo": "ASM",
-    "annDate": "05 Nov 2026",
-    "exDate": "16 Nov 2026",
-    "recDate": "16 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b96.00"
-  },
-  {
-    "company": "Indag Rubber Ltd.",
-    "action": "Interim Dividend \u2013 \u20b90.90 per share",
-    "type": "dividend",
-    "logo": "IND",
-    "annDate": "04 Nov 2026",
-    "exDate": "16 Nov 2026",
-    "recDate": "16 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b90.90"
-  },
-  {
-    "company": "Australian Premium Solar (India) Ltd.",
-    "action": "Interim Dividend \u2013 \u20b90.15 per share",
-    "type": "dividend",
-    "logo": "APS",
-    "annDate": "02 Nov 2026",
-    "exDate": "16 Nov 2026",
-    "recDate": "16 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b90.15"
-  },
-  {
-    "company": "The Great Eastern Shipping Company Ltd.",
-    "action": "Second Interim Dividend \u2013 \u20b914.40 per share",
-    "type": "dividend",
-    "logo": "GES",
-    "annDate": "05 Nov 2026",
-    "exDate": "13 Nov 2026",
-    "recDate": "13 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b914.40"
-  },
-  {
-    "company": "Bayer CropScience Ltd.",
-    "action": "Interim Dividend \u2013 \u20b990.00 per share",
-    "type": "dividend",
-    "logo": "BAY",
-    "annDate": "03 Nov 2026",
-    "exDate": "12 Nov 2026",
-    "recDate": "12 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b990.00"
-  },
-  {
-    "company": "National Aluminium Co. Ltd. (NALCO)",
-    "action": "Interim Dividend \u2013 \u20b94.50 per share",
-    "type": "dividend",
-    "logo": "NAL",
-    "annDate": "28 Oct 2026",
-    "exDate": "06 Nov 2026",
-    "recDate": "06 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b94.50"
-  },
-  {
-    "company": "Power Grid Corporation of India Ltd.",
-    "action": "First Interim Dividend \u2013 \u20b93.00 per share",
-    "type": "dividend",
-    "logo": "PGC",
-    "annDate": "29 Oct 2026",
-    "exDate": "06 Nov 2026",
-    "recDate": "06 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b93.00"
-  },
-  {
-    "company": "Info Edge (India) Ltd. (Naukri)",
-    "action": "Interim Dividend \u2013 \u20b93.00 per share",
-    "type": "dividend",
-    "logo": "INF",
-    "annDate": "28 Oct 2026",
-    "exDate": "06 Nov 2026",
-    "recDate": "06 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b93.00"
-  },
-  {
-    "company": "Coal India Ltd.",
-    "action": "First Interim Dividend \u2013 \u20b910.25 per share",
-    "type": "dividend",
-    "logo": "COA",
-    "annDate": "25 Oct 2026",
-    "exDate": "04 Nov 2026",
-    "recDate": "04 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b910.25"
-  },
-  {
-    "company": "Mazagon Dock Shipbuilders Ltd.",
-    "action": "Interim Dividend \u2013 \u20b95.00 per share",
-    "type": "dividend",
-    "logo": "MAZ",
-    "annDate": "22 Oct 2026",
-    "exDate": "03 Nov 2026",
-    "recDate": "03 Nov 2026",
-    "divType": "Interim",
-    "amount": "\u20b95.00"
-  },
-  {
-    "company": "BN Agrochem Ltd.",
-    "action": "Stock Split from \u20b910 to \u20b91 (Ratio 1:10)",
-    "type": "split",
-    "logo": "BNA",
-    "annDate": "02 Nov 2026",
-    "exDate": "16 Nov 2026",
-    "recDate": "16 Nov 2026",
-    "divType": "Stock Split",
-    "amount": "Ratio 1:10"
-  },
-  {
-    "company": "Interarch Building Products Ltd.",
-    "action": "Stock Split from \u20b910 to \u20b92 (Ratio 2:10)",
-    "type": "split",
-    "logo": "IBP",
-    "annDate": "10 Nov 2026",
-    "exDate": "30 Nov 2026",
-    "recDate": "30 Nov 2026",
-    "divType": "Stock Split",
-    "amount": "Ratio 2:10"
-  },
-  {
-    "company": "Deepak Builders & Engineers India Ltd.",
-    "action": "Stock Split from \u20b910 to \u20b91 (Ratio 1:10)",
-    "type": "split",
-    "logo": "DBE",
-    "annDate": "12 Nov 2026",
-    "exDate": "05 Dec 2026",
-    "recDate": "05 Dec 2026",
-    "divType": "Stock Split",
-    "amount": "Ratio 1:10"
-  },
-  {
-    "company": "Ironwood Education Ltd.",
-    "action": "Rights Issue (Ratio 34:100 @ \u20b925 per share)",
-    "type": "rights",
-    "logo": "IEL",
-    "annDate": "04 Nov 2026",
-    "exDate": "18 Nov 2026",
-    "recDate": "18 Nov 2026",
-    "divType": "Rights Issue",
-    "amount": "Ratio 34:100 @ \u20b925"
-  },
-  {
-    "company": "Praxis Home Retail Ltd.",
-    "action": "Rights Issue (Ratio 5:9 @ \u20b912 per share)",
-    "type": "rights",
-    "logo": "PHR",
-    "annDate": "04 Nov 2026",
-    "exDate": "18 Nov 2026",
-    "recDate": "18 Nov 2026",
-    "divType": "Rights Issue",
-    "amount": "Ratio 5:9 @ \u20b912"
-  },
-  {
-    "company": "Indergiri Finance Ltd.",
-    "action": "Rights Issue (Ratio 7:4 @ \u20b915 per share)",
-    "type": "rights",
-    "logo": "IFL",
-    "annDate": "10 Nov 2026",
-    "exDate": "25 Nov 2026",
-    "recDate": "25 Nov 2026",
-    "divType": "Rights Issue",
-    "amount": "Ratio 7:4 @ \u20b915"
-  },
-  {
-    "company": "Reliance Industries Ltd.",
-    "action": "Bonus Issue 1:1 (1 bonus share for every 1 held) \u2013 Approved",
-    "type": "bonus",
-    "logo": "RIL",
-    "annDate": "05 Sep 2026",
-    "exDate": "28 Oct 2026",
-    "recDate": "28 Oct 2026",
-    "divType": "Bonus Issue",
-    "amount": "Ratio 1:1"
-  },
-  {
-    "company": "Oil and Natural Gas Corp (ONGC)",
-    "action": "Bonus Issue 1:2 (1 bonus share for every 2 held) \u2013 Approved",
-    "type": "bonus",
-    "logo": "ONG",
-    "annDate": "25 Oct 2026",
-    "exDate": "12 Nov 2026",
-    "recDate": "12 Nov 2026",
-    "divType": "Bonus Issue",
-    "amount": "Ratio 1:2"
-  },
-  {
-    "company": "KPI Green Energy Ltd.",
-    "action": "Bonus Issue 1:2 (1 bonus share for every 2 held)",
-    "type": "bonus",
-    "logo": "KPI",
-    "annDate": "05 Nov 2026",
-    "exDate": "15 Nov 2026",
-    "recDate": "15 Nov 2026",
-    "divType": "Bonus Issue",
-    "amount": "Ratio 1:2"
-  },
-  {
-    "company": "Lorenzini Apparels Ltd.",
-    "action": "Bonus Issue 6:11 (6 bonus shares for every 11 held)",
-    "type": "bonus",
-    "logo": "LAL",
-    "annDate": "08 Nov 2026",
-    "exDate": "24 Nov 2026",
-    "recDate": "24 Nov 2026",
-    "divType": "Bonus Issue",
-    "amount": "Ratio 6:11"
-  },
-  {
-    "company": "Dr Agarwals Eye Hospital Ltd.",
-    "action": "Scheme of Amalgamation / Merger with Dr. Agarwals Health Care",
-    "type": "merger",
-    "logo": "DAE",
-    "annDate": "02 Nov 2026",
-    "exDate": "18 Nov 2026",
-    "recDate": "18 Nov 2026",
-    "divType": "Amalgamation",
-    "amount": "Merger Details"
+    "logo": "JAM",
+    "exDate": "20-Nov-2026"
   }
 ]
