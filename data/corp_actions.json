@@ -49,6 +49,13 @@
     "exDate": "20-Nov-2026"
   },
   {
+    "company": "Marsons Limited",
+    "action": "Interim Dividend - Re 0.05 Per Share",
+    "type": "dividend",
+    "logo": "MAR",
+    "exDate": "20-Nov-2026"
+  },
+  {
     "company": "Medi Assist Healthcare Services Limited",
     "action": "Buy Back",
     "type": "dividend",
@@ -56,10 +63,24 @@
     "exDate": "20-Nov-2026"
   },
   {
+    "company": "Rama Phosphates Limited",
+    "action": "Interim Dividend - Re 0.50 Per Share",
+    "type": "dividend",
+    "logo": "RAM",
+    "exDate": "20-Nov-2026"
+  },
+  {
     "company": "Venus Pipes & Tubes Limited",
     "action": "Interim Dividend - Re 0.50 Per Share",
     "type": "dividend",
     "logo": "VEN",
+    "exDate": "20-Nov-2026"
+  },
+  {
+    "company": "Steelcast Limited",
+    "action": "Interim Dividend - Re 0.45 Per Share",
+    "type": "dividend",
+    "logo": "STE",
     "exDate": "20-Nov-2026"
   },
   {
@@ -98,6 +119,13 @@
     "exDate": "20-Nov-2026"
   },
   {
+    "company": "GOVERNMENT OF INDIA",
+    "action": "Interest Payment",
+    "type": "dividend",
+    "logo": "GOV",
+    "exDate": "23-Nov-2026"
+  },
+  {
     "company": "Pashupati Cotspin Limited",
     "action": "Interim Dividend - Re 0.02 Per Share",
     "type": "dividend",
@@ -110,12 +138,5 @@
     "type": "dividend",
     "logo": "ZEE",
     "exDate": "25-Nov-2026"
-  },
-  {
-    "company": "VARVEE GLOBAL LIMITED",
-    "action": "Face Value Split (Sub-Division) - From Rs 5/- Per Share To Rs 2/- Per Share",
-    "type": "split",
-    "logo": "VAR",
-    "exDate": "27-Nov-2026"
   }
 ]
