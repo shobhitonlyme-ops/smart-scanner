@@ -1,26 +1,5 @@
 [
   {
-    "company": "Natco Pharma Limited",
-    "action": "Interim Dividend - Rs 1.25 Per Share",
-    "type": "dividend",
-    "logo": "NAT",
-    "exDate": "19-Nov-2026"
-  },
-  {
-    "company": "Vibrant Global Capital Limited",
-    "action": "Interim Dividend - Re 1 Per Share",
-    "type": "dividend",
-    "logo": "VIB",
-    "exDate": "19-Nov-2026"
-  },
-  {
-    "company": "Ingersoll Rand (India) Limited",
-    "action": "Interim Dividend - Rs 20 Per Share",
-    "type": "dividend",
-    "logo": "ING",
-    "exDate": "19-Nov-2026"
-  },
-  {
     "company": "Oil India Limited",
     "action": "Interim Dividend - Rs 7 Per Share",
     "type": "dividend",
@@ -138,5 +117,19 @@
     "type": "dividend",
     "logo": "ZEE",
     "exDate": "25-Nov-2026"
+  },
+  {
+    "company": "Vraj Iron and Steel Limited",
+    "action": "Interim Dividend - Re 0.60 Per Share",
+    "type": "dividend",
+    "logo": "VRA",
+    "exDate": "25-Nov-2026"
+  },
+  {
+    "company": "VARVEE GLOBAL LIMITED",
+    "action": "Face Value Split (Sub-Division) - From Rs 5/- Per Share To Rs 2/- Per Share",
+    "type": "split",
+    "logo": "VAR",
+    "exDate": "27-Nov-2026"
   }
 ]
