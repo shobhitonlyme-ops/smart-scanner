@@ -1,103 +1,5 @@
 [
   {
-    "company": "Oil India Limited",
-    "action": "Interim Dividend - Rs 7 Per Share",
-    "type": "dividend",
-    "logo": "OIL",
-    "exDate": "20-Nov-2026"
-  },
-  {
-    "company": "SML Mahindra Limited",
-    "action": "Rights 2:7 @ Premium Rs 3496/-",
-    "type": "rights",
-    "logo": "SML",
-    "exDate": "20-Nov-2026"
-  },
-  {
-    "company": "Alufluoride Limited",
-    "action": "Interim Dividend - Rs 2.50 Per Share",
-    "type": "dividend",
-    "logo": "ALU",
-    "exDate": "20-Nov-2026"
-  },
-  {
-    "company": "Skyways Air Services Limited",
-    "action": "Interim Dividend - Re 0.40 Per Share",
-    "type": "dividend",
-    "logo": "SKY",
-    "exDate": "20-Nov-2026"
-  },
-  {
-    "company": "Marsons Limited",
-    "action": "Interim Dividend - Re 0.05 Per Share",
-    "type": "dividend",
-    "logo": "MAR",
-    "exDate": "20-Nov-2026"
-  },
-  {
-    "company": "Medi Assist Healthcare Services Limited",
-    "action": "Buy Back",
-    "type": "dividend",
-    "logo": "MED",
-    "exDate": "20-Nov-2026"
-  },
-  {
-    "company": "Rama Phosphates Limited",
-    "action": "Interim Dividend - Re 0.50 Per Share",
-    "type": "dividend",
-    "logo": "RAM",
-    "exDate": "20-Nov-2026"
-  },
-  {
-    "company": "Venus Pipes & Tubes Limited",
-    "action": "Interim Dividend - Re 0.50 Per Share",
-    "type": "dividend",
-    "logo": "VEN",
-    "exDate": "20-Nov-2026"
-  },
-  {
-    "company": "Steelcast Limited",
-    "action": "Interim Dividend - Re 0.45 Per Share",
-    "type": "dividend",
-    "logo": "STE",
-    "exDate": "20-Nov-2026"
-  },
-  {
-    "company": "Polyplex Corporation Limited",
-    "action": "Interim Dividend - Rs 12 Per Share",
-    "type": "dividend",
-    "logo": "POL",
-    "exDate": "20-Nov-2026"
-  },
-  {
-    "company": "Ashok Leyland Limited",
-    "action": "Interim Dividend - Re 1 Per Share",
-    "type": "dividend",
-    "logo": "ASH",
-    "exDate": "20-Nov-2026"
-  },
-  {
-    "company": "Talbros Automotive Components Limited",
-    "action": "Interim Dividend - Re 0.30 Per Share",
-    "type": "dividend",
-    "logo": "TAL",
-    "exDate": "20-Nov-2026"
-  },
-  {
-    "company": "Jamna Auto Industries Limited",
-    "action": "Interim Dividend - Re 1 Per Share",
-    "type": "dividend",
-    "logo": "JAM",
-    "exDate": "20-Nov-2026"
-  },
-  {
-    "company": "BF Investment Limited",
-    "action": "Interim Dividend - Rs 20 Per Share",
-    "type": "dividend",
-    "logo": "BF ",
-    "exDate": "20-Nov-2026"
-  },
-  {
     "company": "GOVERNMENT OF INDIA",
     "action": "Interest Payment",
     "type": "dividend",
@@ -126,10 +28,24 @@
     "exDate": "25-Nov-2026"
   },
   {
+    "company": "Fusion CX Limited",
+    "action": "Dividend - Re 0.75 Per Share",
+    "type": "dividend",
+    "logo": "FUS",
+    "exDate": "27-Nov-2026"
+  },
+  {
     "company": "VARVEE GLOBAL LIMITED",
     "action": "Face Value Split (Sub-Division) - From Rs 5/- Per Share To Rs 2/- Per Share",
     "type": "split",
     "logo": "VAR",
     "exDate": "27-Nov-2026"
+  },
+  {
+    "company": "Interarch Building Solutions Limited",
+    "action": "Face Value Split (Sub-Division) - From Rs 10/- Per Share To Rs 2/- Per Share",
+    "type": "split",
+    "logo": "INT",
+    "exDate": "30-Nov-2026"
   }
 ]
