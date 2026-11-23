@@ -1,19 +1,5 @@
 [
   {
-    "company": "GOVERNMENT OF INDIA",
-    "action": "Interest Payment",
-    "type": "dividend",
-    "logo": "GOV",
-    "exDate": "23-Nov-2026"
-  },
-  {
-    "company": "Pashupati Cotspin Limited",
-    "action": "Interim Dividend - Re 0.02 Per Share",
-    "type": "dividend",
-    "logo": "PAS",
-    "exDate": "23-Nov-2026"
-  },
-  {
     "company": "Zee Entertainment Enterprises Limited",
     "action": "Buy Back",
     "type": "dividend",
@@ -28,10 +14,17 @@
     "exDate": "25-Nov-2026"
   },
   {
-    "company": "Fusion CX Limited",
-    "action": "Dividend - Re 0.75 Per Share",
+    "company": "Bonlon Industries Limited",
+    "action": "Rights 1:1 @ Premium Rs 20/-",
+    "type": "rights",
+    "logo": "BON",
+    "exDate": "25-Nov-2026"
+  },
+  {
+    "company": "GOVERNMENT OF INDIA",
+    "action": "Interest Payment",
     "type": "dividend",
-    "logo": "FUS",
+    "logo": "GOV",
     "exDate": "27-Nov-2026"
   },
   {
@@ -42,10 +35,24 @@
     "exDate": "27-Nov-2026"
   },
   {
+    "company": "Fusion CX Limited",
+    "action": "Dividend - Re 0.75 Per Share",
+    "type": "dividend",
+    "logo": "FUS",
+    "exDate": "27-Nov-2026"
+  },
+  {
     "company": "Interarch Building Solutions Limited",
     "action": "Face Value Split (Sub-Division) - From Rs 10/- Per Share To Rs 2/- Per Share",
     "type": "split",
     "logo": "INT",
     "exDate": "30-Nov-2026"
+  },
+  {
+    "company": "S. P. Apparels Limited",
+    "action": "Face Value Split (Sub-Division) - From Rs 10/- Per Share To Rs 2/- Per Share",
+    "type": "split",
+    "logo": "S. ",
+    "exDate": "10-Dec-2026"
   }
 ]
