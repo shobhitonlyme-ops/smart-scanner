@@ -317,6 +317,19 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
   .bt-comp-table tr:hover { background:rgba(255,255,255,0.02); }
   #paper-mod, #health-mod { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; display:none; align-items:center; justify-content:center; padding:16px; }
   .mod-card { background:#0f172a; border:1px solid #334155; border-radius:14px; max-width:960px; width:100%; max-height:90vh; overflow-y:auto; padding:24px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.7); color:#f8fafc; }
+
+  /* ══ ADVANCED STOCK PREDICTION & TOP 10 STYLES ══ */
+  .top10-subnav-bar { display:flex; flex-wrap:wrap; gap:8px; margin:12px 18px 16px 18px; padding:8px 12px; background:rgba(15,23,42,0.65); border:1px solid #334155; border-radius:10px; align-items:center; }
+  .top10-pill { padding:6px 14px; border-radius:999px; font-size:12px; font-weight:700; cursor:pointer; border:1px solid var(--bd); background:var(--card); color:var(--mu); transition:all .2s ease; display:inline-flex; align-items:center; gap:6px; }
+  .top10-pill:hover { border-color:#38bdf8; color:#fff; }
+  .top10-pill.on { background:#0369a1; border-color:#38bdf8; color:#fff; box-shadow:0 0 12px rgba(56,189,248,0.35); }
+  .pred-badge { display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:800; padding:2px 7px; border-radius:5px; text-transform:uppercase; }
+  .pred-bull { background:rgba(16,185,129,0.18); color:#34d399; border:1px solid #10b981; }
+  .pred-bear { background:rgba(239,68,68,0.18); color:#f87171; border:1px solid #ef4444; }
+  .pred-swing { background:rgba(59,130,246,0.18); color:#60a5fa; border:1px solid #3b82f6; }
+  .pred-gap { background:rgba(168,85,247,0.18); color:#c084fc; border:1px solid #a855f7; }
+  #pred-mod { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; display:none; align-items:center; justify-content:center; padding:16px; }
+
 </style><script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 </head><body>
 <header><h1>📊 Smart Scanner v9.0 <span class="tg" style="background:#2563eb;color:#ffffff;font-weight:700;font-size:11px">v9.0 PRO QUANT &amp; RESEARCH</span> <span class="mu">— Professional Swing Trading Platform · Quantitative Engine · Realistic Backtest</span></h1><div style="display:flex;align-items:center;gap:12px"><span id="market-regime"></span><span class="mu" id="info">No data loaded</span></div></header>
@@ -328,7 +341,10 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
 <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;align-items:center">
   <label class="mu" style="font-size:11.5px">Strategy: 
     <select id="bt_strat" style="width:100%;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font-size:12px;margin-top:3px">
-      <option value="quant_swing" selected>🏛️ Quant Swing Engine (v9.0 Multi-Factor)</option>
+      <option value="top10_bull" selected>🏆 Top 10 High-Probability Prediction Engine</option>
+      <option value="gap_up">⚡ Next-Day Gap-Up Strategy</option>
+      <option value="gap_down">🌧️ Next-Day Gap-Down Strategy</option>
+      <option value="quant_swing">🏛️ Quant Swing Engine (v9.0 Multi-Factor)</option>
       <option value="pre_bo_swing">🎯 Pre-Breakout Swing Engine (3–10 Day Evaluation)</option>
       <option value="bo20">🚀 20-Day Breakout + Volume (≥1.5×)</option>
       <option value="bo50">🏆 50-Day Breakout Strategy</option>
@@ -1385,6 +1401,288 @@ let U=[];
 
 
 /* ══ SMARTSCANNER v9.0 QUANTITATIVE SWING DETECTION ENGINE ══ */
+
+/* ══ MASTER AUDIT & ADVANCED PREDICTION ENGINE (100-POINT MULTI-FACTOR MODEL) ══ */
+function evalAdvancedPredictionEngine(s, candles, nifty60D = 0, nifty120D = 0, marketRegime = 'NEUTRAL'){
+  s.pred = null;
+  s.gapPred = null;
+  if(!candles || candles.length < 15) return;
+
+  const n = candles.length;
+  const curBar = candles[n - 1];
+  const prevBar = candles[n - 2];
+  const curClose = curBar[2];
+  const curHigh = curBar[0];
+  const curLow = curBar[1];
+  const curOpen = (curBar.length > 4 && curBar[4] != null) ? curBar[4] : curBar[2];
+  const curVol = curBar[3] || s.v || 0;
+
+  // 1. Calculations: EMAs, ATR, RSI, Vol
+  const closes = candles.map(c => c[2]);
+  const ema20 = calcEMA(closes, 20) || curClose;
+  const ema50 = calcEMA(closes, 50) || curClose;
+  const ema200 = calcEMA(closes, 200) || curClose;
+  const rsi = calcRSI(closes, 14) || 50;
+  const atrs = calcATRSeries(candles, 14);
+  const atr = atrs.length ? atrs[atrs.length - 1] : Math.max(1, curHigh - curLow);
+  const atrPct = (atr / curClose) * 100;
+
+  // Range Position (0 to 100%)
+  const barRange = Math.max(0.01, curHigh - curLow);
+  const cPos = ((curClose - curLow) / barRange) * 100;
+  const upperWickPct = ((curHigh - curClose) / barRange) * 100;
+  const lowerWickPct = ((curClose - curLow) / barRange) * 100;
+
+  // Relative Strength Alpha vs Nifty
+  const lookback60 = Math.min(n - 1, 60);
+  const stock60D = ((curClose - candles[n - 1 - lookback60][2]) / candles[n - 1 - lookback60][2]) * 100;
+  const rsAlpha60 = stock60D - nifty60D;
+
+  const rv = s.rv || 1.0;
+  const delivPer = s.deliv_per || 0;
+  const turn20 = s.turnover20D || s.cr || 0;
+
+  // ── 100-POINT PREDICTION SCORING BREAKDOWN ──
+  // 1. Trend Strength (15 pts)
+  let trendScore = 0;
+  let isBullTrend = false;
+  let isBearTrend = false;
+  if(curClose > ema20 && ema20 > ema50 && ema50 > ema200){
+    trendScore = 15; isBullTrend = true;
+  } else if(curClose > ema20 && ema20 > ema50){
+    trendScore = 11; isBullTrend = true;
+  } else if(curClose > ema20){
+    trendScore = 6;
+  } else if(curClose < ema20 && ema20 < ema50 && ema50 < ema200){
+    trendScore = 15; isBearTrend = true;
+  } else if(curClose < ema20 && ema20 < ema50){
+    trendScore = 11; isBearTrend = true;
+  } else if(curClose < ema20){
+    trendScore = 6;
+  }
+
+  // 2. Volume Confirmation (15 pts)
+  let volScore = 0;
+  if(rv >= 2.2) volScore = 15;
+  else if(rv >= 1.6) volScore = 11;
+  else if(rv >= 1.2) volScore = 7;
+  else if(rv >= 0.9) volScore = 4;
+
+  // 3. Relative Strength vs Nifty (15 pts)
+  let rsScore = 0;
+  if(rsAlpha60 >= 15) rsScore = 15;
+  else if(rsAlpha60 >= 8) rsScore = 11;
+  else if(rsAlpha60 > 0) rsScore = 7;
+  else if(rsAlpha60 >= -5) rsScore = 3;
+
+  // 4. Price Action Quality (15 pts)
+  let paScore = 0;
+  if(cPos >= 80 && upperWickPct <= 18) paScore += 10;
+  else if(cPos >= 65) paScore += 6;
+  else if(cPos <= 20 && lowerWickPct <= 18) paScore += 10; // Bearish closing weakness
+  else if(cPos <= 35) paScore += 6;
+
+  // Consolidation / Squeeze bonus
+  const high20 = Math.max(...candles.slice(-20).map(c => c[0]));
+  const low20 = Math.min(...candles.slice(-20).map(c => c[1]));
+  const baseWidthPct = ((high20 - low20) / low20) * 100;
+  if(baseWidthPct <= 14) paScore += 5;
+  else if(baseWidthPct <= 20) paScore += 3;
+
+  // 5. Momentum (RSI) (10 pts)
+  let momScore = 0;
+  if(rsi >= 55 && rsi <= 72) momScore = 10; // Bullish sweetspot
+  else if(rsi >= 50 && rsi < 55) momScore = 6;
+  else if(rsi <= 45 && rsi >= 28) momScore = 10; // Bearish momentum
+  else if(rsi > 45 && rsi <= 50) momScore = 6;
+  else if(rsi > 78 || rsi < 22) momScore = 0; // Overextended penalty
+
+  // 6. Breakout / Breakdown Structure (10 pts)
+  let structScore = 0;
+  const distToHigh20 = ((high20 - curClose) / curClose) * 100;
+  const distToLow20 = ((curClose - low20) / curClose) * 100;
+  if(distToHigh20 >= 0 && distToHigh20 <= 2.5 && curClose > curOpen) structScore = 10;
+  else if(distToLow20 >= 0 && distToLow20 <= 2.5 && curClose < curOpen) structScore = 10;
+  else if(s.nr4 || s.nr7) structScore = 8;
+  else if(distToHigh20 <= 4.0 || distToLow20 <= 4.0) structScore = 6;
+
+  // 7. F&O Smart Money Confirmation (10 pts)
+  let foScore = 0;
+  let foStatus = 'Non-F&O Equity';
+  if(s.fo != null && s.fo !== 0){
+    if(s.chg > 0 && s.fo > 0){ foScore = 10; foStatus = 'Long Buildup'; }
+    else if(s.chg < 0 && s.fo > 0){ foScore = 10; foStatus = 'Short Buildup'; }
+    else if(s.chg > 0 && s.fo < 0){ foScore = 7; foStatus = 'Short Covering'; }
+    else if(s.chg < 0 && s.fo < 0){ foScore = 7; foStatus = 'Long Unwinding'; }
+  } else {
+    // Normalization for non-F&O: weight shared proportionately from delivery & turnover
+    foScore = (delivPer >= 50 ? 5 : 2) + (turn20 >= 10 ? 4 : 2);
+    foStatus = delivPer >= 50 ? 'Cash Delivery Backing' : 'Cash Segment';
+  }
+
+  // 8. Sector / Benchmark Strength (5 pts)
+  let secScore = (nifty60D > 0 && rsAlpha60 > 0) ? 5 : 3;
+
+  // 9. Delivery / Institutional Evidence (5 pts)
+  let delivScore = 0;
+  if(delivPer >= 55) delivScore = 5;
+  else if(delivPer >= 40) delivScore = 3;
+  else if(s.dl >= 1.0) delivScore = 4; // Bulk deal backing
+
+  let totalPredScore = trendScore + volScore + rsScore + paScore + momScore + structScore + foScore + secScore + delivScore;
+
+  // Market Regime Adjustment (Module 9)
+  if(marketRegime.includes('BEAR') && isBullTrend){
+    totalPredScore = Math.max(0, totalPredScore - 12);
+  } else if(marketRegime.includes('BULL') && isBearTrend){
+    totalPredScore = Math.max(0, totalPredScore - 12);
+  }
+
+  // ── MODULE 2: NEXT DAY GAP PREDICTOR ──
+  let gapUpProb = 25; // baseline
+  let gapDownProb = 25;
+  const gapReasons = [];
+  const gapDownReasons = [];
+
+  // Gap-Up factors
+  if(cPos >= 82){ gapUpProb += 25; gapReasons.push(`Strong High-Close (${cPos.toFixed(0)}% Range)`); }
+  if(upperWickPct <= 16){ gapUpProb += 20; gapReasons.push('Tiny Upper Wick (Relentless Close)'); }
+  if(rv >= 1.8 && s.chg > 0){ gapUpProb += 20; gapReasons.push(`Volume Blast (${rv.toFixed(1)}×)`); }
+  if(delivPer >= 52){ gapUpProb += 15; gapReasons.push(`Delivery Accumulation (${delivPer.toFixed(0)}%)`); }
+  if(foStatus === 'Long Buildup' || foStatus === 'Short Covering'){ gapUpProb += 15; gapReasons.push(`F&O ${foStatus}`); }
+  if(distToHigh20 <= 1.5 && s.chg > 0){ gapUpProb += 10; gapReasons.push('Right at Resistance Ceiling'); }
+
+  // Gap-Down factors
+  if(cPos <= 20){ gapDownProb += 25; gapDownReasons.push(`Weak Low-Close (${cPos.toFixed(0)}% Range)`); }
+  if(lowerWickPct <= 16){ gapDownProb += 20; gapDownReasons.push('Tiny Lower Wick (Sellers in Full Control)'); }
+  if(rv >= 1.8 && s.chg < 0){ gapDownProb += 20; gapDownReasons.push(`Selloff Volume Surge (${rv.toFixed(1)}×)`); }
+  if(foStatus === 'Short Buildup' || foStatus === 'Long Unwinding'){ gapDownProb += 15; gapDownReasons.push(`F&O ${foStatus}`); }
+  if(distToLow20 <= 1.5 && s.chg < 0){ gapDownProb += 10; gapDownReasons.push('Teetering on Support Breakdown'); }
+
+  gapUpProb = Math.min(94, Math.max(10, gapUpProb));
+  gapDownProb = Math.min(94, Math.max(10, gapDownProb));
+
+  const gapDirection = gapUpProb >= 65 ? 'GAP-UP' : (gapDownProb >= 65 ? 'GAP-DOWN' : 'NEUTRAL');
+  const gapConfidence = (gapUpProb >= 80 || gapDownProb >= 80) ? 'HIGH' : ((gapUpProb >= 65 || gapDownProb >= 65) ? 'MEDIUM' : 'LOW');
+  const gapInval = gapDirection === 'GAP-UP' ? `Open < Day Low ₹${curLow.toFixed(1)}` : (gapDirection === 'GAP-DOWN' ? `Open > Day High ₹${curHigh.toFixed(1)}` : `Break of ₹${curLow.toFixed(1)}`);
+
+  s.gapPred = {
+    prob: gapUpProb,
+    probDown: gapDownProb,
+    direction: gapDirection,
+    confidence: gapConfidence,
+    reasons: gapDirection === 'GAP-DOWN' ? gapDownReasons : gapReasons,
+    invalidation: gapInval
+  };
+
+  // ── TRADE PLAN GENERATION (3-10 DAY SWING) ──
+  const isBull = totalPredScore >= 60 ? (isBullTrend || s.chg >= 0) : false;
+  const isBear = totalPredScore >= 60 ? (isBearTrend || s.chg < 0) : false;
+  const bias = isBull ? 'BULLISH' : (isBear ? 'BEARISH' : 'NEUTRAL');
+
+  let entryZone = '';
+  let sl = 0;
+  let t1 = 0;
+  let t2 = 0;
+  let riskPct = 0;
+  let rr = '1 : 2.2';
+
+  if(bias === 'BULLISH'){
+    const entryMin = (curClose * 1.002).toFixed(1);
+    const entryMax = (curClose * 1.008).toFixed(1);
+    entryZone = `₹${entryMin} – ₹${entryMax}`;
+    const rawSl = Math.max(curLow, curClose - (1.8 * atr));
+    sl = Math.max(curClose * 0.92, rawSl); // Max 8% risk
+    const risk = curClose - sl;
+    t1 = Number((curClose + (1.5 * risk)).toFixed(1));
+    t2 = Number((curClose + (3.0 * risk)).toFixed(1));
+    riskPct = Number(((risk / curClose) * 100).toFixed(1));
+    rr = `1 : ${(3.0 / 1.5 * 1.1).toFixed(1)}`;
+  } else if(bias === 'BEARISH'){
+    const entryMin = (curClose * 0.998).toFixed(1);
+    const entryMax = (curClose * 0.992).toFixed(1);
+    entryZone = `₹${entryMin} – ₹${entryMax}`;
+    const rawSl = Math.min(curHigh, curClose + (1.8 * atr));
+    sl = Math.min(curClose * 1.08, rawSl);
+    const risk = sl - curClose;
+    t1 = Number((curClose - (1.5 * risk)).toFixed(1));
+    t2 = Number((curClose - (3.0 * risk)).toFixed(1));
+    riskPct = Number(((risk / curClose) * 100).toFixed(1));
+    rr = `1 : ${(3.0 / 1.5 * 1.1).toFixed(1)}`;
+  } else {
+    entryZone = `₹${curClose.toFixed(1)}`;
+    sl = Number((curClose * 0.96).toFixed(1));
+    t1 = Number((curClose * 1.05).toFixed(1));
+    t2 = Number((curClose * 1.09).toFixed(1));
+    riskPct = 4.0;
+  }
+
+  // Setup classification
+  let setupType = 'Swing Consolidation';
+  if(gapDirection === 'GAP-UP' && gapConfidence === 'HIGH') setupType = '⚡ BTST Gap-Up Rocket';
+  else if(gapDirection === 'GAP-DOWN' && gapConfidence === 'HIGH') setupType = '🌧️ Gap-Down Vulnerability';
+  else if(distToHigh20 <= 2.0 && baseWidthPct <= 16) setupType = '🎯 Pre-Breakout Compression';
+  else if(distToLow20 <= 2.0 && baseWidthPct <= 16) setupType = '⚠️ Breakdown Imminent';
+  else if(s.nr4 || s.nr7) setupType = '📏 NR Volatility Squeeze';
+  else if(rv >= 2.0) setupType = '🚀 Institutional Volume Explosion';
+  else if(s.h52new) setupType = '⭐ 52-Week High Breakout';
+
+  // Primary Reason for Selection
+  const primaryReasons = [];
+  if(isBullTrend) primaryReasons.push('Stage 2 Uptrend (Close > EMA20 > EMA50)');
+  if(isBearTrend) primaryReasons.push('Downtrend Alignment (Close < EMA20 < EMA50)');
+  if(rv >= 1.5) primaryReasons.push(`${rv.toFixed(1)}× Volume Surge`);
+  if(rsAlpha60 >= 8) primaryReasons.push(`+${rsAlpha60.toFixed(1)}% Alpha vs Nifty`);
+  if(cPos >= 80) primaryReasons.push(`Bullish Top Close (${cPos.toFixed(0)}%)`);
+  if(delivPer >= 50) primaryReasons.push(`${delivPer.toFixed(0)}% Delivery Backing`);
+  if(foStatus.includes('Buildup')) primaryReasons.push(foStatus);
+
+  const isQualified = (totalPredScore >= 65) && (curClose >= 30) && (turn20 >= 3.0);
+
+  s.pred = {
+    score: totalPredScore,
+    grade: totalPredScore >= 85 ? 'STRONG SETUP' : (totalPredScore >= 75 ? 'HIGH QUALITY' : (totalPredScore >= 65 ? 'WATCHLIST' : 'AVOID')),
+    bias: bias,
+    setupType: setupType,
+    isQualified: isQualified,
+    breakdown: {
+      trend: trendScore,
+      volume: volScore,
+      rs: rsScore,
+      priceAction: paScore,
+      momentum: momScore,
+      structure: structScore,
+      fo: foScore,
+      sector: secScore,
+      delivery: delivScore
+    },
+    tradePlan: {
+      entryZone: entryZone,
+      sl: sl,
+      t1: t1,
+      t2: t2,
+      riskPct: riskPct,
+      rr: rr,
+      holding: '3–10 Trading Sessions'
+    },
+    foStatus: foStatus,
+    reasons: primaryReasons,
+    passedConditions: [
+      `Liquidity: ₹${turn20.toFixed(1)} Cr 20D Turnover (>= ₹3 Cr)`,
+      `Minimum Price: ₹${curClose.toFixed(1)} (>= ₹30)`,
+      bias === 'BULLISH' ? 'Positive Price Action & EMA Structure' : 'Bearish Breakdown Confirmation',
+      `Relative Strength: ${rsAlpha60 >= 0 ? '+' : ''}${rsAlpha60.toFixed(1)}% vs Nifty`,
+      `Volatility: ATR ₹${atr.toFixed(1)} (${atrPct.toFixed(1)}%)`
+    ],
+    failedConditions: [
+      totalPredScore < 85 ? `Setup Quality Score ${totalPredScore}/100 (< 85)` : null,
+      rv < 1.5 ? `Volume ${rv.toFixed(1)}× below 1.5× ideal expansion threshold` : null,
+      delivPer > 0 && delivPer < 40 ? `Delivery % ${delivPer.toFixed(0)}% below 40% institutional baseline` : null,
+      rsi > 75 ? `RSI ${rsi.toFixed(1)} shows short-term extension` : null
+    ].filter(Boolean)
+  };
+}
+
 function evalQuantSwingEngine(s, candles, nifty60D = 0, nifty120D = 0){
   s.qs = null;
   if(!candles || candles.length < 20) return;
@@ -2660,6 +2958,8 @@ PROFIT_JUMP_DATA.forEach(p => {
 })();
 
 const TABS = [
+  { id: 'top10_master', n: '🏆 Top 10 High Probability', d: 'Master Multi-Factor Dashboard: Top 10 Bullish, Bearish, Swing & Gap Setups scored on a 100-pt quantitative model. Strict quality threshold (Score ≥ 65). Displays NO TRADE when setups fail standards.', ok: s => s.pred && s.pred.isQualified, so: 'pred_score' },
+  { id: 'gap_predictor', n: '⚡ Next-Day Gap Predictor', d: 'Next-Day Gap Prediction Engine: Quantitative Gap-Up and Gap-Down probability based on close position, volume surge, ATR volatility expansion, F&O buildup, and institutional delivery backing.', ok: s => s.gapPred && (s.gapPred.prob >= 60 || s.gapPred.probDown >= 60), so: 'gap_prob' },
   { id: 'quant_swing', n: '🏛️ Professional Quantitative', d: 'SmartScanner v9.0 Quant Swing Engine: High-probability 3–10 day swing setups combining Stage 2 Trend (Close > EMA50 > EMA200 + Positive Slope), contracting ATR volatility, tight base, Relative Strength alpha vs Nifty, turnover ≥ ₹10 Cr, and extension protection.', ok: s => s.qs && s.qs.isQualified, so: 'qs_score' },
   { id: 'pre_bo', n: '🎯 Pre-Breakout Top 20', d: 'List A: Stocks forming tight consolidation bases (20-40 sessions) before a confirmed breakout with contracting ATR & rising relative strength.', ok: s => s.pb ? (!s.pb.isExcluded && s.pb.distToR > 1.0 && s.pb.distToR <= 5.0 && !s.pb.isConfirmedBO) : (s.ar && !s.ar.isConfirmedBreakout), so: 'pb_score' },
   { id: 'approaching', n: '⚡ Breakout Approaching', d: 'List B: Stocks right at overhead resistance ceiling (≤1.5% away) with volume accumulation & compressed wicks ready for trigger.', ok: s => s.pb ? (!s.pb.isExcluded && s.pb.distToR >= 0.0 && s.pb.distToR <= 1.5 && !s.pb.isConfirmedBO) : (s.ar && s.ar.distToR <= 1.5), so: 'pb_proximity' },
@@ -2755,6 +3055,36 @@ function rows(tab){
     }
     return true;
   });
+
+    if(tab.id === 'top10_master'){
+    window.top10View = window.top10View || 'bull';
+    let pool = d.filter(s => s.pred && s.pred.isQualified);
+    if(window.top10View === 'bull') pool = pool.filter(s => s.pred.bias === 'BULLISH');
+    else if(window.top10View === 'bear') pool = pool.filter(s => s.pred.bias === 'BEARISH');
+    else if(window.top10View === 'swing') pool = pool.filter(s => s.pred.score >= 65);
+    else if(window.top10View === 'gap') pool = pool.filter(s => s.gapPred && (s.gapPred.prob >= 60 || s.gapPred.probDown >= 60));
+
+    pool.sort((a,b) => {
+      if(window.top10View === 'gap'){
+        const pA = Math.max(a.gapPred ? a.gapPred.prob : 0, a.gapPred ? a.gapPred.probDown : 0);
+        const pB = Math.max(b.gapPred ? b.gapPred.prob : 0, b.gapPred ? b.gapPred.probDown : 0);
+        return pB - pA;
+      }
+      return (b.pred ? b.pred.score : 0) - (a.pred ? a.pred.score : 0);
+    });
+    return pool.slice(0, 10);
+  }
+
+  if(tab.id === 'gap_predictor'){
+    window.gapPredView = window.gapPredView || 'up';
+    let pool = d.filter(s => s.gapPred);
+    if(window.gapPredView === 'up'){
+      pool = pool.filter(s => s.gapPred.direction === 'GAP-UP' || s.gapPred.prob >= 60).sort((a,b) => (b.gapPred.prob - a.gapPred.prob));
+    } else {
+      pool = pool.filter(s => s.gapPred.direction === 'GAP-DOWN' || s.gapPred.probDown >= 60).sort((a,b) => (b.gapPred.probDown - a.gapPred.probDown));
+    }
+    return pool.slice(0, 20);
+  }
 
   if(tab.id === 'quant_swing'){
     d = d.filter(s => s.qs && s.qs.isQualified);
@@ -2986,6 +3316,8 @@ function render(){
   if(tab.id==='deliv')return delivRows(d);
   if(tab.id==='news')return newsRows(d);
   if(tab.id==='deals')return dealsRows(d);
+  if(tab.id==='top10_master')return top10Rows(d);
+  if(tab.id==='gap_predictor')return gapPredictorRows(d);
   if(tab.id==='quant_swing')return quantSwingRows(d);
   if(tab.id==='pre_bo' || tab.id==='approaching' || tab.id==='fresh_bo')return preBreakoutEngineRows(d, tab.id);
   if(tab.id==='retest')return retestRows(d);
@@ -3301,6 +3633,223 @@ function renderSqueezePills(c){
   const rs = c.c5_relStrength ? '<span class="sq-pill sq-pass" title="C5: Relative Strength vs NIFTY">RS</span>' : '<span class="sq-pill sq-fail" title="C5: Lagging NIFTY">RS</span>';
   const tc = c.c6_tightCandles ? '<span class="sq-pill sq-pass" title="C6: Tight Candles (5D < 0.7*30D)">TGT</span>' : '<span class="sq-pill sq-fail" title="C6: Wide Candles">TGT</span>';
   return sq + vd + hl + px + rs + tc;
+}
+
+
+/* ══ MODULE 6: TOP 10 HIGH PROBABILITY DASHBOARD ══ */
+window.top10View = 'bull';
+window.setTop10View = function(v){
+  window.top10View = v;
+  render();
+};
+
+function top10Rows(d){
+  const curView = window.top10View || 'bull';
+  const subnav = `
+    <div class="top10-subnav-bar">
+      <span class="mu" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Top 10 Category:</span>
+      <button class="top10-pill ${curView==='bull'?'on':''}" onclick="setTop10View('bull')">🟢 Top 10 Bullish Setups</button>
+      <button class="top10-pill ${curView==='bear'?'on':''}" onclick="setTop10View('bear')">🔴 Top 10 Bearish Setups</button>
+      <button class="top10-pill ${curView==='swing'?'on':''}" onclick="setTop10View('swing')">⚡ Top 10 Swing Setups</button>
+      <button class="top10-pill ${curView==='gap'?'on':''}" onclick="setTop10View('gap')">🌅 Top 10 Gap Watchlist</button>
+      <span style="margin-left:auto;font-size:11.5px;color:var(--mu)">Strict Hurdle: Score ≥ 65 · Qualified: <b style="color:#38bdf8">${d.length}</b></span>
+    </div>
+  `;
+
+  const th = `
+    <th># Rank</th>
+    <th>Stock Name</th>
+    <th>Symbol</th>
+    <th>Close</th>
+    <th>Setup Type</th>
+    <th>Bias</th>
+    <th>Prob Score</th>
+    <th>Volume Strength</th>
+    <th>RS Alpha</th>
+    <th>Trend</th>
+    <th>F&amp;O Money</th>
+    <th>Entry Zone</th>
+    <th>Stop Loss</th>
+    <th>Target 1</th>
+    <th>Target 2</th>
+    <th>R : R</th>
+    <th>Reason for Selection</th>
+    <th>Actions</th>
+  `;
+
+  if(!d.length){
+    const emptyRow = `
+      <tr>
+        <td colspan="18" style="text-align:center;padding:48px 24px;">
+          <div style="font-size:36px;margin-bottom:12px;">🛡️</div>
+          <div style="font-size:16px;font-weight:800;color:#f8fafc;margin-bottom:6px;">NO HIGH-CONVICTION TRADE IN THIS CATEGORY</div>
+          <div style="font-size:13px;color:var(--mu);max-width:540px;margin:0 auto 16px auto;">
+            Currently, no stock satisfies the strict 65-Point Multi-Factor Quality &amp; Risk hurdle for this category.
+            <b>Cash is a valid risk-managed position</b> — do not force trades in suboptimal market setups.
+          </div>
+          <span class="badge" style="background:#1e293b;color:#94a3b8;border:1px solid #475569;padding:4px 12px;font-weight:700">Strict Capital Protection Active</span>
+        </td>
+      </tr>
+    `;
+    return { subnav, th, tbody: emptyRow };
+  }
+
+  const rows = d.map((s, idx) => {
+    const p = s.pred || {};
+    const tp = p.tradePlan || {};
+    const gp = s.gapPred || {};
+    const score = p.score || 0;
+    const scoreColor = score >= 85 ? '#34d399' : (score >= 75 ? '#38bdf8' : '#facc15');
+    const biasBadge = p.bias === 'BULLISH'
+      ? `<span class="pred-badge pred-bull">🟢 BULLISH</span>`
+      : (p.bias === 'BEARISH' ? `<span class="pred-badge pred-bear">🔴 BEARISH</span>` : `<span class="pred-badge">⚪ NEUTRAL</span>`);
+
+    const foBadge = (p.foStatus && p.foStatus.includes('Long'))
+      ? `<span style="color:#34d399;font-weight:700">${p.foStatus}</span>`
+      : ((p.foStatus && p.foStatus.includes('Short')) ? `<span style="color:#f87171;font-weight:700">${p.foStatus}</span>` : `<span class="mu">${p.foStatus||'Cash'}</span>`);
+
+    const rsAlpha = (s.rsAlpha60 != null) ? s.rsAlpha60 : (s.qs ? s.qs.rsAlpha60 : 0);
+    const rsDisp = `<span style="color:${rsAlpha>=0?'var(--g)':'var(--r)'};font-weight:700">${rsAlpha>=0?'+':''}${rsAlpha.toFixed(1)}%</span>`;
+
+    const reasonsList = (p.reasons || []).slice(0, 2).join(' · ');
+
+    return `
+      <tr class="stock-row" onclick="openPredictionAudit('${e(s.sym)}')">
+        <td style="font-weight:800;color:#94a3b8">#${idx + 1}</td>
+        <td>
+          <div style="font-weight:700;color:#fff">${e(s.name || s.sym)}</div>
+          <div class="mu" style="font-size:10.5px">${e(s.sec || 'NSE Equities')}</div>
+        </td>
+        <td><b style="color:#38bdf8">${e(s.sym)}</b> <span class="badge" style="font-size:9.5px;padding:1px 4px">${s.ex}</span></td>
+        <td class="num">
+          <b>₹${s.c.toFixed(2)}</b>
+          <div style="font-size:10.5px;color:${s.chg>=0?'var(--g)':'var(--r)'}">${s.chg>=0?'+':''}${s.chg.toFixed(2)}%</div>
+        </td>
+        <td><span class="badge" style="background:#1e293b;color:#cbd5e1;font-weight:600">${p.setupType || 'Swing'}</span></td>
+        <td>${biasBadge}</td>
+        <td>
+          <div style="font-size:14px;font-weight:800;color:${scoreColor}">${score} <span style="font-size:10px;color:var(--mu)">/100</span></div>
+          <div style="font-size:9.5px;color:${scoreColor};font-weight:700">${p.grade || 'QUALIFIED'}</div>
+        </td>
+        <td class="num">
+          <b style="color:${s.rv>=1.5?'var(--g)':'var(--mu)'}">${s.rv.toFixed(1)}×</b>
+          <div class="mu" style="font-size:10px">${s.deliv_per ? s.deliv_per.toFixed(0) + '% Del' : 'Turn ₹' + (s.cr||0).toFixed(1) + 'Cr'}</div>
+        </td>
+        <td class="num">${rsDisp}</td>
+        <td><span style="font-size:11px;font-weight:600;color:${p.bias==='BULLISH'?'#34d399':'#f87171'}">${p.bias==='BULLISH'?'Stage 2 Uptrend':'Downtrend Pressure'}</span></td>
+        <td>${foBadge}</td>
+        <td style="font-weight:700;color:#38bdf8">${tp.entryZone || '—'}</td>
+        <td class="num" style="color:#f87171;font-weight:700">₹${tp.sl ? tp.sl.toFixed(1) : '—'}<div class="mu" style="font-size:9.5px">${tp.riskPct ? tp.riskPct + '% risk' : ''}</div></td>
+        <td class="num" style="color:#34d399;font-weight:700">₹${tp.t1 ? tp.t1.toFixed(1) : '—'}</td>
+        <td class="num" style="color:#34d399;font-weight:700">₹${tp.t2 ? tp.t2.toFixed(1) : '—'}</td>
+        <td><span class="badge" style="background:#064e3b;color:#6ee7b7;font-weight:700">${tp.rr || '1:2.0'}</span></td>
+        <td style="font-size:11.5px;color:#cbd5e1;max-width:240px">${reasonsList || 'High probability technical confluence'}</td>
+        <td>
+          <div style="display:flex;gap:4px">
+            <button onclick="event.stopPropagation();openPredictionAudit('${e(s.sym)}')" style="padding:3px 8px;background:#0369a1;color:#fff;border:none;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer">⚡ Audit</button>
+            <button onclick="event.stopPropagation();quickPaperTrade('${e(s.sym)}')" style="padding:3px 8px;background:#1e3a8a;color:#93c5fd;border:1px solid #3b82f6;border-radius:4px;font-size:10px;cursor:pointer">📝 Paper</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  return { subnav, th, tbody: rows };
+}
+
+
+/* ══ MODULE 2: NEXT-DAY GAP PREDICTOR DASHBOARD ══ */
+window.gapPredView = 'up';
+window.setGapPredView = function(v){
+  window.gapPredView = v;
+  render();
+};
+
+function gapPredictorRows(d){
+  const curView = window.gapPredView || 'up';
+  const subnav = `
+    <div class="top10-subnav-bar">
+      <span class="mu" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Gap Direction:</span>
+      <button class="top10-pill ${curView==='up'?'on':''}" onclick="setGapPredView('up')">🌅 Potential GAP-UP Stocks (${U.filter(s=>s.gapPred&&s.gapPred.direction==='GAP-UP').length})</button>
+      <button class="top10-pill ${curView==='down'?'on':''}" onclick="setGapPredView('down')">🌧️ Potential GAP-DOWN Stocks (${U.filter(s=>s.gapPred&&s.gapPred.direction==='GAP-DOWN').length})</button>
+      <span style="margin-left:auto;font-size:11.5px;color:var(--mu)">Based on Close Positioning, Volume Surge, F&amp;O Buildup &amp; Range Expansion</span>
+    </div>
+  `;
+
+  const th = `
+    <th># Rank</th>
+    <th>Symbol</th>
+    <th>Close</th>
+    <th>Day Chg%</th>
+    <th>Gap Probability %</th>
+    <th>Confidence</th>
+    <th>Range Position</th>
+    <th>Volume &amp; Delivery</th>
+    <th>F&amp;O Buildup</th>
+    <th>Invalidation Condition</th>
+    <th>Key Driving Reasons</th>
+    <th>Action</th>
+  `;
+
+  if(!d.length){
+    const emptyRow = `
+      <tr>
+        <td colspan="12" style="text-align:center;padding:48px 24px;">
+          <div style="font-size:32px;margin-bottom:10px">⚖️</div>
+          <div style="font-size:15px;font-weight:700;color:#f8fafc">No Strong Gap Candidates Detected in This Session</div>
+          <div class="mu" style="font-size:12px;margin-top:4px">Neither bullish buyers nor aggressive sellers closed with sufficient conviction to warrant an overnight gap edge.</div>
+        </td>
+      </tr>
+    `;
+    return { subnav, th, tbody: emptyRow };
+  }
+
+  const rows = d.map((s, idx) => {
+    const gp = s.gapPred || {};
+    const prob = curView === 'up' ? gp.prob : gp.probDown;
+    const probColor = prob >= 80 ? '#34d399' : (prob >= 65 ? '#38bdf8' : '#facc15');
+    const confBadge = gp.confidence === 'HIGH'
+      ? `<span class="badge" style="background:#064e3b;color:#6ee7b7;font-weight:700">HIGH CONFIDENCE</span>`
+      : (gp.confidence === 'MEDIUM' ? `<span class="badge" style="background:#1e3a8a;color:#93c5fd">MEDIUM</span>` : `<span class="badge" style="background:#374151;color:#94a3b8">MODERATE</span>`);
+
+    const cPosDisp = curView === 'up'
+      ? `<b style="color:#34d399">${s.cp ? s.cp.toFixed(0) : '—'}%</b> <span class="mu" style="font-size:10px">(Top of Day)</span>`
+      : `<b style="color:#f87171">${s.cp ? s.cp.toFixed(0) : '—'}%</b> <span class="mu" style="font-size:10px">(Low of Day)</span>`;
+
+    const reasons = (gp.reasons || []).join(' · ');
+
+    return `
+      <tr class="stock-row" onclick="openPredictionAudit('${e(s.sym)}')">
+        <td style="font-weight:800;color:#94a3b8">#${idx + 1}</td>
+        <td>
+          <b style="color:#38bdf8">${e(s.sym)}</b>
+          <div class="mu" style="font-size:10.5px">${e(s.name || s.sym)}</div>
+        </td>
+        <td class="num"><b>₹${s.c.toFixed(2)}</b></td>
+        <td class="num" style="color:${s.chg>=0?'var(--g)':'var(--r)'};font-weight:700">${s.chg>=0?'+':''}${s.chg.toFixed(2)}%</td>
+        <td>
+          <div style="font-size:14px;font-weight:800;color:${probColor}">${prob}%</div>
+          <div style="width:100px;height:4px;background:#334155;border-radius:2px;overflow:hidden;margin-top:3px">
+            <div style="width:${prob}%;height:100%;background:${probColor}"></div>
+          </div>
+        </td>
+        <td>${confBadge}</td>
+        <td>${cPosDisp}</td>
+        <td class="num">
+          <b>${s.rv.toFixed(1)}×</b>
+          <div class="mu" style="font-size:10px">${s.deliv_per ? s.deliv_per.toFixed(0) + '% Del' : '—'}</div>
+        </td>
+        <td><b style="color:${gp.direction==='GAP-UP'?'#34d399':'#f87171'}">${s.pred ? s.pred.foStatus : 'Equity'}</b></td>
+        <td style="font-size:11.5px;color:#fca5a5;font-weight:600">${gp.invalidation || '—'}</td>
+        <td style="font-size:11.5px;color:#cbd5e1;max-width:240px">${reasons || 'Price/Volume confluence'}</td>
+        <td>
+          <button onclick="event.stopPropagation();openPredictionAudit('${e(s.sym)}')" style="padding:4px 9px;background:#0369a1;color:#fff;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">⚡ Audit</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  return { subnav, th, tbody: rows };
 }
 
 function quantSwingRows(d){
@@ -4554,7 +5103,41 @@ function runBacktest(){
           let scoreQuality = 0;
 
           // Strategy Evaluators
-          if(strat === 'quant_swing'){
+          if(strat === 'top10_bull'){
+            // Top 10 High-Probability Multi-Factor Prediction Engine
+            const baseHighs = priorBars.map(x => x.h);
+            const rHigh = Math.max(...baseHighs);
+            const distToR = rHigh > 0 ? ((rHigh - prevBar.c) / rHigh * 100) : 99;
+            const barRange = Math.max(0.01, prevBar.h - prevBar.l);
+            const cPos = ((prevBar.c - prevBar.l) / barRange) * 100;
+
+            if(cPos >= 75 && relVol >= 1.4 && distToR <= 4.0 && prevBar.c > prevBar.o){
+              isSignal = true;
+              scoreQuality = 85 + (cPos - 75) + (relVol * 5);
+            }
+          } else if(strat === 'gap_up'){
+            // Next-Day Gap-Up Rocket Setup
+            const barRange = Math.max(0.01, prevBar.h - prevBar.l);
+            const cPos = ((prevBar.c - prevBar.l) / barRange) * 100;
+            const upperWick = ((prevBar.h - prevBar.c) / barRange) * 100;
+            const dayGain = prevBar.p > 0 ? ((prevBar.c - prevBar.p) / prevBar.p * 100) : 0;
+
+            if(cPos >= 82 && upperWick <= 18 && relVol >= 1.5 && dayGain >= 1.5 && dayGain <= 7.5){
+              isSignal = true;
+              scoreQuality = 90 + cPos;
+            }
+          } else if(strat === 'gap_down'){
+            // Next-Day Gap-Down Setup
+            const barRange = Math.max(0.01, prevBar.h - prevBar.l);
+            const cPos = ((prevBar.c - prevBar.l) / barRange) * 100;
+            const lowerWick = ((prevBar.c - prevBar.l) / barRange) * 100;
+            const dayLoss = prevBar.p > 0 ? ((prevBar.p - prevBar.c) / prevBar.p * 100) : 0;
+
+            if(cPos <= 22 && lowerWick <= 18 && relVol >= 1.4 && dayLoss >= 1.5){
+              isSignal = true;
+              scoreQuality = 85 + (25 - cPos);
+            }
+          } else if(strat === 'quant_swing'){
             // Phase 5 & 7 Quant Swing Engine: Stage 2 Trend + Base Consolidation + Vol
             const baseHighs = priorBars.map(x => x.h);
             const baseLows = priorBars.map(x => x.l);
@@ -5462,6 +6045,11 @@ function getDynamicAnnouncements(){
 
 function getDynamicCorpActions(){
   return [
+    // ── UPCOMING EX-DIVIDENDS (Late Nov 2026) ──
+    {company:'Zee Entertainment Enterprises Limited',action:'Buy Back',type:'dividend',logo:'ZEE',annDate:'14 Nov 2026',exDate:'25-Nov-2026',recDate:'25-Nov-2026',divType:'Buy Back',amount:'Buy Back',_date:new Date('2026-11-25')},
+    {company:'Vraj Iron and Steel Limited',action:'Interim Dividend – Re 0.60 Per Share',type:'dividend',logo:'VRA',annDate:'14 Nov 2026',exDate:'25-Nov-2026',recDate:'25-Nov-2026',divType:'Interim',amount:'₹0.60',_date:new Date('2026-11-25')},
+    {company:'GOVERNMENT OF INDIA',action:'Interest Payment',type:'dividend',logo:'GOV',annDate:'14 Nov 2026',exDate:'27-Nov-2026',recDate:'27-Nov-2026',divType:'Interest',amount:'Interest',_date:new Date('2026-11-27')},
+    {company:'Fusion CX Limited',action:'Dividend – Re 0.75 Per Share',type:'dividend',logo:'FUS',annDate:'14 Nov 2026',exDate:'27-Nov-2026',recDate:'27-Nov-2026',divType:'Interim',amount:'₹0.75',_date:new Date('2026-11-27')},
     // ── TODAY'S EX-DIVIDENDS (17 Nov 2026) ──
     {company:'Power Finance Corporation Ltd. (PFC)',action:'Second Interim Dividend – ₹4.10 per share',type:'dividend',logo:'PFC',annDate:'07 Nov 2026',exDate:'17 Nov 2026',recDate:'17 Nov 2026',divType:'Interim',amount:'₹4.10',_date:new Date('2026-11-17')},
     {company:'MRF Ltd.',action:'Interim Dividend – ₹3.00 per share',type:'dividend',logo:'MRF',annDate:'08 Nov 2026',exDate:'17 Nov 2026',recDate:'17 Nov 2026',divType:'Interim',amount:'₹3.00',_date:new Date('2026-11-17')},
@@ -5676,6 +6264,36 @@ async function fetchLiveCorpActions(){
   renderCorpActions();
 }
 
+function nwParseDateToTimestamp(val){
+  if(!val) return 0;
+  if(val instanceof Date) return isNaN(val.getTime()) ? 0 : val.getTime();
+  const s = String(val).replace(/-/g, ' ').trim();
+  let dt = new Date(s);
+  if(!isNaN(dt.getTime())) return dt.getTime();
+  const m = s.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/);
+  if(m){
+    const d = parseInt(m[1], 10);
+    const mStr = m[2].slice(0, 3).toLowerCase();
+    const y = parseInt(m[3], 10);
+    const months = {jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6, aug:7, sep:8, oct:9, nov:10, dec:11};
+    if(months[mStr] !== undefined){
+      return new Date(y, months[mStr], d).getTime();
+    }
+  }
+  return 0;
+}
+
+let corpSortMode = 'upcoming'; // 'upcoming' (default: nearest upcoming first, past at bottom), 'desc', 'asc'
+
+window.toggleCorpSort = function(col){
+  if(col === 'exDate'){
+    if(corpSortMode === 'upcoming') corpSortMode = 'desc';
+    else if(corpSortMode === 'desc') corpSortMode = 'asc';
+    else corpSortMode = 'upcoming';
+    renderCorpActions();
+  }
+};
+
 function renderCorpActions(){
   const list=document.getElementById('nw_corpList');
   if(!list) return;
@@ -5700,12 +6318,43 @@ function renderCorpActions(){
     return;
   }
 
+  // Exact Sorting: Upcoming/Future dates come first (nearest upcoming first: 25-Nov, 27-Nov, etc.),
+  // and past/expired dates come AFTER upcoming dates (most recent past to oldest at bottom: 03-Nov sabse last me)
+  const todayStart = new Date().setHours(0, 0, 0, 0);
+  filtered.sort((a, b) => {
+    const tA = nwParseDateToTimestamp(a.exDate || a._date || a.recDate);
+    const tB = nwParseDateToTimestamp(b.exDate || b._date || b.recDate);
+    if(corpSortMode === 'desc') return tB - tA;
+    if(corpSortMode === 'asc') return tA - tB;
+    
+    // Default 'upcoming':
+    const aUp = tA >= todayStart;
+    const bUp = tB >= todayStart;
+    if(aUp && bUp) return tA - tB; // Earliest upcoming first (e.g. 25-Nov before 27-Nov)
+    if(aUp && !bUp) return -1;    // Upcoming comes before past
+    if(!aUp && bUp) return 1;     // Past comes after upcoming
+    return tB - tA;               // Among past: most recent past first, oldest last (03-Nov sabse last me)
+  });
+
   const colValTitle = (currentUpcat === 'dividend') ? 'Dividend Per Share (₹)' : (currentUpcat === 'split' ? 'Split Ratio' : (currentUpcat === 'rights' ? 'Rights Ratio' : (currentUpcat === 'bonus' ? 'Bonus Ratio' : 'Dividend / Details (₹)')));
   const colTypeTitle = (currentUpcat === 'dividend') ? 'Dividend Type' : 'Type';
+  const sortLabel = (corpSortMode === 'upcoming') ? ' (Upcoming First ▾)' : ((corpSortMode === 'desc') ? ' (Newest ▾)' : ' (Oldest ▴)');
 
   const rowsHtml = filtered.map(a => {
     const p = nwParseCorpDetails(a);
-    const exDateHtml = p.exDate ? `${p.exDate}${nwIsToday(a._date)?' <b style="color:var(--green);font-size:.72rem;">(Today)</b>':''}` : '—';
+    const tEx = nwParseDateToTimestamp(a.exDate || a._date || a.recDate);
+    const isToday = nwIsToday(tEx ? new Date(tEx) : a._date);
+    const isUpcoming = tEx >= todayStart;
+    
+    let exBadge = '';
+    if(isToday){
+      exBadge = ' <span class="badge" style="background:#065f46;color:#6ee7b7;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;margin-left:4px;">Today</span>';
+    } else if(isUpcoming){
+      exBadge = ' <span class="badge" style="background:#1e3a8a;color:#93c5fd;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600;margin-left:4px;">Upcoming</span>';
+    } else {
+      exBadge = ' <span style="color:var(--muted);font-size:10px;margin-left:4px;font-weight:400;">(Passed)</span>';
+    }
+    const exDateHtml = p.exDate ? `${p.exDate}${exBadge}` : '—';
     const valColor = (a.type === 'dividend') ? 'color:var(--green)' : ((a.type === 'split') ? 'color:var(--amber)' : ((a.type === 'bonus') ? 'color:var(--blue)' : 'color:#a855f7'));
     
     return `<tr>
@@ -5732,7 +6381,7 @@ function renderCorpActions(){
         <tr>
           <th style="padding:13px 16px;">Company</th>
           <th style="padding:13px 16px;">Announcement / Date</th>
-          <th style="padding:13px 16px;">Ex-Date</th>
+          <th style="padding:13px 16px;cursor:pointer;user-select:none;" onclick="toggleCorpSort('exDate')" title="Click karein: Sort badlein (Upcoming First / Newest / Oldest)">Ex-Date <span style="font-size:11px;color:var(--teal)">${sortLabel}</span></th>
           <th style="padding:13px 16px;">Record Date</th>
           <th style="padding:13px 16px;">${colTypeTitle}</th>
           <th style="padding:13px 16px;text-align:right;">${colValTitle}</th>
@@ -6080,6 +6729,125 @@ function savePaperStorage(data){
   } catch(e){}
 }
 
+
+/* ══ MODULE 11: STOCK-WISE DEEP PREDICTION AUDIT MODAL ══ */
+window.openPredictionAudit = function(sym){
+  const s = U.find(x => x.sym === sym);
+  if(!s || !s.pred) return;
+  const p = s.pred;
+  const tp = p.tradePlan || {};
+  const gp = s.gapPred || {};
+  const bd = p.breakdown || {};
+
+  $('pred_mod_title').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="corp-logo" style="width:38px;height:38px;font-size:12px;font-weight:800;border-radius:8px">${e(s.sym.slice(0,3))}</div>
+      <div>
+        <div style="font-size:18px;font-weight:800;color:#fff">${e(s.name || s.sym)} <span style="font-size:13px;color:#38bdf8">(${e(s.sym)})</span></div>
+        <div style="font-size:12px;color:var(--mu)">LTP: <b style="color:#fff">₹${s.c.toFixed(2)}</b> · Chg: <b style="color:${s.chg>=0?'var(--g)':'var(--r)'}">${s.chg>=0?'+':''}${s.chg.toFixed(2)}%</b> · Setup: <b style="color:#facc15">${p.setupType}</b></div>
+      </div>
+    </div>
+  `;
+
+  $('pred_mod_body').innerHTML = `
+    <!-- Top Summary Banner -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px">
+      <div style="background:rgba(15,23,42,0.8);border:1px solid #334155;border-radius:8px;padding:12px">
+        <div class="mu" style="font-size:11px">100-Pt Quality Score</div>
+        <div style="font-size:22px;font-weight:800;color:${p.score>=85?'#34d399':'#38bdf8'}">${p.score} <span style="font-size:12px;color:var(--mu)">/ 100</span></div>
+        <div style="font-size:10.5px;color:#38bdf8;font-weight:700">${p.grade}</div>
+      </div>
+      <div style="background:rgba(15,23,42,0.8);border:1px solid #334155;border-radius:8px;padding:12px">
+        <div class="mu" style="font-size:11px">Direction Bias</div>
+        <div style="font-size:18px;font-weight:800;color:${p.bias==='BULLISH'?'#34d399':'#f87171'}">${p.bias}</div>
+        <div class="mu" style="font-size:11px">${p.bias==='BULLISH'?'Long Swing Candidate':'Short / Hedge Setup'}</div>
+      </div>
+      <div style="background:rgba(15,23,42,0.8);border:1px solid #334155;border-radius:8px;padding:12px">
+        <div class="mu" style="font-size:11px">Next-Day Gap Probability</div>
+        <div style="font-size:18px;font-weight:800;color:#c084fc">${gp.direction === 'GAP-UP' ? gp.prob + '% Gap-Up' : gp.probDown + '% Gap-Down'}</div>
+        <div style="font-size:10.5px;color:#a855f7;font-weight:700">${gp.confidence} Confidence</div>
+      </div>
+      <div style="background:rgba(15,23,42,0.8);border:1px solid #334155;border-radius:8px;padding:12px">
+        <div class="mu" style="font-size:11px">F&amp;O Smart Money</div>
+        <div style="font-size:16px;font-weight:800;color:#facc15">${p.foStatus}</div>
+        <div class="mu" style="font-size:11px">${s.fo ? s.fo.toFixed(1) + '% OI Shift' : 'Cash Delivery Backing'}</div>
+      </div>
+    </div>
+
+    <!-- 100-Point Factor Breakdown Grid -->
+    <h4 style="margin:0 0 10px 0;color:#f8fafc">📊 9-Factor Quantitative Score Breakdown</h4>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin-bottom:20px;font-size:12px">
+      <div style="background:var(--card);border:1px solid var(--bd);padding:8px 12px;border-radius:6px;display:flex;justify-content:space-between">
+        <span>Trend Strength (15 pts):</span><b style="color:#38bdf8">${bd.trend || 0} / 15</b>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--bd);padding:8px 12px;border-radius:6px;display:flex;justify-content:space-between">
+        <span>Volume Surge (15 pts):</span><b style="color:#38bdf8">${bd.volume || 0} / 15</b>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--bd);padding:8px 12px;border-radius:6px;display:flex;justify-content:space-between">
+        <span>RS Alpha vs Nifty (15 pts):</span><b style="color:#38bdf8">${bd.rs || 0} / 15</b>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--bd);padding:8px 12px;border-radius:6px;display:flex;justify-content:space-between">
+        <span>Price Action Quality (15 pts):</span><b style="color:#38bdf8">${bd.priceAction || 0} / 15</b>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--bd);padding:8px 12px;border-radius:6px;display:flex;justify-content:space-between">
+        <span>RSI Momentum (10 pts):</span><b style="color:#38bdf8">${bd.momentum || 0} / 10</b>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--bd);padding:8px 12px;border-radius:6px;display:flex;justify-content:space-between">
+        <span>Base Structure (10 pts):</span><b style="color:#38bdf8">${bd.structure || 0} / 10</b>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--bd);padding:8px 12px;border-radius:6px;display:flex;justify-content:space-between">
+        <span>F&amp;O Confirmation (10 pts):</span><b style="color:#38bdf8">${bd.fo || 0} / 10</b>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--bd);padding:8px 12px;border-radius:6px;display:flex;justify-content:space-between">
+        <span>Sector Leadership (5 pts):</span><b style="color:#38bdf8">${bd.sector || 0} / 5</b>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--bd);padding:8px 12px;border-radius:6px;display:flex;justify-content:space-between">
+        <span>Delivery Accumulation (5 pts):</span><b style="color:#38bdf8">${bd.delivery || 0} / 5</b>
+      </div>
+    </div>
+
+    <!-- Actionable Trade Plan (Modules 4 & 6) -->
+    <div style="background:rgba(2,132,199,0.1);border:1px solid #0284c7;border-radius:10px;padding:14px;margin-bottom:20px">
+      <h4 style="margin:0 0 10px 0;color:#38bdf8;display:flex;align-items:center;gap:6px">🎯 Actionable Trade Plan (3–10 Day Horizon)</h4>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;font-size:12px">
+        <div><span class="mu">Entry Zone:</span> <b style="color:#fff">${tp.entryZone}</b></div>
+        <div><span class="mu">Stop Loss:</span> <b style="color:#f87171">₹${tp.sl}</b> (${tp.riskPct}% risk)</div>
+        <div><span class="mu">Target 1 (1.5R):</span> <b style="color:#34d399">₹${tp.t1}</b> (Book 50%)</div>
+        <div><span class="mu">Target 2 (3.0R):</span> <b style="color:#34d399">₹${tp.t2}</b> (EMA10 Trail)</div>
+        <div><span class="mu">Risk : Reward:</span> <b style="color:#facc15">${tp.rr}</b></div>
+        <div><span class="mu">Invalidation:</span> <b style="color:#fca5a5">${gp.invalidation}</b></div>
+      </div>
+    </div>
+
+    <!-- Conditions Passed & Failed Audit Checklist -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div style="background:rgba(6,78,59,0.2);border:1px solid #059669;border-radius:8px;padding:12px">
+        <h5 style="margin:0 0 8px 0;color:#6ee7b7">✔ Conditions Satisfied</h5>
+        <ul style="margin:0;padding-left:18px;font-size:11.5px;color:#cbd5e1;line-height:1.6">
+          ${(p.passedConditions || []).map(c => `<li>${c}</li>`).join('')}
+        </ul>
+      </div>
+      <div style="background:rgba(69,10,10,0.2);border:1px solid #dc2626;border-radius:8px;padding:12px">
+        <h5 style="margin:0 0 8px 0;color:#fca5a5">⚠ Conditions Failed / Risk Factors</h5>
+        <ul style="margin:0;padding-left:18px;font-size:11.5px;color:#cbd5e1;line-height:1.6">
+          ${(p.failedConditions && p.failedConditions.length) ? p.failedConditions.map(c => `<li>${c}</li>`).join('') : '<li style="color:#94a3b8">None — All key parameters aligned</li>'}
+        </ul>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end;gap:8px">
+      <button onclick="closePredictionAudit()" style="padding:6px 14px;background:#334155;color:#fff;border:none;border-radius:6px;cursor:pointer">Close</button>
+      <button onclick="quickPaperTrade('${e(s.sym)}');closePredictionAudit()" style="padding:6px 14px;background:#1e3a8a;color:#93c5fd;border:1px solid #3b82f6;border-radius:6px;cursor:pointer;font-weight:700">📝 Execute Virtual Paper Trade</button>
+    </div>
+  `;
+
+  $('pred-mod').style.display = 'flex';
+};
+
+window.closePredictionAudit = function(){
+  $('pred-mod').style.display = 'none';
+};
+
 window.openPaperTrading = function(){
   renderPaperTrading();
   const m = $('paper-mod');
@@ -6318,5 +7086,17 @@ function renderDataHealth(){
   `;
 }
 </script>
+
+<!-- Module 11 Stock-Wise Deep Prediction Audit Modal -->
+<div id="pred-mod">
+  <div class="mod-card" style="max-width:880px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid #334155;padding-bottom:12px">
+      <div id="pred_mod_title"></div>
+      <button onclick="closePredictionAudit()" style="background:transparent;border:none;color:#94a3b8;font-size:22px;cursor:pointer">✕</button>
+    </div>
+    <div id="pred_mod_body"></div>
+  </div>
+</div>
+
 </body>
 </html>
