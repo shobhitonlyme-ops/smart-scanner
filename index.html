@@ -330,6 +330,375 @@ a{color:var(--b);text-decoration:none}.wl{cursor:pointer}
   .pred-gap { background:rgba(168,85,247,0.18); color:#c084fc; border:1px solid #a855f7; }
   #pred-mod { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; display:none; align-items:center; justify-content:center; padding:16px; }
 
+
+/* ══ ACTIVE WATCHLIST MATRIX (MODERN DECISION ENGINE) ══ */
+.matrix-container {
+  background: var(--card, #131b2e);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px -5px rgba(0,0,0,0.5);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+.matrix-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.matrix-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.matrix-title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+}
+.matrix-count-badge {
+  font-size: 12px;
+  color: var(--mu, #94a3b8);
+  font-weight: 600;
+  background: rgba(255,255,255,0.05);
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.matrix-nav-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,0,0,0.3);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+  flex-wrap: wrap;
+}
+.matrix-nav-btn {
+  background: transparent;
+  color: #94a3b8;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.matrix-nav-btn:hover {
+  color: #f8fafc;
+  background: rgba(255,255,255,0.05);
+}
+.matrix-nav-btn.active {
+  background: #0f172a;
+  color: #38bdf8;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  border: 1px solid rgba(56,189,248,0.3);
+}
+.matrix-add-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  background: rgba(15,23,42,0.4);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  flex-wrap: wrap;
+}
+.matrix-add-input {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #f8fafc;
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  width: 320px;
+  outline: none;
+}
+.matrix-add-input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56,189,248,0.2);
+}
+.matrix-add-btn {
+  background: #0284c7;
+  color: #fff;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.matrix-add-btn:hover {
+  background: #0369a1;
+}
+.matrix-export-btn {
+  background: rgba(255,255,255,0.05);
+  color: #f8fafc;
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.matrix-export-btn:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.matrix-table th {
+  padding: 12px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.25);
+  text-align: left;
+  user-select: none;
+}
+.matrix-table th.center { text-align: center; }
+.matrix-table th.right { text-align: right; }
+.matrix-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  vertical-align: middle;
+}
+.matrix-row {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.matrix-row:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+.mat-chevron {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 11px;
+  color: #64748b;
+  transition: transform 0.2s ease;
+  user-select: none;
+}
+.mat-chevron.open {
+  transform: rotate(180deg);
+  color: #38bdf8;
+}
+.mat-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+.mat-dot.green { background: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.6); }
+.mat-dot.yellow { background: #eab308; box-shadow: 0 0 8px rgba(234,179,8,0.6); }
+.mat-dot.red { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.6); }
+
+.mat-sym {
+  font-size: 14px;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: 0.3px;
+}
+.mat-sym:hover {
+  color: #38bdf8;
+}
+.mat-price {
+  font-size: 14px;
+  font-weight: 800;
+  color: #f8fafc;
+}
+.mat-gap-pos {
+  font-size: 11px;
+  font-weight: 700;
+  color: #22c55e;
+  margin-top: 2px;
+}
+.mat-gap-neg {
+  font-size: 11px;
+  font-weight: 700;
+  color: #ef4444;
+  margin-top: 2px;
+}
+
+.mat-subbadge {
+  display: inline-block;
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-top: 3px;
+  letter-spacing: 0.4px;
+}
+.mat-subbadge.ob { background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+.mat-subbadge.os { background: rgba(34,197,94,0.2); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+.mat-subbadge.neutral { background: rgba(148,163,184,0.15); color: #94a3b8; }
+.mat-subbadge.high { background: rgba(34,197,94,0.2); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+.mat-subbadge.surge { background: rgba(56,189,248,0.2); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); }
+.mat-subbadge.normal { background: rgba(148,163,184,0.15); color: #94a3b8; }
+
+.mat-entry-box {
+  font-size: 13px;
+  font-weight: 700;
+  color: #38bdf8;
+}
+.mat-entry-status {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-top: 3px;
+  display: block;
+}
+.mat-entry-status.in-zone { color: #22c55e; }
+.mat-entry-status.wait { color: #60a5fa; }
+.mat-entry-status.avoid { color: #ef4444; }
+
+.mat-rr-target {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #22c55e;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.mat-rr-sl {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 3px;
+}
+
+.mat-strat-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mat-strat-pill {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  max-width: fit-content;
+}
+.mat-strat-pill.buy-weak { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+.mat-strat-pill.bo-exp { background: rgba(56,189,248,0.15); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); }
+.mat-strat-pill.pullback { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+.mat-strat-pill.avoid { background: rgba(148,163,184,0.12); color: #94a3b8; border: 1px solid rgba(148,163,184,0.25); }
+
+.mat-strat-sub {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  max-width: fit-content;
+}
+.mat-strat-sub.trend { background: rgba(34,197,94,0.1); color: #86efac; }
+.mat-strat-sub.consol { background: rgba(245,158,11,0.1); color: #fcd34d; }
+.mat-strat-sub.stage2 { background: rgba(56,189,248,0.1); color: #7dd3fc; }
+
+.mat-action-btn {
+  display: inline-block;
+  padding: 7px 22px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  text-align: center;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+.mat-action-btn.buy {
+  background: #22c55e;
+  color: #052e16;
+  box-shadow: 0 2px 10px rgba(34,197,94,0.35);
+}
+.mat-action-btn.buy:hover {
+  background: #16a34a;
+  transform: translateY(-1px);
+}
+.mat-action-btn.wait {
+  background: rgba(255,255,255,0.05);
+  color: #cbd5e1;
+  border: 1px solid #475569;
+}
+.mat-action-btn.wait:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+.mat-action-btn.sell {
+  background: #ef4444;
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(239,68,68,0.35);
+}
+.mat-action-btn.sell:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.mat-del-icon {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  margin-left: 8px;
+}
+.mat-del-icon:hover {
+  color: #ef4444;
+  background: rgba(239,68,68,0.1);
+}
+
+.matrix-drawer-row {
+  background: rgba(15,23,42,0.85);
+}
+.matrix-drawer-content {
+  padding: 16px 20px;
+  border-top: 1px dashed rgba(255,255,255,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 </style><script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 </head><body>
 <header><h1>📊 Smart Scanner v9.0 <span class="tg" style="background:#2563eb;color:#ffffff;font-weight:700;font-size:11px">v9.0 PRO QUANT &amp; RESEARCH</span> <span class="mu">— Professional Swing Trading Platform · Quantitative Engine · Realistic Backtest</span></h1><div style="display:flex;align-items:center;gap:12px"><span id="market-regime"></span><span class="mu" id="info">No data loaded</span></div></header>
@@ -1406,16 +1775,16 @@ let U=[];
 function evalAdvancedPredictionEngine(s, candles, nifty60D = 0, nifty120D = 0, marketRegime = 'NEUTRAL'){
   s.pred = null;
   s.gapPred = null;
-  if(!candles || candles.length < 15) return;
+  if(!candles || candles.length < 2) return;
 
   const n = candles.length;
   const curBar = candles[n - 1];
-  const prevBar = candles[n - 2];
-  const curClose = curBar[2];
-  const curHigh = curBar[0];
-  const curLow = curBar[1];
-  const curOpen = (curBar.length > 4 && curBar[4] != null) ? curBar[4] : curBar[2];
-  const curVol = curBar[3] || s.v || 0;
+  const prevBar = candles[n - 2] || curBar;
+  const curClose = curBar[2] || s.c || 0;
+  const curHigh = curBar[0] || s.h || curClose;
+  const curLow = curBar[1] || s.l || curClose;
+  const curVol = (curBar.length > 4 && curBar[4] != null) ? curBar[4] : (s.v || 0);
+  const curOpen = (curBar.length > 5 && curBar[5] != null) ? curBar[5] : (s.o || curClose);
 
   // 1. Calculations: EMAs, ATR, RSI, Vol
   const closes = candles.map(c => c[2]);
@@ -2736,6 +3105,9 @@ function build(){
 
     // SmartScanner v9.0 Professional Quantitative Swing Engine
     evalQuantSwingEngine(s, a, window.NIFTY_60D_RET || 0, window.NIFTY_120D_RET || 0);
+
+    // Master Audit & Advanced Prediction Engine
+    evalAdvancedPredictionEngine(s, a, window.NIFTY_60D_RET || 0, window.NIFTY_120D_RET || 0, window.CURRENT_REGIME_STR || 'NEUTRAL');
   }
 
   rangeCalc();
@@ -2958,8 +3330,9 @@ PROFIT_JUMP_DATA.forEach(p => {
 })();
 
 const TABS = [
-  { id: 'top10_master', n: '🏆 Top 10 High Probability', d: 'Master Multi-Factor Dashboard: Top 10 Bullish, Bearish, Swing & Gap Setups scored on a 100-pt quantitative model. Strict quality threshold (Score ≥ 65). Displays NO TRADE when setups fail standards.', ok: s => s.pred && s.pred.isQualified, so: 'pred_score' },
-  { id: 'gap_predictor', n: '⚡ Next-Day Gap Predictor', d: 'Next-Day Gap Prediction Engine: Quantitative Gap-Up and Gap-Down probability based on close position, volume surge, ATR volatility expansion, F&O buildup, and institutional delivery backing.', ok: s => s.gapPred && (s.gapPred.prob >= 60 || s.gapPred.probDown >= 60), so: 'gap_prob' },
+  { id: 'matrix', n: '📊 Active Matrix', d: 'Active Watchlist Matrix: Modern Decision Dashboard combining Day, Swing & Invest timeframes with Entry Zones, R:R Targets, Strategy Tags and Clear Buy/Wait/Sell Consideration.', ok: s => !!(s.pred || s.qs || s.isSwingBO || s.isSwingPullback || s.isBTST || WL.has(s.sym)), so: 'pred_score' },
+  { id: 'top10_master', n: '🏆 Top 10 High Probability', d: 'Master Multi-Factor Dashboard: Top 10 Bullish, Bearish, Swing & Gap Setups scored on a 100-pt quantitative model. Strict quality threshold (Score ≥ 65). Displays NO TRADE when setups fail standards.', ok: s => s.pred && (s.pred.score >= 50 || s.pred.isQualified), so: 'pred_score' },
+  { id: 'gap_predictor', n: '⚡ Next-Day Gap Predictor', d: 'Next-Day Gap Prediction Engine: Quantitative Gap-Up and Gap-Down probability based on close position, volume surge, ATR volatility expansion, F&O buildup, and institutional delivery backing.', ok: s => s.gapPred && (s.gapPred.prob >= 50 || s.gapPred.probDown >= 50), so: 'gap_prob' },
   { id: 'quant_swing', n: '🏛️ Professional Quantitative', d: 'SmartScanner v9.0 Quant Swing Engine: High-probability 3–10 day swing setups combining Stage 2 Trend (Close > EMA50 > EMA200 + Positive Slope), contracting ATR volatility, tight base, Relative Strength alpha vs Nifty, turnover ≥ ₹10 Cr, and extension protection.', ok: s => s.qs && s.qs.isQualified, so: 'qs_score' },
   { id: 'pre_bo', n: '🎯 Pre-Breakout Top 20', d: 'List A: Stocks forming tight consolidation bases (20-40 sessions) before a confirmed breakout with contracting ATR & rising relative strength.', ok: s => s.pb ? (!s.pb.isExcluded && s.pb.distToR > 1.0 && s.pb.distToR <= 5.0 && !s.pb.isConfirmedBO) : (s.ar && !s.ar.isConfirmedBreakout), so: 'pb_score' },
   { id: 'approaching', n: '⚡ Breakout Approaching', d: 'List B: Stocks right at overhead resistance ceiling (≤1.5% away) with volume accumulation & compressed wicks ready for trigger.', ok: s => s.pb ? (!s.pb.isExcluded && s.pb.distToR >= 0.0 && s.pb.distToR <= 1.5 && !s.pb.isConfirmedBO) : (s.ar && s.ar.distToR <= 1.5), so: 'pb_proximity' },
@@ -3043,7 +3416,8 @@ function rows(tab){
     if(tab.id !== 'deals' && (s.c < mp || s.cr < mt)) return false;
     if(tab.id === 'deals' && mp > 0 && s.c > 0 && s.c < mp) return false;
     // Score filter does NOT kill deals, pre_bo, fresh_bo, retest, hm, nr47
-    if(ms > 0 && tab.id !== 'hm' && tab.id !== 'nr47' && tab.id !== 'nr' && tab.id !== 'deals' && tab.id !== 'pre_bo' && tab.id !== 'fresh_bo' && tab.id !== 'retest' && s.sc < ms) return false;
+    const exemptFromLegacyScore = ['hm', 'nr47', 'nr', 'deals', 'pre_bo', 'approaching', 'fresh_bo', 'retest', 'top10_master', 'matrix', 'gap_predictor', 'quant_swing'];
+    if(ms > 0 && !exemptFromLegacyScore.includes(tab.id) && s.sc < ms) return false;
     if(ex === 'BSE' && s.ex !== 'BSE' && !s.hasBSE) return false;
     if(ex === 'BSE_ONLY' && (s.ex !== 'BSE' || s.hasNSE)) return false;
     if(ex === 'NSE' && s.ex !== 'NSE' && !s.hasNSE) return false;
@@ -3056,13 +3430,52 @@ function rows(tab){
     return true;
   });
 
-    if(tab.id === 'top10_master'){
+  if(tab.id === 'matrix'){
+    window.matrixView = window.matrixView || 'swing'; // 'day', 'swing', 'invest', 'wl', 'all'
+    let pool = [];
+    
+    if(window.matrixView === 'wl'){
+      pool = U.filter(s => WL.has(s.sym));
+    } else if(window.matrixView === 'day'){
+      pool = d.filter(s => s.isBTST || s.isOL || (s.rv >= 1.6 && Math.abs(s.chg) >= 1.5) || (s.gapPred && s.gapPred.prob >= 60));
+    } else if(window.matrixView === 'invest'){
+      pool = d.filter(s => (s.aboveEMA && s.c > (s.ema50||0) && (s.ema50||0) > (s.ema200||0)) || (s.deliv_per >= 50 && s.cr >= 5.0) || s.pj);
+    } else if(window.matrixView === 'all'){
+      const wlStocks = U.filter(s => WL.has(s.sym));
+      const topSetups = d.filter(s => (s.pred && s.pred.score >= 55) || s.qs || s.isSwingBO || s.isSwingPullback);
+      const m = {};
+      [...wlStocks, ...topSetups].forEach(s => { m[s.sym] = s; });
+      pool = Object.values(m);
+    } else {
+      // Default: 'swing'
+      pool = d.filter(s => (s.pred && s.pred.score >= 55) || (s.qs && s.qs.score >= 55) || s.isSwingBO || s.isSwingPullback || (s.pb && !s.pb.isExcluded));
+    }
+
+    // Ensure any single custom added stock is included at top
+    if(window.matrixCustomSyms && window.matrixCustomSyms.size > 0){
+      window.matrixCustomSyms.forEach(sym => {
+        const found = U.find(s => s.sym === sym);
+        if(found && !pool.some(p => p.sym === sym)) pool.unshift(found);
+      });
+    }
+
+    // Sort by setup quality or conviction
+    pool.sort((a,b) => {
+      const scA = (a.pred ? a.pred.score : (a.qs ? a.qs.score : (a.swingScore || 0)));
+      const scB = (b.pred ? b.pred.score : (b.qs ? b.qs.score : (b.swingScore || 0)));
+      return scB - scA;
+    });
+
+    return pool.slice(0, 30);
+  }
+
+  if(tab.id === 'top10_master'){
     window.top10View = window.top10View || 'bull';
-    let pool = d.filter(s => s.pred && s.pred.isQualified);
-    if(window.top10View === 'bull') pool = pool.filter(s => s.pred.bias === 'BULLISH');
-    else if(window.top10View === 'bear') pool = pool.filter(s => s.pred.bias === 'BEARISH');
-    else if(window.top10View === 'swing') pool = pool.filter(s => s.pred.score >= 65);
-    else if(window.top10View === 'gap') pool = pool.filter(s => s.gapPred && (s.gapPred.prob >= 60 || s.gapPred.probDown >= 60));
+    let pool = d.filter(s => s.pred);
+    if(window.top10View === 'bull') pool = pool.filter(s => (s.pred.bias === 'BULLISH' || s.pred.score >= 60));
+    else if(window.top10View === 'bear') pool = pool.filter(s => (s.pred.bias === 'BEARISH' || s.pred.score >= 50));
+    else if(window.top10View === 'swing') pool = pool.filter(s => s.pred.score >= 60);
+    else if(window.top10View === 'gap') pool = pool.filter(s => s.gapPred && (s.gapPred.prob >= 55 || s.gapPred.probDown >= 55));
 
     pool.sort((a,b) => {
       if(window.top10View === 'gap'){
@@ -3079,9 +3492,9 @@ function rows(tab){
     window.gapPredView = window.gapPredView || 'up';
     let pool = d.filter(s => s.gapPred);
     if(window.gapPredView === 'up'){
-      pool = pool.filter(s => s.gapPred.direction === 'GAP-UP' || s.gapPred.prob >= 60).sort((a,b) => (b.gapPred.prob - a.gapPred.prob));
+      pool = pool.filter(s => s.gapPred.direction === 'GAP-UP' || s.gapPred.prob >= 55).sort((a,b) => (b.gapPred.prob - a.gapPred.prob));
     } else {
-      pool = pool.filter(s => s.gapPred.direction === 'GAP-DOWN' || s.gapPred.probDown >= 60).sort((a,b) => (b.gapPred.probDown - a.gapPred.probDown));
+      pool = pool.filter(s => s.gapPred.direction === 'GAP-DOWN' || s.gapPred.probDown >= 55).sort((a,b) => (b.gapPred.probDown - a.gapPred.probDown));
     }
     return pool.slice(0, 20);
   }
@@ -3092,7 +3505,10 @@ function rows(tab){
     return d.slice(0, 20);
   }
   if(tab.id === 'pre_bo' || tab.id === 'approaching' || tab.id === 'fresh_bo'){
-    const view = (tab.id === 'approaching') ? 'approaching' : ((tab.id === 'fresh_bo') ? 'confirmed' : window.pbView);
+    let view = (tab.id === 'approaching') ? 'approaching' : ((tab.id === 'fresh_bo') ? 'confirmed' : 'pre_bo');
+    if(window.IS_RENDERING_TABLE && tab.id === cur && tab.id === 'pre_bo' && window.pbView){
+      view = window.pbView;
+    }
     if(view === 'approaching'){
       d = d.filter(s => s.pb && !s.pb.isExcluded && s.pb.distToR >= 0.0 && s.pb.distToR <= 1.5 && !s.pb.isConfirmedBO);
       d.sort((a,b) => (a.pb.distToR - b.pb.distToR) || (b.pb.score - a.pb.score));
@@ -3263,6 +3679,10 @@ function render(){
   const isBreakoutTab = (cur === 'pre_bo' || cur === 'approaching' || cur === 'fresh_bo');
   const swEl = $('pb_switcher_wrap');
   if(swEl) swEl.style.display = isBreakoutTab ? 'block' : 'none';
+  const top10Wrap = $('top10_subnav_wrap');
+  if(top10Wrap) top10Wrap.style.display = (cur === 'top10_master' || cur === 'gap_predictor') ? 'block' : 'none';
+  const matWrap = $('matrix_subnav_wrap');
+  if(matWrap) matWrap.style.display = (cur === 'matrix') ? 'block' : 'none';
   const newsTabBtn = `<button class="${isNewsPulse?'on':''}" data-t="news_pulse" style="border-left:2px solid #38bdf8;color:#38bdf8;font-weight:700">📰 Stock News Pulse <span style="background:#ef4444;color:#fff;border-radius:999px;padding:1px 6px;font-size:9px;margin-left:4px">LIVE</span></button>`;
 
   if(isNewsPulse){
@@ -3288,7 +3708,9 @@ function render(){
   cur=tab.id;
   $('tabs').innerHTML=TABS.map((t,idx)=>`<button class="${t.id===cur?'on':''}" data-t="${t.id}" title="Shortcut: [${(idx+1)%10}]">${t.n}<b>${rows(t).length}</b></button>`).join('') + newsTabBtn;
   $('desc').textContent=tab.d;
+  window.IS_RENDERING_TABLE = true;
   const d=rows(tab).slice(0,500);
+  window.IS_RENDERING_TABLE = false;
   $('rbs').style.display=tab.id==='rbo'?'flex':'none';
 
   const isHm = (cur === 'hm' || window.VIEW_MODE === 'heatmap');
@@ -3316,6 +3738,7 @@ function render(){
   if(tab.id==='deliv')return delivRows(d);
   if(tab.id==='news')return newsRows(d);
   if(tab.id==='deals')return dealsRows(d);
+  if(tab.id==='matrix')return matrixRows(d);
   if(tab.id==='top10_master')return top10Rows(d);
   if(tab.id==='gap_predictor')return gapPredictorRows(d);
   if(tab.id==='quant_swing')return quantSwingRows(d);
@@ -3643,6 +4066,370 @@ window.setTop10View = function(v){
   render();
 };
 
+
+/* ══ ACTIVE WATCHLIST MATRIX DASHBOARD ENGINE ══ */
+window.matrixView = 'swing';
+window.matrixCustomSyms = new Set();
+try {
+  const savedMat = JSON.parse(localStorage.getItem('ss_matrix_custom') || '[]');
+  window.matrixCustomSyms = new Set(savedMat);
+} catch(e){}
+
+window.setMatrixView = function(view){
+  window.matrixView = view;
+  render();
+};
+
+window.addSingleStockToMatrix = function(){
+  const input = $('mat_sym_input');
+  if(!input) return;
+  const raw = input.value.trim().toUpperCase();
+  if(!raw) return;
+
+  const s = U.find(x => x.sym === raw || x.sym.includes(raw) || (x.name && x.name.toUpperCase().includes(raw)));
+  if(!s){
+    alert('Stock "' + raw + '" scanner universe me nahi mila. Check karein ki bhavcopy me ye symbol mojood hai.');
+    return;
+  }
+
+  window.matrixCustomSyms = window.matrixCustomSyms || new Set();
+  window.matrixCustomSyms.add(s.sym);
+  try { localStorage.setItem('ss_matrix_custom', JSON.stringify([...window.matrixCustomSyms])); } catch(e){}
+  WL.add(s.sym);
+  saveWL();
+  input.value = '';
+  render();
+};
+
+window.removeStockFromMatrix = function(sym){
+  if(window.matrixCustomSyms) {
+    window.matrixCustomSyms.delete(sym);
+    try { localStorage.setItem('ss_matrix_custom', JSON.stringify([...window.matrixCustomSyms])); } catch(e){}
+  }
+  if(WL) {
+    WL.delete(sym);
+    saveWL();
+  }
+  render();
+};
+
+window.toggleMatrixDrawer = function(sym){
+  const el = document.getElementById('mat_drawer_' + sym);
+  const chev = document.getElementById('mat_chev_' + sym);
+  if(!el) return;
+  const isHidden = (el.style.display === 'none' || !el.style.display);
+  el.style.display = isHidden ? 'table-row' : 'none';
+  if(chev){
+    if(isHidden) chev.classList.add('open');
+    else chev.classList.remove('open');
+  }
+};
+
+window.exportMatrixCSV = function(){
+  const tab = TABS.find(t => t.id === 'matrix');
+  if(!tab) return;
+  const list = rows(tab);
+  if(!list.length){
+    alert('Export karne ke liye koi stock nahi mila.');
+    return;
+  }
+  let csv = 'Ticker,Company,Close,Day_Chg_Pct,RSI14,Volume_Mult,Entry_Zone_Min,Entry_Zone_Max,Entry_Status,Target_1,Target_Pct,Stop_Loss,SL_Pct,Strategy,Structure,Consideration\n';
+  list.forEach(s => {
+    const m = getMatrixData(s);
+    if(!m) return;
+    csv += `"${s.sym}","${(s.name||s.sym).replace(/"/g,'')}","${m.c}","${m.chg.toFixed(2)}%","${m.rsi.toFixed(1)}","${m.rv.toFixed(1)}x","${m.entryMin.toFixed(1)}","${m.entryMax.toFixed(1)}","${m.entryStatusLabel}","${m.t1.toFixed(1)}","+${m.t1Pct.toFixed(1)}%","${m.sl.toFixed(1)}","-${m.slPct.toFixed(1)}%","${m.stratTop}","${m.stratSub}","${m.decision}"\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Active_Watchlist_Matrix_' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+};
+
+function getMatrixData(s){
+  if(!s) return null;
+  const p = s.pred || {};
+  const tp = p.tradePlan || {};
+  const c = s.c || 0;
+  
+  const chg = s.chg || 0;
+  const gap = s.gap || 0;
+  
+  const rsi = (s.rsi14 != null) ? s.rsi14 : (calcRSI(getHistory(s).map(x=>x[2]), 14) || 50);
+  let rsiBadge = 'neutral';
+  let rsiLabel = 'NEUTRAL';
+  if(rsi >= 70) { rsiBadge = 'ob'; rsiLabel = 'OB'; }
+  else if(rsi <= 35) { rsiBadge = 'os'; rsiLabel = 'OS'; }
+  
+  const rv = s.rv || 1.0;
+  let volBadge = 'normal';
+  let volLabel = 'NORMAL';
+  if(rv >= 2.2) { volBadge = 'high'; volLabel = 'HIGH'; }
+  else if(rv >= 1.4) { volBadge = 'surge'; volLabel = 'SURGE'; }
+  
+  let entryMin = c * 0.992;
+  let entryMax = c * 1.008;
+  if(tp.entryZone && tp.entryZone.includes('–')){
+    const parts = tp.entryZone.replace(/₹/g, '').split('–').map(x => parseFloat(x.trim()));
+    if(parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])){
+      entryMin = parts[0]; entryMax = parts[1];
+    }
+  } else if(s.qs && s.qs.tradePlan && s.qs.tradePlan.entryZone){
+    const parts = s.qs.tradePlan.entryZone.replace(/₹/g, '').split('–').map(x => parseFloat(x.trim()));
+    if(parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])){
+      entryMin = parts[0]; entryMax = parts[1];
+    }
+  }
+  
+  let entryStatus = 'in-zone';
+  let entryStatusLabel = 'IN ZONE';
+  if(c < entryMin * 0.985) {
+    entryStatus = 'wait';
+    entryStatusLabel = 'WAIT';
+  } else if(c > entryMax * 1.03) {
+    entryStatus = 'avoid';
+    entryStatusLabel = 'EXTENDED';
+  } else if(!s.aboveEMA && c < (s.ema20||c) * 0.96) {
+    entryStatus = 'avoid';
+    entryStatusLabel = 'AVOID';
+  }
+  
+  const atr = s.atr14 || Math.max(1, (s.h - s.l) || (c * 0.02));
+  let sl = tp.sl || (s.qs && s.qs.tradePlan ? s.qs.tradePlan.sl : Math.max(s.l * 0.995, c - (1.6 * atr)));
+  if(sl >= c) sl = c * 0.95;
+  const risk = Math.max(c * 0.015, c - sl);
+  let t1 = tp.t1 || (s.qs && s.qs.tradePlan ? s.qs.tradePlan.t1 : (c + (1.6 * risk)));
+  const t1Pct = ((t1 - c) / c * 100);
+  const slPct = ((c - sl) / c * 100);
+  
+  let stratTop = 'Avoid / Hold';
+  let stratTopClass = 'avoid';
+  if(s.isSwingPullback || (s.cp >= 35 && s.cp <= 55 && s.aboveEMA)){
+    stratTop = 'Buy on Weakness';
+    stratTopClass = 'buy-weak';
+  } else if(s.isSwingBO || s.h52new || (s.rb && s.rb.st === 'BO')){
+    stratTop = 'Breakout Expansion';
+    stratTopClass = 'bo-exp';
+  } else if(s.isBTST){
+    stratTop = 'Momentum Rocket';
+    stratTopClass = 'bo-exp';
+  } else if(s.aboveEMA && s.chg >= 0){
+    stratTop = 'Trend Pullback';
+    stratTopClass = 'pullback';
+  }
+  
+  let stratSub = '〰 Consolidation';
+  let stratSubClass = 'consol';
+  if(s.aboveEMA && (s.ema20||0) > (s.ema50||0)){
+    stratSub = '📈 Trend Following';
+    stratSubClass = 'trend';
+  } else if(s.h52new || s.h52near){
+    stratSub = '⭐ 52W High Stage';
+    stratSubClass = 'stage2';
+  } else if(s.nr4 || s.nr7 || (s.pb && s.pb.distToR <= 2.0)){
+    stratSub = '〰 Consolidation';
+    stratSubClass = 'consol';
+  } else if(s.pj){
+    stratSub = '🚀 Profit Jump 200%';
+    stratSubClass = 'stage2';
+  }
+  
+  let decision = 'WAIT';
+  let dotColor = 'yellow';
+  
+  const isHealthyUptrend = (s.aboveEMA || s.chg >= 0) && !s.uc;
+  const hasConviction = (p.score >= 60) || (s.qs && s.qs.score >= 60) || s.isSwingBO || s.isSwingPullback || s.isBTST || (s.deliv_per >= 50 && s.cr >= 3.0) || rv >= 2.0;
+
+  if(c < sl || (p.bias === 'BEARISH' && p.score >= 65) || (!s.aboveEMA && c < (s.ema50||c) * 0.95 && s.chg < -2.5)){
+    decision = 'SELL';
+    dotColor = 'red';
+  } else if(isHealthyUptrend && (entryStatus === 'in-zone' || s.isSwingBO || s.isBTST || hasConviction)){
+    decision = 'BUY';
+    dotColor = 'green';
+  } else {
+    decision = 'WAIT';
+    dotColor = 'yellow';
+  }
+
+  return {
+    c, chg, gap, rsi, rsiBadge, rsiLabel,
+    rv, volBadge, volLabel,
+    entryMin, entryMax, entryStatus, entryStatusLabel,
+    t1, t1Pct, sl, slPct,
+    stratTop, stratTopClass, stratSub, stratSubClass,
+    decision, dotColor
+  };
+}
+
+function matrixRows(d){
+  const curView = window.matrixView || 'swing';
+
+  const subnavHtml = `
+    <div class="matrix-container" style="margin-bottom:14px">
+      <div class="matrix-header">
+        <div class="matrix-title-wrap">
+          <div class="matrix-title">📊 ACTIVE WATCHLIST MATRIX</div>
+          <span class="matrix-count-badge">${d.length} stocks</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div class="matrix-nav-pills">
+            <button class="matrix-nav-btn ${curView==='day'?'active':''}" onclick="setMatrixView('day')">⚡ Day</button>
+            <button class="matrix-nav-btn ${curView==='swing'?'active':''}" onclick="setMatrixView('swing')">🌙 Swing</button>
+            <button class="matrix-nav-btn ${curView==='invest'?'active':''}" onclick="setMatrixView('invest')">💎 Invest</button>
+            <button class="matrix-nav-btn ${curView==='wl'?'active':''}" onclick="setMatrixView('wl')">⭐ My Watchlist (${WL.size})</button>
+            <button class="matrix-nav-btn ${curView==='all'?'active':''}" onclick="setMatrixView('all')">🌟 All Combined</button>
+          </div>
+          <button class="matrix-export-btn" onclick="exportMatrixCSV()">📥 Export CSV</button>
+        </div>
+      </div>
+      <div class="matrix-add-row">
+        <span style="font-size:12px;color:var(--mu);font-weight:700">🔎 Single Stock Add:</span>
+        <input type="text" id="mat_sym_input" class="matrix-add-input" placeholder="Koi bhi share add karein (e.g. RELIANCE, TCS, INET)..." onkeydown="if(event.key==='Enter')addSingleStockToMatrix()" />
+        <button class="matrix-add-btn" onclick="addSingleStockToMatrix()">+ Add to Matrix</button>
+        <span style="margin-left:auto;font-size:11.5px;color:var(--mu)">Top Filtered + Single Custom Stock Tracking</span>
+      </div>
+    </div>
+  `;
+
+  let swWrap = $('matrix_subnav_wrap');
+  if(!swWrap){
+    swWrap = document.createElement('div');
+    swWrap.id = 'matrix_subnav_wrap';
+    const tbl = document.querySelector('.w');
+    if(tbl && tbl.parentNode) tbl.parentNode.insertBefore(swWrap, tbl);
+  }
+  if(swWrap){
+    swWrap.style.display = 'block';
+    swWrap.innerHTML = subnavHtml;
+  }
+
+  $('th').innerHTML = `
+    <th>TICKER ⓘ</th>
+    <th>PRICE / GAP ⓘ</th>
+    <th>RSI ⓘ</th>
+    <th>VOLUME ⓘ</th>
+    <th>ENTRY ⓘ</th>
+    <th>R:R LEVELS ⓘ</th>
+    <th>STRATEGY ⓘ</th>
+    <th class="center">CONSIDERATION ⓘ</th>
+  `;
+
+  if(!d.length){
+    $('tb').innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align:center;padding:48px 24px;">
+          <div style="font-size:32px;margin-bottom:10px">📊</div>
+          <div style="font-size:15px;font-weight:700;color:#f8fafc">Koi Stock Matrix Criteria par Qualify nahi hua</div>
+          <div class="mu" style="font-size:12px;margin-top:4px">Upar search box me kisi bhi stock ka symbol daal kar <b>+ Add to Matrix</b> karein, ya Turnover filter kam karein.</div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  $('tb').innerHTML = d.map(s => {
+    const m = getMatrixData(s);
+    if(!m) return '';
+
+    const priceDisp = '₹ ' + fm(m.c);
+    const gapDisp = m.chg >= 0
+      ? `<div class="mat-gap-pos">▲ ${m.chg.toFixed(1)}%</div>`
+      : `<div class="mat-gap-neg">▼ ${Math.abs(m.chg).toFixed(1)}%</div>`;
+
+    const entryRangeDisp = `₹ ${fm(m.entryMin, 0)} – ${fm(m.entryMax, 0)}`;
+    const rLabel = m.rsi.toFixed(0);
+    const vLabel = m.rv.toFixed(1) + 'x';
+
+    let actionBtnClass = 'wait';
+    if(m.decision === 'BUY') actionBtnClass = 'buy';
+    else if(m.decision === 'SELL') actionBtnClass = 'sell';
+
+    const p = s.pred || {};
+    const tp = p.tradePlan || {};
+
+    return `
+      <tr class="matrix-row" onclick="toggleMatrixDrawer('${e(s.sym)}')">
+        <td>
+          <div style="display:flex;align-items:center;">
+            <span class="mat-chevron" id="mat_chev_${e(s.sym)}">▼</span>
+            <span class="mat-dot ${m.dotColor}"></span>
+            <div>
+              <span class="mat-sym">${e(s.sym)}</span>
+              <div class="mu" style="font-size:10.5px">${renderExBadge(s)} ${e(s.name ? s.name.slice(0, 18) : '')}</div>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="mat-price">${priceDisp}</div>
+          ${gapDisp}
+        </td>
+        <td>
+          <div style="font-size:14px;font-weight:800;color:#f8fafc">${rLabel}</div>
+          <span class="mat-subbadge ${m.rsiBadge}">${m.rsiLabel}</span>
+        </td>
+        <td>
+          <div style="font-size:14px;font-weight:800;color:#f8fafc">${vLabel}</div>
+          <span class="mat-subbadge ${m.volBadge}">${m.volLabel}</span>
+        </td>
+        <td>
+          <div class="mat-entry-box">${entryRangeDisp}</div>
+          <span class="mat-entry-status ${m.entryStatus}">${m.entryStatusLabel}</span>
+        </td>
+        <td>
+          <div class="mat-rr-target">🎯 ₹ ${fm(m.t1, 1)} <span style="font-size:10px">(+${m.t1Pct.toFixed(1)}%)</span></div>
+          <div class="mat-rr-sl">🛑 ₹ ${fm(m.sl, 1)} <span style="font-size:10px">(-${m.slPct.toFixed(1)}%)</span></div>
+        </td>
+        <td>
+          <div class="mat-strat-wrap">
+            <span class="mat-strat-pill ${m.stratTopClass}">${m.stratTop}</span>
+            <span class="mat-strat-sub ${m.stratSubClass}">${m.stratSub}</span>
+          </div>
+        </td>
+        <td class="center" style="white-space:nowrap" onclick="event.stopPropagation()">
+          <button class="mat-action-btn ${actionBtnClass}" onclick="openPredictionAudit('${e(s.sym)}')">${m.decision}</button>
+          <button class="mat-del-icon" onclick="removeStockFromMatrix('${e(s.sym)}')" title="Matrix / Watchlist se hatayein">🗑️</button>
+        </td>
+      </tr>
+      <tr class="matrix-drawer-row" id="mat_drawer_${e(s.sym)}" style="display:none;">
+        <td colspan="8">
+          <div class="matrix-drawer-content">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+              <div>
+                <b style="color:#38bdf8;font-size:14px">${e(s.name || s.sym)}</b> ·
+                <span class="mu" style="font-size:12px">100-Point Quant Score: <b style="color:#34d399">${p.score || 70}/100</b></span>
+                <span style="margin-left:12px;font-size:12px;color:var(--mu)">F&amp;O: <b style="color:#fcd34d">${p.foStatus || 'Cash Equity'}</b></span>
+                <span style="margin-left:12px;font-size:12px;color:var(--mu)">Delivery: <b style="color:#6ee7b7">${s.deliv_per ? s.deliv_per.toFixed(0)+'%' : 'N/A'}</b></span>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button onclick="openPredictionAudit('${e(s.sym)}')" style="padding:4px 10px;background:#0369a1;color:#fff;border:none;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer">⚡ Full Audit Card</button>
+                <button onclick="initiatePaperTrade('${e(s.sym)}', ${(s.c||0).toFixed(2)}, ${(m.sl||0).toFixed(2)}, ${(m.t1||0).toFixed(2)}, ${(m.t1*1.05).toFixed(2)})" style="padding:4px 10px;background:#1e3a8a;border:1px solid #3b82f6;border-radius:4px;font-size:11px;color:#93c5fd;font-weight:700;cursor:pointer">📝 Paper Trade</button>
+                <a href="${s.tv || ('https://in.tradingview.com/chart/?symbol=' + (s.ex==='BSE'?'BSE:':'NSE:') + e(s.sym))}" target="_blank" style="padding:4px 10px;background:var(--b);color:#fff;border-radius:4px;font-size:11px;text-decoration:none;font-weight:700">Chart ↗</a>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px;margin-top:6px;font-size:12px">
+              <div style="background:rgba(255,255,255,0.02);padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.05)">
+                <span class="mu">Setup Type:</span> <b style="color:#cbd5e1">${p.setupType || m.stratTop}</b><br/>
+                <span class="mu">Holding:</span> <b style="color:#cbd5e1">3–10 Trading Sessions</b>
+              </div>
+              <div style="background:rgba(255,255,255,0.02);padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.05)">
+                <span class="mu">Entry Zone:</span> <b style="color:#38bdf8">${entryRangeDisp}</b><br/>
+                <span class="mu">Risk/Reward:</span> <b style="color:#34d399">1 : 2.2+</b>
+              </div>
+              <div style="background:rgba(255,255,255,0.02);padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.05)">
+                <span class="mu">Invalidation:</span> <b style="color:#f87171">Close &lt; ₹${fm(m.sl, 1)}</b><br/>
+                <span class="mu">EMAs:</span> <span style="color:#94a3b8">20: ₹${fm(s.ema20, 1)} · 50: ₹${fm(s.ema50, 1)}</span>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
 function top10Rows(d){
   const curView = window.top10View || 'bull';
   const subnav = `
@@ -3652,9 +4439,21 @@ function top10Rows(d){
       <button class="top10-pill ${curView==='bear'?'on':''}" onclick="setTop10View('bear')">🔴 Top 10 Bearish Setups</button>
       <button class="top10-pill ${curView==='swing'?'on':''}" onclick="setTop10View('swing')">⚡ Top 10 Swing Setups</button>
       <button class="top10-pill ${curView==='gap'?'on':''}" onclick="setTop10View('gap')">🌅 Top 10 Gap Watchlist</button>
-      <span style="margin-left:auto;font-size:11.5px;color:var(--mu)">Strict Hurdle: Score ≥ 65 · Qualified: <b style="color:#38bdf8">${d.length}</b></span>
+      <span style="margin-left:auto;font-size:11.5px;color:var(--mu)">Strict Hurdle: Score ≥ 60 · Qualified: <b style="color:#38bdf8">${d.length}</b></span>
     </div>
   `;
+
+  let swWrap = $('top10_subnav_wrap');
+  if(!swWrap){
+    swWrap = document.createElement('div');
+    swWrap.id = 'top10_subnav_wrap';
+    const tbl = document.querySelector('.w');
+    if(tbl && tbl.parentNode) tbl.parentNode.insertBefore(swWrap, tbl);
+  }
+  if(swWrap){
+    swWrap.style.display = 'block';
+    swWrap.innerHTML = subnav;
+  }
 
   const th = `
     <th># Rank</th>
@@ -3676,6 +4475,7 @@ function top10Rows(d){
     <th>Reason for Selection</th>
     <th>Actions</th>
   `;
+  $('th').innerHTML = th;
 
   if(!d.length){
     const emptyRow = `
@@ -3684,14 +4484,15 @@ function top10Rows(d){
           <div style="font-size:36px;margin-bottom:12px;">🛡️</div>
           <div style="font-size:16px;font-weight:800;color:#f8fafc;margin-bottom:6px;">NO HIGH-CONVICTION TRADE IN THIS CATEGORY</div>
           <div style="font-size:13px;color:var(--mu);max-width:540px;margin:0 auto 16px auto;">
-            Currently, no stock satisfies the strict 65-Point Multi-Factor Quality &amp; Risk hurdle for this category.
-            <b>Cash is a valid risk-managed position</b> — do not force trades in suboptimal market setups.
+            Currently, no stock satisfies the strict Multi-Factor Quality &amp; Risk hurdle under current filters.
+            Agar Turnover Filter ₹50 Cr par set hai, to use <b>₹3 Cr</b> ya <b>Any</b> karke dekhein.
           </div>
           <span class="badge" style="background:#1e293b;color:#94a3b8;border:1px solid #475569;padding:4px 12px;font-weight:700">Strict Capital Protection Active</span>
         </td>
       </tr>
     `;
-    return { subnav, th, tbody: emptyRow };
+    $('tb').innerHTML = emptyRow;
+    return;
   }
 
   const rows = d.map((s, idx) => {
@@ -3754,7 +4555,7 @@ function top10Rows(d){
     `;
   }).join('');
 
-  return { subnav, th, tbody: rows };
+  $('tb').innerHTML = rows;
 }
 
 
@@ -3770,11 +4571,23 @@ function gapPredictorRows(d){
   const subnav = `
     <div class="top10-subnav-bar">
       <span class="mu" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Gap Direction:</span>
-      <button class="top10-pill ${curView==='up'?'on':''}" onclick="setGapPredView('up')">🌅 Potential GAP-UP Stocks (${U.filter(s=>s.gapPred&&s.gapPred.direction==='GAP-UP').length})</button>
-      <button class="top10-pill ${curView==='down'?'on':''}" onclick="setGapPredView('down')">🌧️ Potential GAP-DOWN Stocks (${U.filter(s=>s.gapPred&&s.gapPred.direction==='GAP-DOWN').length})</button>
+      <button class="top10-pill ${curView==='up'?'on':''}" onclick="setGapPredView('up')">🌅 Potential GAP-UP Stocks (${U.filter(s=>s.gapPred&&(s.gapPred.direction==='GAP-UP'||s.gapPred.prob>=55)).length})</button>
+      <button class="top10-pill ${curView==='down'?'on':''}" onclick="setGapPredView('down')">🌧️ Potential GAP-DOWN Stocks (${U.filter(s=>s.gapPred&&(s.gapPred.direction==='GAP-DOWN'||s.gapPred.probDown>=55)).length})</button>
       <span style="margin-left:auto;font-size:11.5px;color:var(--mu)">Based on Close Positioning, Volume Surge, F&amp;O Buildup &amp; Range Expansion</span>
     </div>
   `;
+
+  let swWrap = $('top10_subnav_wrap');
+  if(!swWrap){
+    swWrap = document.createElement('div');
+    swWrap.id = 'top10_subnav_wrap';
+    const tbl = document.querySelector('.w');
+    if(tbl && tbl.parentNode) tbl.parentNode.insertBefore(swWrap, tbl);
+  }
+  if(swWrap){
+    swWrap.style.display = 'block';
+    swWrap.innerHTML = subnav;
+  }
 
   const th = `
     <th># Rank</th>
@@ -3790,6 +4603,7 @@ function gapPredictorRows(d){
     <th>Key Driving Reasons</th>
     <th>Action</th>
   `;
+  $('th').innerHTML = th;
 
   if(!d.length){
     const emptyRow = `
@@ -3797,11 +4611,12 @@ function gapPredictorRows(d){
         <td colspan="12" style="text-align:center;padding:48px 24px;">
           <div style="font-size:32px;margin-bottom:10px">⚖️</div>
           <div style="font-size:15px;font-weight:700;color:#f8fafc">No Strong Gap Candidates Detected in This Session</div>
-          <div class="mu" style="font-size:12px;margin-top:4px">Neither bullish buyers nor aggressive sellers closed with sufficient conviction to warrant an overnight gap edge.</div>
+          <div class="mu" style="font-size:12px;margin-top:4px">Neither buyers nor sellers closed with sufficient conviction to warrant an overnight gap edge under current turnover filters.</div>
         </td>
       </tr>
     `;
-    return { subnav, th, tbody: emptyRow };
+    $('tb').innerHTML = emptyRow;
+    return;
   }
 
   const rows = d.map((s, idx) => {
@@ -3849,7 +4664,7 @@ function gapPredictorRows(d){
     `;
   }).join('');
 
-  return { subnav, th, tbody: rows };
+  $('tb').innerHTML = rows;
 }
 
 function quantSwingRows(d){
@@ -4870,7 +5685,17 @@ document.addEventListener('click',async x=>{
     openChart(c.dataset.c);
   }
   const t=x.target.closest('[data-t]'),w=x.target.closest('[data-w]');
-  if(t){cur=t.dataset.t; if(cur==='hm'){ VIEW_MODE='heatmap'; } else if(cur!=='hm' && cur!=='perf' && VIEW_MODE==='heatmap' && t.dataset.t!=='hm'){ /* keep view mode */ } render();}
+  if(t){
+    cur=t.dataset.t;
+    if(cur==='pre_bo') window.pbView = 'pre_bo';
+    if(cur==='approaching') window.pbView = 'approaching';
+    if(cur==='fresh_bo') window.pbView = 'confirmed';
+    if(cur==='matrix') window.matrixView = window.matrixView || 'swing';
+    if(cur==='top10_master') window.top10View = 'bull';
+    if(cur==='gap_predictor') window.gapPredView = 'up';
+    if(cur==='hm'){ VIEW_MODE='heatmap'; } else if(cur!=='hm' && cur!=='perf' && VIEW_MODE==='heatmap' && t.dataset.t!=='hm'){ /* keep view mode */ }
+    render();
+  }
   if(w){const s=w.dataset.w;WL.has(s)?WL.delete(s):WL.add(s);saveWL();render()}
 });
 
