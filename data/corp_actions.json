@@ -1,26 +1,5 @@
 [
   {
-    "company": "Zee Entertainment Enterprises Limited",
-    "action": "Buy Back",
-    "type": "dividend",
-    "logo": "ZEE",
-    "exDate": "25-Nov-2026"
-  },
-  {
-    "company": "Vraj Iron and Steel Limited",
-    "action": "Interim Dividend - Re 0.60 Per Share",
-    "type": "dividend",
-    "logo": "VRA",
-    "exDate": "25-Nov-2026"
-  },
-  {
-    "company": "Bonlon Industries Limited",
-    "action": "Rights 1:1 @ Premium Rs 20/-",
-    "type": "rights",
-    "logo": "BON",
-    "exDate": "25-Nov-2026"
-  },
-  {
     "company": "GOVERNMENT OF INDIA",
     "action": "Interest Payment",
     "type": "dividend",
@@ -54,5 +33,19 @@
     "type": "split",
     "logo": "S. ",
     "exDate": "10-Dec-2026"
+  },
+  {
+    "company": "Government of India",
+    "action": "Redemption",
+    "type": "dividend",
+    "logo": "GOV",
+    "exDate": "11-Dec-2026"
+  },
+  {
+    "company": "2.50%GOLDBONDS2026Sr-IV",
+    "action": "Redemption",
+    "type": "dividend",
+    "logo": "2.5",
+    "exDate": "29-Dec-2026"
   }
 ]
